@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-asphalt text-zinc-100;
+  background-image: radial-gradient(circle at top, #1a1d2a 0%, #09090b 45%);
+}
+
+.card {
+  @apply rounded-xl border border-zinc-800 bg-carbon/80 p-4 shadow-lg shadow-black/20;
+}
