@@ -16,7 +16,11 @@ body {
 }
 
 .eyebrow {
-  @apply text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500;
+  @apply font-mono text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-zinc-500;
+}
+
+.race-code {
+  @apply font-mono text-[0.68rem] uppercase tracking-[0.18em] text-zinc-500;
 }
 
 .motion-fade-up {
