@@ -10,7 +10,7 @@ const nextRaceStats = [
 const standingsPreview = [
   { title: "车手积分榜", leader: "VER", detail: "168 pts", href: "/drivers/VER" },
   { title: "车队积分榜", leader: "Red Bull", detail: "287 pts", href: "/live" }
-];
+] as const;
 
 export default function Home() {
   const topDrivers = mockLiveTiming.slice(0, 3);
