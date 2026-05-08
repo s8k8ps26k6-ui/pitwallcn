@@ -9,8 +9,15 @@ const nextRaceStats = [
 
 const standingsPreview = [
   { title: "车手积分榜", leader: "VER", detail: "168 pts", href: "/drivers/VER" },
-  { title: "车队积分榜", leader: "Red Bull", detail: "287 pts", href: "/live" }
+  { title: "车队积分榜", leader: "Red Bull Racing", detail: "287 pts", href: "/live" }
 ] as const;
+
+const raceControlCategoryText = {
+  FLAG: "旗语",
+  INCIDENT: "事件",
+  SAFETY_CAR: "安全车",
+  NOTICE: "通知"
+} as const;
 
 export default function Home() {
   const topDrivers = mockLiveTiming.slice(0, 3);
@@ -19,10 +26,10 @@ export default function Home() {
   return (
     <main className="space-y-6">
       <section
-        className="motion-fade-up relative overflow-hidden rounded-2xl border border-zinc-800 bg-cover bg-center px-6 py-16 shadow-xl shadow-black/30 sm:px-8 sm:py-20"
+        className="motion-fade-up relative overflow-hidden rounded-2xl border border-zinc-800 bg-cover bg-center px-6 py-12 shadow-xl shadow-black/30 sm:px-8 sm:py-16"
         style={{ backgroundImage: "url('/images/hero.jpg')" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/55 to-black/75" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/78 via-black/48 to-black/70" aria-hidden="true" />
         <div className="relative max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-pitGreen/30 bg-pitGreen/10 px-3 py-1 text-xs font-medium text-pitGreen">
             <span className="live-dot" aria-hidden="true" />
@@ -121,7 +128,7 @@ export default function Home() {
                 <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-neonRed shadow-[0_0_12px_rgba(255,46,46,0.7)]" />
                 <div className="flex items-center justify-between gap-3 text-xs text-zinc-500">
                   <span>{msg.timestamp}</span>
-                  <span>{msg.category}</span>
+                  <span>{raceControlCategoryText[msg.category]}</span>
                 </div>
                 <p className="mt-1 text-sm text-zinc-200">{msg.message}</p>
               </li>
@@ -143,6 +150,13 @@ export default function Home() {
           </Link>
         ))}
       </section>
+
+      <footer className="motion-fade-up rounded-2xl border border-zinc-900 bg-black/20 px-5 py-6 text-sm text-zinc-500">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-semibold text-zinc-300">Pitwall CN</p>
+          <p>非官方项目 · 当前使用 Mock 数据展示 · For Chinese F1 fans</p>
+        </div>
+      </footer>
     </main>
   );
 }
