@@ -12,13 +12,6 @@ const standingsPreview = [
   { title: "车队积分榜", leader: "Red Bull Racing", detail: "287 pts", href: "/live" }
 ] as const;
 
-const raceControlCategoryText = {
-  FLAG: "旗语",
-  INCIDENT: "事件",
-  SAFETY_CAR: "安全车",
-  NOTICE: "通知"
-} as const;
-
 export default function Home() {
   const topDrivers = mockLiveTiming.slice(0, 3);
   const latestRaceControl = [...mockRaceControl].slice(-3).reverse();
@@ -29,7 +22,7 @@ export default function Home() {
         className="motion-fade-up relative overflow-hidden rounded-2xl border border-zinc-800 bg-cover bg-center px-6 py-12 shadow-xl shadow-black/30 sm:px-8 sm:py-16"
         style={{ backgroundImage: "url('/images/hero.jpg')" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-black/78 via-black/48 to-black/70" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/88 via-black/62 to-black/82" aria-hidden="true" />
         <div className="relative max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-pitGreen/30 bg-pitGreen/10 px-3 py-1 text-xs font-medium text-pitGreen">
             <span className="live-dot" aria-hidden="true" />
@@ -128,7 +121,7 @@ export default function Home() {
                 <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-neonRed shadow-[0_0_12px_rgba(255,46,46,0.7)]" />
                 <div className="flex items-center justify-between gap-3 text-xs text-zinc-500">
                   <span>{msg.timestamp}</span>
-                  <span>{raceControlCategoryText[msg.category]}</span>
+                  <span className="race-code">{msg.category}</span>
                 </div>
                 <p className="mt-1 text-sm text-zinc-200">{msg.message}</p>
               </li>
