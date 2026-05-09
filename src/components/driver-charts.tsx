@@ -12,12 +12,10 @@ const lapTimes = [
   { lap: 7, time: 96.6 }
 ];
 
-const speed = [
-  { point: "T1", speed: 284 },
-  { point: "T2", speed: 301 },
-  { point: "T3", speed: 269 },
-  { point: "T4", speed: 315 },
-  { point: "S1", speed: 328 }
+const sectorSpeeds = [
+  { sector: "S1", speed: 304 },
+  { sector: "S2", speed: 286 },
+  { sector: "S3", speed: 318 }
 ];
 
 const tooltipStyle = {
@@ -52,15 +50,15 @@ export function DriverCharts() {
       <section className="card h-80">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <p className="eyebrow">Telemetry</p>
-            <h3 className="mt-1 text-lg font-semibold text-white">速度遥测</h3>
+            <p className="eyebrow">Sector Speed</p>
+            <h3 className="mt-1 text-lg font-semibold text-white">分段速度</h3>
           </div>
-          <span className="race-code">KM/H</span>
+          <span className="race-code">S1 / S2 / S3</span>
         </div>
         <ResponsiveContainer width="100%" height="78%">
-          <AreaChart data={speed} margin={{ left: -18, right: 12, top: 8, bottom: 0 }}>
+          <AreaChart data={sectorSpeeds} margin={{ left: -18, right: 12, top: 8, bottom: 0 }}>
             <CartesianGrid stroke="rgba(63, 63, 70, 0.35)" strokeDasharray="3 3" />
-            <XAxis dataKey="point" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+            <XAxis dataKey="sector" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
             <YAxis stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
             <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#19f38b" }} />
             <Area type="monotone" dataKey="speed" stroke="#19f38b" fill="rgba(25, 243, 139, 0.16)" strokeWidth={3} />
