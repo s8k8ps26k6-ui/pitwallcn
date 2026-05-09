@@ -1,37 +1,5 @@
 import Link from "next/link";
-
-const drivers = [
-  {
-    code: "VER",
-    name: "Max Verstappen",
-    team: "Red Bull Racing",
-    number: "1",
-    points: "168",
-    status: "P1",
-    href: "/drivers/VER",
-    accent: "border-blue-500/40 bg-blue-500/10 text-blue-300"
-  },
-  {
-    code: "NOR",
-    name: "Lando Norris",
-    team: "McLaren",
-    number: "4",
-    points: "142",
-    status: "P2",
-    href: "/drivers/NOR",
-    accent: "border-orange-400/40 bg-orange-400/10 text-orange-300"
-  },
-  {
-    code: "LEC",
-    name: "Charles Leclerc",
-    team: "Ferrari",
-    number: "16",
-    points: "119",
-    status: "P3",
-    href: "/drivers/LEC",
-    accent: "border-neonRed/40 bg-neonRed/10 text-neonRed"
-  }
-] as const;
+import { drivers } from "@/lib/drivers";
 
 export default function DriversPage() {
   return (
@@ -60,7 +28,7 @@ export default function DriversPage() {
           <Link
             key={driver.code}
             className={`card motion-fade-up motion-delay-${index + 1} group flex min-h-72 flex-col justify-between p-5`}
-            href={driver.href}
+            href={`/drivers/${driver.code}`}
           >
             <div>
               <div className="mb-5 flex items-center justify-between gap-3">
