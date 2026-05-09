@@ -2,6 +2,14 @@ import Link from "next/link";
 
 const primaryModules = [
   {
+    code: "SCHEDULE",
+    title: "赛程",
+    description: "查看下一站大奖赛、倒计时与周末时间安排。",
+    href: "/schedule",
+    status: "NEXT RACE",
+    accent: "border-blue-400/40 bg-blue-400/10 text-blue-300"
+  },
+  {
     code: "LIVE TIMING",
     title: "实时计时",
     description: "查看车手排名、差距、上一圈、最快圈与进站状态。",
@@ -43,6 +51,13 @@ const primaryModules = [
   }
 ] as const;
 
+const countdown = [
+  { value: "15", label: "天" },
+  { value: "06", label: "小时" },
+  { value: "25", label: "分钟" },
+  { value: "53", label: "秒" }
+] as const;
+
 export default function Home() {
   return (
     <main className="space-y-6">
@@ -61,20 +76,44 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-white sm:text-6xl">Pitwall CN</h1>
           <h2 className="text-xl font-semibold text-neonAmber sm:text-2xl">非官方 F1 数据看板</h2>
           <p className="max-w-2xl text-base leading-7 text-zinc-100">
-            一个面向中文车迷的 F1 数据主控台。实时计时、赛会控制、车手数据、积分榜与圈速分析分别进入独立页面查看。
+            一个面向中文车迷的 F1 数据主控台。赛程、实时计时、赛会控制、车手数据、积分榜与圈速分析分别进入独立页面查看。
           </p>
           <div className="flex flex-wrap gap-3 pt-2 text-sm">
-            <Link className="rounded-full bg-neonRed px-4 py-2 font-semibold text-white transition hover:bg-red-500" href="/live">
-              进入实时计时
+            <Link className="rounded-full bg-neonRed px-4 py-2 font-semibold text-white transition hover:bg-red-500" href="/schedule">
+              查看下一站
             </Link>
-            <Link className="rounded-full border border-zinc-600 px-4 py-2 text-zinc-100 transition hover:border-neonAmber hover:text-neonAmber" href="/standings">
-              查看积分榜
+            <Link className="rounded-full border border-zinc-600 px-4 py-2 text-zinc-100 transition hover:border-neonAmber hover:text-neonAmber" href="/live">
+              进入实时计时
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      <section className="motion-fade-up motion-delay-1 overflow-hidden rounded-3xl border border-blue-500/20 bg-[#11182f] p-5 shadow-xl shadow-blue-950/30">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="race-code text-zinc-400">第 5 站 · 下一站</span>
+              <span className="rounded-full border border-purple-400/40 bg-purple-500/20 px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] text-purple-200">冲刺赛</span>
+            </div>
+            <h2 className="text-3xl font-bold text-white">加拿大大奖赛</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-300">🇨🇦 吉尔斯·维伦纽夫赛道 · 蒙特利尔 · 2026.05.23 - 25</p>
+          </div>
+          <div className="grid min-w-0 grid-cols-4 gap-2 rounded-2xl border border-zinc-800/80 bg-black/25 p-3 text-center lg:min-w-[22rem]">
+            {countdown.map((item) => (
+              <div key={item.label}>
+                <p className="font-mono text-3xl font-bold text-blue-400">{item.value}</p>
+                <p className="mt-1 text-xs text-zinc-500">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <Link className="mt-5 flex items-center justify-center rounded-2xl border border-blue-400/40 bg-blue-500/20 px-4 py-3 text-sm font-semibold text-blue-100 transition hover:bg-blue-500/30" href="/schedule">
+          查看完整赛事时间安排 →
+        </Link>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {primaryModules.map((item, index) => (
           <Link
             key={item.href}
@@ -110,7 +149,7 @@ export default function Home() {
             <p className="eyebrow">Project Status</p>
             <h2 className="mt-2 text-xl font-semibold text-neonAmber">v1 数据主控台</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">
-              当前版本以 Mock 数据展示完整界面结构。页面结构已拆分为实时、赛控、车手、积分与圈速分析五个模块，后续可逐步接入真实 F1 数据源。
+              当前版本以 Mock 数据展示完整界面结构。页面结构已拆分为赛程、实时、赛控、车手、积分与圈速分析六个模块，后续可逐步接入真实 F1 数据源。
             </p>
           </div>
         </div>
