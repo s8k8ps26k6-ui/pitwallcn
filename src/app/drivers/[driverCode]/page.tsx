@@ -1,28 +1,75 @@
 import Link from "next/link";
 import { DriverCharts } from "@/components/driver-charts";
 
+const driverStats = [
+  { label: "Number", value: "1", hint: "车号" },
+  { label: "Team", value: "Red Bull", hint: "当前车队" },
+  { label: "Points", value: "168", hint: "赛季积分" },
+  { label: "Status", value: "P1", hint: "积分榜位置" }
+];
+
+const stintData = [
+  { label: "Compound", value: "MEDIUM" },
+  { label: "Laps", value: "18" },
+  { label: "Gap", value: "LEADER" }
+];
+
 export default function DriverDetailPage({ params }: { params: { driverCode: string } }) {
+  const driverCode = params.driverCode.toUpperCase();
+
   return (
     <main className="space-y-4">
       <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
         ← BACK TO HOME
       </Link>
-      <section className="card motion-fade-up overflow-hidden p-0">
-        <div className="grid md:grid-cols-2">
+
+      <section className="motion-fade-up overflow-hidden rounded-2xl border border-zinc-800 bg-black/30 shadow-xl shadow-black/20">
+        <div className="grid md:grid-cols-[1.05fr_0.95fr]">
           <div
-            className="min-h-64 bg-cover bg-center"
+            className="relative min-h-72 bg-cover bg-center"
             style={{ backgroundImage: "url('/images/driver-redbull.jpg')" }}
             aria-label="车手视觉图"
-          />
-          <div className="space-y-3 p-5">
-            <p className="eyebrow">Driver Detail</p>
-            <h2 className="text-2xl font-semibold text-white">车手：{params.driverCode.toUpperCase()}</h2>
-            <p className="text-sm leading-6 text-zinc-300">资料卡占位内容：车队、号码与赛季表现数据。</p>
-            <p className="rounded-lg border border-zinc-800 bg-black/20 p-3 text-sm text-zinc-400">当前页面使用模拟数据，后续将接入实时接口。</p>
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/20 to-black/80" aria-hidden="true" />
+            <div className="absolute bottom-4 left-4 rounded-full border border-pitGreen/60 bg-black/65 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.18)] backdrop-blur">
+              DRIVER PROFILE · MOCK DATA
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-between space-y-6 p-5 sm:p-6">
+            <div>
+              <p className="eyebrow">Driver Detail</p>
+              <h1 className="mt-2 text-4xl font-bold text-white sm:text-5xl">{driverCode}</h1>
+              <p className="mt-2 text-lg font-semibold text-neonAmber">Red Bull Racing</p>
+              <p className="mt-3 text-sm leading-6 text-zinc-300">
+                车手资料页用于集中展示车手基础信息、圈速走势与速度遥测。当前为模拟数据版本，后续可接入真实接口。
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {driverStats.map((item) => (
+                <div key={item.label} className="rounded-xl border border-zinc-800 bg-black/25 p-3">
+                  <p className="race-code">{item.label}</p>
+                  <p className="mt-2 font-mono text-2xl font-bold text-white">{item.value}</p>
+                  <p className="mt-1 text-xs text-zinc-500">{item.hint}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
-      <div className="motion-fade-up motion-delay-1">
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        {stintData.map((item, index) => (
+          <article key={item.label} className={`card motion-fade-up motion-delay-${index + 1}`}>
+            <p className="eyebrow">Current Stint</p>
+            <p className="mt-3 race-code text-zinc-400">{item.label}</p>
+            <p className="mt-2 font-mono text-3xl font-bold text-white">{item.value}</p>
+          </article>
+        ))}
+      </section>
+
+      <div className="motion-fade-up motion-delay-4">
         <DriverCharts />
       </div>
     </main>
