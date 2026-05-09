@@ -1,69 +1,52 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { RaceWeekend } from "@/lib/types";
 
-const scheduleItems = [
-  {
-    date: "5月23日 周六",
-    circuitDate: "5月22日 周五",
-    title: "第一次自由练习赛",
-    localTime: "00:30 - 01:30",
-    circuitTime: "12:30 - 13:30",
-    type: "FP1",
-    tone: "bg-neonAmber"
-  },
-  {
-    date: "5月23日 周六",
-    circuitDate: "5月22日 周五",
-    title: "冲刺排位赛",
-    localTime: "04:30 - 05:30",
-    circuitTime: "16:30 - 17:30",
-    type: "SQ",
-    tone: "bg-purple-500"
-  },
-  {
-    date: "5月24日 周日",
-    circuitDate: "5月23日 周六",
-    title: "冲刺赛",
-    localTime: "00:00 - 00:30",
-    circuitTime: "12:00 - 12:30",
-    type: "SPRINT",
-    tone: "bg-purple-500"
-  },
-  {
-    date: "5月24日 周日",
-    circuitDate: "5月23日 周六",
-    title: "排位赛",
-    localTime: "04:00 - 05:00",
-    circuitTime: "16:00 - 17:00",
-    type: "QUALIFYING",
-    tone: "bg-neonRed"
-  },
-  {
-    date: "5月25日 周一",
-    circuitDate: "5月24日 周日",
-    title: "正赛",
-    localTime: "02:00 - 04:00",
-    circuitTime: "14:00 - 16:00",
-    type: "RACE",
-    tone: "bg-pitGreen"
-  }
-] as const;
+function formatDateTime(iso: string, timeZone: string) {
+  const date = new Date(iso);
+  return {
+    date: new Intl.DateTimeFormat("zh-CN", {
+      month: "numeric",
+      day: "numeric",
+      weekday: "short",
+      timeZone
+    }).format(date),
+    time: new Intl.DateTimeFormat("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone
+    }).format(date)
+  };
+}
 
-export function ScheduleView() {
+function getSessionTone(name: string) {
+  const upper = name.toUpperCase();
+  if (upper.includes("RACE") || name.includes("正赛")) return "bg-pitGreen";
+  if (upper.includes("QUALIFYING") || upper.includes("SQ") || name.includes("排位")) return "bg-neonRed";
+  if (upper.includes("SPRINT") || name.includes("冲刺")) return "bg-purple-500";
+  return "bg-neonAmber";
+}
+
+export function ScheduleView({ race }: { race: RaceWeekend }) {
   const [timeMode, setTimeMode] = useState<"local" | "circuit">("local");
 
   const modeMeta = useMemo(
     () => ({
       local: {
-        hint: "按中国时间展示"
+        hint: "按中国时间展示",
+        timeZone: "Asia/Shanghai"
       },
       circuit: {
-        hint: "按蒙特利尔当地时间展示"
+        hint: `按${race.location || race.country}当地时间展示`,
+        timeZone: "America/Toronto"
       }
     }),
-    []
+    [race.country, race.location]
   );
+
+  const currentMeta = modeMeta[timeMode];
 
   return (
     <section className="motion-fade-up motion-delay-1 space-y-3">
@@ -71,7 +54,7 @@ export function ScheduleView() {
         <div>
           <p className="eyebrow">Weekend Schedule</p>
           <h2 className="mt-1 text-2xl font-bold text-white">赛事时间安排</h2>
-          <p className="mt-1 text-xs text-zinc-500">{modeMeta[timeMode].hint}</p>
+          <p className="mt-1 text-xs text-zinc-500">{currentMeta.hint}</p>
         </div>
         <div className="grid w-fit grid-cols-2 rounded-full border border-zinc-800 bg-black/30 p-1 text-xs">
           <button
@@ -96,26 +79,25 @@ export function ScheduleView() {
       </div>
 
       <div className="space-y-3">
-        {scheduleItems.map((item, index) => {
-          const date = timeMode === "local" ? item.date : item.circuitDate;
-          const time = timeMode === "local" ? item.localTime : item.circuitTime;
+        {race.sessions.map((item, index) => {
+          const formatted = formatDateTime(item.startTime, currentMeta.timeZone);
 
           return (
             <article
-              key={`${item.title}-${item.localTime}`}
+              key={`${item.name}-${item.startTime}`}
               className={`motion-fade-up motion-delay-${(index % 6) + 1} rounded-2xl border border-zinc-800 bg-[#11182f]/90 p-4 shadow-lg shadow-black/20`}
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <span className={`h-3 w-3 rounded-full ${item.tone} shadow-[0_0_18px_rgba(59,130,246,0.4)]`} />
+                  <span className={`h-3 w-3 rounded-full ${getSessionTone(item.name)} shadow-[0_0_18px_rgba(59,130,246,0.4)]`} />
                   <div>
-                    <p className="text-lg font-semibold text-white">{date}</p>
-                    <p className="mt-1 text-sm text-zinc-400">{item.title}</p>
+                    <p className="text-lg font-semibold text-white">{formatted.date}</p>
+                    <p className="mt-1 text-sm text-zinc-400">{item.name}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono text-lg font-bold text-neonAmber">{time}</p>
-                  <p className="mt-1 race-code">{item.type}</p>
+                  <p className="font-mono text-lg font-bold text-neonAmber">{formatted.time}</p>
+                  <p className="mt-1 race-code">SESSION</p>
                 </div>
               </div>
             </article>
