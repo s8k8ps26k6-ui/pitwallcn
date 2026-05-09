@@ -14,3 +14,20 @@ export type RaceControlMessage = {
   category: "FLAG" | "SAFETY_CAR" | "INCIDENT" | "NOTICE";
   message: string;
 };
+
+export type ScheduleSession = {
+  name: string;
+  startTime: string;
+};
+
+export type RaceWeekend = {
+  id: string;
+  raceName: string;
+  country: string;
+  location: string;
+  circuitName: string;
+  startDate: string;
+  endDate: string;
+  sessions: ScheduleSession[];
+  countdownTarget: string;
+};
