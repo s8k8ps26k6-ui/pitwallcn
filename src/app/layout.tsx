@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 
 const navItems = [
   { label: "首页", href: "/" },
+  { label: "赛程", href: "/schedule" },
   { label: "实时计时", href: "/live" },
   { label: "赛会控制", href: "/race-control" },
   { label: "车手", href: "/drivers" },
@@ -25,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link className="text-2xl font-bold tracking-wide text-neonRed transition hover:text-red-400" href="/">
               Pitwall CN
             </Link>
-            <nav className="grid w-full grid-cols-3 gap-1.5 rounded-2xl border border-zinc-800/80 bg-black/20 p-1 text-center text-sm shadow-lg shadow-black/10 backdrop-blur sm:w-fit sm:min-w-[27rem] lg:flex lg:min-w-0 lg:flex-wrap lg:text-left">
+            <nav className="grid w-full grid-cols-4 gap-1.5 rounded-2xl border border-zinc-800/80 bg-black/20 p-1 text-center text-sm shadow-lg shadow-black/10 backdrop-blur lg:flex lg:w-fit lg:flex-wrap lg:text-left">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
