@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { DriverCharts } from "@/components/driver-charts";
 import { getDriverProfile } from "@/lib/drivers";
 
 export default function DriverDetailPage({ params }: { params: { driverCode: string } }) {
@@ -12,10 +11,10 @@ export default function DriverDetailPage({ params }: { params: { driverCode: str
     { label: "Status", value: driver.status, hint: "积分榜位置" }
   ];
 
-  const stintData = [
-    { label: "Compound", value: driver.compound },
-    { label: "Laps", value: driver.laps },
-    { label: "Gap", value: driver.gap }
+  const profileCards = [
+    { label: "Season Role", value: "POINTS FIGHT", hint: "赛季定位" },
+    { label: "Data Mode", value: "MOCK", hint: "当前数据源" },
+    { label: "Profile", value: "ACTIVE", hint: "资料状态" }
   ];
 
   return (
@@ -49,7 +48,7 @@ export default function DriverDetailPage({ params }: { params: { driverCode: str
               <p className="mt-2 text-lg font-semibold text-neonAmber">{driver.name}</p>
               <p className="mt-1 text-sm font-semibold text-zinc-300">{driver.team}</p>
               <p className="mt-3 text-sm leading-6 text-zinc-300">
-                当前展示 {driver.name} 的模拟赛季数据，包括积分、车队、当前 stint、圈速走势与分段速度。后续可接入真实接口。
+                当前展示 {driver.name} 的模拟赛季资料，包括车队、车号、积分与排名状态。单场圈速和分段数据已拆分到圈速分析页面。
               </p>
             </div>
 
@@ -67,18 +66,27 @@ export default function DriverDetailPage({ params }: { params: { driverCode: str
       </section>
 
       <section className="grid gap-4 sm:grid-cols-3">
-        {stintData.map((item, index) => (
+        {profileCards.map((item, index) => (
           <article key={item.label} className={`card motion-fade-up motion-delay-${index + 1}`}>
-            <p className="eyebrow">Current Stint</p>
-            <p className="mt-3 race-code text-zinc-400">{item.label}</p>
-            <p className="mt-2 font-mono text-3xl font-bold text-white">{item.value}</p>
+            <p className="eyebrow">{item.label}</p>
+            <p className="mt-3 font-mono text-2xl font-bold text-white">{item.value}</p>
+            <p className="mt-1 text-sm text-zinc-400">{item.hint}</p>
           </article>
         ))}
       </section>
 
-      <div className="motion-fade-up motion-delay-4">
-        <DriverCharts />
-      </div>
+      <section className="card motion-fade-up motion-delay-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="eyebrow">Related Module</p>
+            <h2 className="mt-1 text-lg font-semibold text-white">查看单场圈速表现</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-400">圈速、S1/S2/S3 分段和 stint 对比数据已拆分到独立分析页。</p>
+          </div>
+          <Link className="w-fit rounded-full border border-neonAmber/50 bg-neonAmber/10 px-4 py-2 text-sm font-semibold text-neonAmber transition hover:bg-neonAmber/20" href="/lap-analysis">
+            打开圈速分析 →
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
