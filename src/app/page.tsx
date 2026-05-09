@@ -22,9 +22,10 @@ export default function Home() {
         className="motion-fade-up relative overflow-hidden rounded-2xl border border-zinc-800 bg-cover bg-center px-6 py-12 shadow-xl shadow-black/30 sm:px-8 sm:py-16"
         style={{ backgroundImage: "url('/images/hero.jpg')" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-black/88 via-black/62 to-black/82" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/94 via-black/76 to-black/92" aria-hidden="true" />
+        <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
         <div className="relative max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-pitGreen/30 bg-pitGreen/10 px-3 py-1 text-xs font-medium text-pitGreen">
+          <div className="inline-flex items-center gap-2 rounded-full border border-pitGreen/60 bg-black/65 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.18)] backdrop-blur">
             <span className="live-dot" aria-hidden="true" />
             模拟数据在线 · 每 10 秒刷新预览
           </div>
