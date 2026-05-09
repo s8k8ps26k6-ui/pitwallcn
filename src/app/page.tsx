@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RaceCountdown } from "@/components/race-countdown";
 
 const primaryModules = [
   {
@@ -51,13 +52,6 @@ const primaryModules = [
   }
 ] as const;
 
-const countdown = [
-  { value: "15", label: "天" },
-  { value: "06", label: "小时" },
-  { value: "25", label: "分钟" },
-  { value: "53", label: "秒" }
-] as const;
-
 export default function Home() {
   return (
     <main className="space-y-6">
@@ -99,14 +93,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-white">加拿大大奖赛</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">🇨🇦 吉尔斯·维伦纽夫赛道 · 蒙特利尔 · 2026.05.23 - 25</p>
           </div>
-          <div className="grid min-w-0 grid-cols-4 gap-2 rounded-2xl border border-zinc-800/80 bg-black/25 p-3 text-center lg:min-w-[22rem]">
-            {countdown.map((item) => (
-              <div key={item.label}>
-                <p className="font-mono text-3xl font-bold text-blue-400">{item.value}</p>
-                <p className="mt-1 text-xs text-zinc-500">{item.label}</p>
-              </div>
-            ))}
-          </div>
+          <RaceCountdown />
         </div>
         <Link className="mt-5 flex items-center justify-center rounded-2xl border border-blue-400/40 bg-blue-500/20 px-4 py-3 text-sm font-semibold text-blue-100 transition hover:bg-blue-500/30" href="/schedule">
           查看完整赛事时间安排 →
