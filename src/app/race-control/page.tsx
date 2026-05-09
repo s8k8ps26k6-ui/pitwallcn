@@ -1,42 +1,100 @@
 import Link from "next/link";
 import { mockRaceControl } from "@/lib/mockData";
+import type { RaceControlMessage } from "@/lib/types";
 
-const colors: Record<string, string> = {
-  FLAG: "text-neonAmber",
-  SAFETY_CAR: "text-pitGreen",
-  INCIDENT: "text-neonRed",
-  NOTICE: "text-zinc-100"
+const categoryStyles: Record<RaceControlMessage["category"], string> = {
+  FLAG: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber",
+  SAFETY_CAR: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen",
+  INCIDENT: "border-neonRed/40 bg-neonRed/10 text-neonRed",
+  NOTICE: "border-zinc-500/40 bg-zinc-500/10 text-zinc-300"
 };
 
-const categoryText: Record<string, string> = {
+const categoryText: Record<RaceControlMessage["category"], string> = {
+  FLAG: "FLAG",
+  SAFETY_CAR: "SAFETY CAR",
+  INCIDENT: "INCIDENT",
+  NOTICE: "NOTICE"
+};
+
+const categoryName: Record<RaceControlMessage["category"], string> = {
   FLAG: "旗语",
   SAFETY_CAR: "安全车",
-  INCIDENT: "事故",
+  INCIDENT: "事件记录",
   NOTICE: "通知"
 };
 
+const summaryCards = [
+  { label: "Messages", value: mockRaceControl.length.toString(), hint: "当前消息数" },
+  { label: "Latest", value: mockRaceControl[mockRaceControl.length - 1]?.timestamp ?? "--", hint: "最新更新时间" },
+  { label: "Mode", value: "MOCK", hint: "数据源状态" }
+];
+
 export default function RaceControlPage() {
+  const latestMessages = [...mockRaceControl].reverse();
+
   return (
     <main className="space-y-4">
       <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
         ← BACK TO HOME
       </Link>
-      <section className="card">
-        <div className="mb-4">
-          <p className="eyebrow">Race Control</p>
-          <h2 className="mt-2 text-xl font-semibold text-white">赛会控制</h2>
+
+      <section className="motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow">Race Control</p>
+            <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">赛会控制</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+              模拟 FIA Race Control 消息流，集中展示旗语、安全车、事件记录与比赛控制通知。
+            </p>
+          </div>
+          <div className="w-fit rounded-full border border-neonAmber/50 bg-black/60 px-3 py-1 text-xs font-semibold text-neonAmber shadow-[0_0_24px_rgba(255,176,32,0.14)]">
+            <span className="mr-2 inline-flex h-2 w-2 rounded-full bg-neonAmber shadow-[0_0_14px_rgba(255,176,32,0.9)]" aria-hidden="true" />
+            CONTROL FEED · ACTIVE
+          </div>
         </div>
-        <ul className="space-y-2">
-          {mockRaceControl.map((msg) => (
-            <li key={msg.id} className="rounded border border-zinc-800 bg-black/20 p-3">
-              <div className="flex items-center justify-between text-xs text-zinc-400">
-                <span>{msg.timestamp}</span>
-                <span className={colors[msg.category]}>{categoryText[msg.category]}</span>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        {summaryCards.map((item, index) => (
+          <article key={item.label} className={`card motion-fade-up motion-delay-${index + 1}`}>
+            <p className="eyebrow">{item.label}</p>
+            <p className="mt-3 font-mono text-3xl font-bold text-white">{item.value}</p>
+            <p className="mt-1 text-sm text-zinc-400">{item.hint}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="card motion-fade-up motion-delay-4 overflow-hidden p-0">
+        <div className="border-b border-zinc-800 bg-black/25 px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow">Message Log</p>
+              <h2 className="mt-1 text-lg font-semibold text-white">控制消息时间线</h2>
+            </div>
+            <span className="race-code">FIA STYLE</span>
+          </div>
+        </div>
+
+        <ol className="space-y-0 p-3">
+          {latestMessages.map((msg, index) => (
+            <li key={msg.id} className="relative grid gap-3 border-l border-zinc-800 pb-5 pl-5 last:pb-0 sm:grid-cols-[6rem_1fr]">
+              <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-neonRed shadow-[0_0_12px_rgba(255,46,46,0.7)]" aria-hidden="true" />
+              <div className="font-mono text-xs text-zinc-500">
+                <p>{msg.timestamp}</p>
+                <p className="mt-1">#{String(latestMessages.length - index).padStart(2, "0")}</p>
               </div>
-              <p className="mt-1 text-sm">{msg.message}</p>
+              <article className="rounded-xl border border-zinc-800 bg-black/25 p-3 transition hover:border-zinc-700 hover:bg-black/35">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] ${categoryStyles[msg.category]}`}>
+                    {categoryText[msg.category]}
+                  </span>
+                  <span className="text-xs text-zinc-500">{categoryName[msg.category]}</span>
+                </div>
+                <p className="text-sm leading-6 text-zinc-100">{msg.message}</p>
+              </article>
             </li>
           ))}
-        </ul>
+        </ol>
       </section>
     </main>
   );
