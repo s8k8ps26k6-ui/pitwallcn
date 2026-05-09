@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {navItems.map((item) => (
                 <Link
                   key={item.href}
-                  className="rounded-xl px-2.5 py-2 text-zinc-300 transition hover:bg-zinc-800 hover:text-white sm:px-3 lg:rounded-full lg:py-1.5"
+                  className="rounded-xl border border-zinc-800/70 bg-zinc-950/20 px-2.5 py-2 text-zinc-300 transition hover:border-zinc-700 hover:bg-zinc-800 hover:text-white sm:px-3 lg:rounded-full lg:py-1.5"
                   href={item.href}
                 >
                   {item.label}
