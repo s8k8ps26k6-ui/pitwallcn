@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const lapTimes = [
   { lap: 1, time: 97.2 },
@@ -21,8 +21,8 @@ const speed = [
 ];
 
 const tooltipStyle = {
-  background: "rgba(9, 9, 11, 0.95)",
-  border: "1px solid rgba(63, 63, 70, 0.85)",
+  background: "rgba(9, 9, 11, 0.92)",
+  border: "1px solid rgba(63, 63, 70, 0.9)",
   borderRadius: "12px",
   color: "#f4f4f5"
 };
@@ -30,7 +30,7 @@ const tooltipStyle = {
 export function DriverCharts() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <section className="card h-72">
+      <section className="card h-80">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="eyebrow">Lap Trace</p>
@@ -38,25 +38,18 @@ export function DriverCharts() {
           </div>
           <span className="race-code">LAP TIME</span>
         </div>
-        <ResponsiveContainer width="100%" height="76%">
-          <LineChart data={lapTimes} margin={{ left: -20, right: 10, top: 8, bottom: 0 }}>
-            <XAxis dataKey="lap" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis domain={[96, 98]} stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 11 }} tickLine={false} axisLine={false} />
-            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#ffb020" }} cursor={{ stroke: "rgba(255, 176, 32, 0.22)", strokeWidth: 1 }} />
-            <Line
-              type="monotone"
-              dataKey="time"
-              stroke="#ff2e2e"
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 4 }}
-              isAnimationActive={false}
-            />
+        <ResponsiveContainer width="100%" height="78%">
+          <LineChart data={lapTimes} margin={{ left: -18, right: 12, top: 8, bottom: 0 }}>
+            <CartesianGrid stroke="rgba(63, 63, 70, 0.35)" strokeDasharray="3 3" />
+            <XAxis dataKey="lap" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+            <YAxis domain={[96, 98]} stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#ffb020" }} />
+            <Line type="monotone" dataKey="time" stroke="#ff2e2e" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
           </LineChart>
         </ResponsiveContainer>
       </section>
 
-      <section className="card h-72">
+      <section className="card h-80">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <p className="eyebrow">Telemetry</p>
@@ -64,19 +57,13 @@ export function DriverCharts() {
           </div>
           <span className="race-code">KM/H</span>
         </div>
-        <ResponsiveContainer width="100%" height="76%">
-          <AreaChart data={speed} margin={{ left: -20, right: 10, top: 8, bottom: 0 }}>
-            <XAxis dataKey="point" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 11 }} tickLine={false} axisLine={false} />
-            <YAxis stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 11 }} tickLine={false} axisLine={false} />
-            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#19f38b" }} cursor={{ stroke: "rgba(25, 243, 139, 0.22)", strokeWidth: 1 }} />
-            <Area
-              type="monotone"
-              dataKey="speed"
-              stroke="#19f38b"
-              fill="rgba(25, 243, 139, 0.12)"
-              strokeWidth={2.5}
-              isAnimationActive={false}
-            />
+        <ResponsiveContainer width="100%" height="78%">
+          <AreaChart data={speed} margin={{ left: -18, right: 12, top: 8, bottom: 0 }}>
+            <CartesianGrid stroke="rgba(63, 63, 70, 0.35)" strokeDasharray="3 3" />
+            <XAxis dataKey="point" stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+            <YAxis stroke="#71717a" tick={{ fill: "#a1a1aa", fontSize: 12 }} />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#19f38b" }} />
+            <Area type="monotone" dataKey="speed" stroke="#19f38b" fill="rgba(25, 243, 139, 0.16)" strokeWidth={3} />
           </AreaChart>
         </ResponsiveContainer>
       </section>
