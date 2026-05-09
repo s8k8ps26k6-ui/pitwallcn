@@ -11,7 +11,7 @@ const navItems = [
   { label: "首页", href: "/" },
   { label: "实时计时", href: "/live" },
   { label: "赛会控制", href: "/race-control" },
-  { label: "车手", href: "/drivers/VER" }
+  { label: "车手", href: "/drivers" }
 ] as const;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
