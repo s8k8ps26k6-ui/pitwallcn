@@ -1,33 +1,39 @@
 import Link from "next/link";
 import { DriverCharts } from "@/components/driver-charts";
-
-const driverStats = [
-  { label: "Number", value: "1", hint: "车号" },
-  { label: "Team", value: "Red Bull", hint: "当前车队" },
-  { label: "Points", value: "168", hint: "赛季积分" },
-  { label: "Status", value: "P1", hint: "积分榜位置" }
-];
-
-const stintData = [
-  { label: "Compound", value: "MEDIUM" },
-  { label: "Laps", value: "18" },
-  { label: "Gap", value: "LEADER" }
-];
+import { getDriverProfile } from "@/lib/drivers";
 
 export default function DriverDetailPage({ params }: { params: { driverCode: string } }) {
-  const driverCode = params.driverCode.toUpperCase();
+  const driver = getDriverProfile(params.driverCode);
+
+  const driverStats = [
+    { label: "Number", value: driver.number, hint: "车号" },
+    { label: "Team", value: driver.team, hint: "当前车队" },
+    { label: "Points", value: driver.points, hint: "赛季积分" },
+    { label: "Status", value: driver.status, hint: "积分榜位置" }
+  ];
+
+  const stintData = [
+    { label: "Compound", value: driver.compound },
+    { label: "Laps", value: driver.laps },
+    { label: "Gap", value: driver.gap }
+  ];
 
   return (
     <main className="space-y-4">
-      <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
-        ← BACK TO HOME
-      </Link>
+      <div className="flex flex-wrap gap-2">
+        <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
+          ← BACK TO HOME
+        </Link>
+        <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/drivers">
+          ← DRIVER INDEX
+        </Link>
+      </div>
 
       <section className="motion-fade-up overflow-hidden rounded-2xl border border-zinc-800 bg-black/30 shadow-xl shadow-black/20">
         <div className="grid md:grid-cols-[1.05fr_0.95fr]">
           <div
             className="relative min-h-72 bg-cover bg-center"
-            style={{ backgroundImage: "url('/images/driver-redbull.jpg')" }}
+            style={{ backgroundImage: `url('${driver.image}')` }}
             aria-label="车手视觉图"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/20 to-black/80" aria-hidden="true" />
@@ -39,10 +45,11 @@ export default function DriverDetailPage({ params }: { params: { driverCode: str
           <div className="flex flex-col justify-between space-y-6 p-5 sm:p-6">
             <div>
               <p className="eyebrow">Driver Detail</p>
-              <h1 className="mt-2 text-4xl font-bold text-white sm:text-5xl">{driverCode}</h1>
-              <p className="mt-2 text-lg font-semibold text-neonAmber">Red Bull Racing</p>
+              <h1 className="mt-2 text-4xl font-bold text-white sm:text-5xl">{driver.code}</h1>
+              <p className="mt-2 text-lg font-semibold text-neonAmber">{driver.name}</p>
+              <p className="mt-1 text-sm font-semibold text-zinc-300">{driver.team}</p>
               <p className="mt-3 text-sm leading-6 text-zinc-300">
-                车手资料页用于集中展示车手基础信息、圈速走势与速度遥测。当前为模拟数据版本，后续可接入真实接口。
+                当前展示 {driver.name} 的模拟赛季数据，包括积分、车队、当前 stint、圈速走势与分段速度。后续可接入真实接口。
               </p>
             </div>
 
