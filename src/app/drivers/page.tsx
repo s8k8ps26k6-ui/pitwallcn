@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DriverIndex } from "@/components/driver-index";
 import { drivers } from "@/lib/drivers";
 
 export default function DriversPage() {
@@ -14,49 +15,16 @@ export default function DriversPage() {
             <p className="eyebrow">Driver Index</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">车手数据中心</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              从这里选择车手进入详情页。当前为 Mock 数据版本，后续可扩展到完整车手名单与真实积分数据。
+              从这里选择车手进入详情页。当前为 Mock 数据版本，后续可扩展到完整车手名单、动漫头像与真实积分数据。
             </p>
           </div>
           <div className="w-fit rounded-full border border-neonRed/50 bg-black/60 px-3 py-1 text-xs font-semibold text-neonRed shadow-[0_0_24px_rgba(255,46,46,0.14)]">
-            DRIVER DATA · MOCK
+            {drivers.length} DRIVERS · MOCK
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {drivers.map((driver, index) => (
-          <Link
-            key={driver.code}
-            className={`card motion-fade-up motion-delay-${index + 1} group flex min-h-72 flex-col justify-between p-5`}
-            href={`/drivers/${driver.code}`}
-          >
-            <div>
-              <div className="mb-5 flex items-center justify-between gap-3">
-                <p className="eyebrow">{driver.team}</p>
-                <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] ${driver.accent}`}>
-                  {driver.status}
-                </span>
-              </div>
-              <p className="font-mono text-5xl font-bold text-white">{driver.code}</p>
-              <h2 className="mt-3 text-xl font-semibold text-neonAmber">{driver.name}</h2>
-              <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-lg border border-zinc-800 bg-black/25 p-3">
-                  <p className="race-code">No.</p>
-                  <p className="mt-1 font-mono text-xl font-bold text-white">{driver.number}</p>
-                </div>
-                <div className="rounded-lg border border-zinc-800 bg-black/25 p-3">
-                  <p className="race-code">Pts</p>
-                  <p className="mt-1 font-mono text-xl font-bold text-white">{driver.points}</p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-8 flex items-center justify-between border-t border-zinc-800 pt-4">
-              <span className="race-code">OPEN PROFILE</span>
-              <span className="text-xl text-zinc-500 transition group-hover:translate-x-1 group-hover:text-neonAmber">→</span>
-            </div>
-          </Link>
-        ))}
-      </section>
+      <DriverIndex drivers={drivers} />
     </main>
   );
 }
