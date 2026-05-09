@@ -11,7 +11,9 @@ const navItems = [
   { label: "首页", href: "/" },
   { label: "实时计时", href: "/live" },
   { label: "赛会控制", href: "/race-control" },
-  { label: "车手", href: "/drivers" }
+  { label: "车手", href: "/drivers" },
+  { label: "积分榜", href: "/standings" },
+  { label: "圈速分析", href: "/lap-analysis" }
 ] as const;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -23,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link className="text-2xl font-bold tracking-wide text-neonRed transition hover:text-red-400" href="/">
               Pitwall CN
             </Link>
-            <nav className="flex w-fit flex-wrap gap-1.5 rounded-full border border-zinc-800/80 bg-black/20 p-1 text-sm shadow-lg shadow-black/10 backdrop-blur">
+            <nav className="flex w-fit max-w-full flex-wrap gap-1.5 rounded-full border border-zinc-800/80 bg-black/20 p-1 text-sm shadow-lg shadow-black/10 backdrop-blur">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
