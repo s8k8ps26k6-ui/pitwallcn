@@ -19,10 +19,10 @@ const primaryModules = [
   },
   {
     code: "DRIVER DATA",
-    title: "车手页面",
-    description: "进入车手资料卡，查看圈速走势与遥测占位图表。",
-    href: "/drivers/VER",
-    status: "VER PROFILE",
+    title: "车手数据",
+    description: "进入车手选择页，选择不同车手查看资料卡、圈速走势与分段速度。",
+    href: "/drivers",
+    status: "DRIVER INDEX",
     accent: "border-neonRed/40 bg-neonRed/10 text-neonRed"
   }
 ] as const;
@@ -51,8 +51,8 @@ export default function Home() {
             <Link className="rounded-full bg-neonRed px-4 py-2 font-semibold text-white transition hover:bg-red-500" href="/live">
               进入实时计时
             </Link>
-            <Link className="rounded-full border border-zinc-600 px-4 py-2 text-zinc-100 transition hover:border-neonAmber hover:text-neonAmber" href="/race-control">
-              查看赛会控制
+            <Link className="rounded-full border border-zinc-600 px-4 py-2 text-zinc-100 transition hover:border-neonAmber hover:text-neonAmber" href="/drivers">
+              选择车手数据
             </Link>
           </div>
         </div>
