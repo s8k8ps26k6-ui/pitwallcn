@@ -15,35 +15,37 @@ export const mockRaceControl: RaceControlMessage[] = [
 
 export const mockSchedule: RaceWeekend[] = [
   {
-    id: "2026-cn",
-    raceName: "中国大奖赛",
-    country: "中国",
-    location: "上海",
-    circuitName: "上海国际赛车场",
-    startDate: "2026-05-15T03:30:00Z",
-    endDate: "2026-05-17T08:00:00Z",
-    countdownTarget: "2026-05-17T07:00:00Z",
+    id: "2026-ca",
+    raceName: "加拿大大奖赛",
+    country: "加拿大",
+    location: "蒙特利尔",
+    circuitName: "吉尔斯·维伦纽夫赛道",
+    startDate: "2026-05-22T16:30:00Z",
+    endDate: "2026-05-24T22:00:00Z",
+    countdownTarget: "2026-05-24T20:00:00Z",
     sessions: [
-      { name: "练习赛 1", startTime: "2026-05-15T03:30:00Z" },
-      { name: "练习赛 2", startTime: "2026-05-15T07:00:00Z" },
-      { name: "排位赛", startTime: "2026-05-16T07:00:00Z" },
-      { name: "正赛", startTime: "2026-05-17T07:00:00Z" }
+      { name: "第一次自由练习赛", startTime: "2026-05-22T16:30:00Z" },
+      { name: "冲刺排位赛", startTime: "2026-05-22T20:30:00Z" },
+      { name: "冲刺赛", startTime: "2026-05-23T16:00:00Z" },
+      { name: "排位赛", startTime: "2026-05-23T20:00:00Z" },
+      { name: "正赛", startTime: "2026-05-24T20:00:00Z" }
     ]
   },
   {
-    id: "2026-jp",
-    raceName: "日本大奖赛",
-    country: "日本",
-    location: "铃鹿",
-    circuitName: "铃鹿赛道",
-    startDate: "2026-05-29T03:30:00Z",
-    endDate: "2026-05-31T08:00:00Z",
-    countdownTarget: "2026-05-31T07:00:00Z",
+    id: "2026-mc",
+    raceName: "摩纳哥大奖赛",
+    country: "摩纳哥",
+    location: "蒙特卡洛",
+    circuitName: "摩纳哥赛道",
+    startDate: "2026-06-05T11:30:00Z",
+    endDate: "2026-06-07T15:00:00Z",
+    countdownTarget: "2026-06-07T13:00:00Z",
     sessions: [
-      { name: "练习赛 1", startTime: "2026-05-29T03:30:00Z" },
-      { name: "练习赛 2", startTime: "2026-05-29T07:00:00Z" },
-      { name: "排位赛", startTime: "2026-05-30T07:00:00Z" },
-      { name: "正赛", startTime: "2026-05-31T07:00:00Z" }
+      { name: "第一次自由练习赛", startTime: "2026-06-05T11:30:00Z" },
+      { name: "第二次自由练习赛", startTime: "2026-06-05T15:00:00Z" },
+      { name: "第三次自由练习赛", startTime: "2026-06-06T10:30:00Z" },
+      { name: "排位赛", startTime: "2026-06-06T14:00:00Z" },
+      { name: "正赛", startTime: "2026-06-07T13:00:00Z" }
     ]
   }
 ];
