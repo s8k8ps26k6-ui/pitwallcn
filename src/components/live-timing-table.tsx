@@ -1,7 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LiveTimingRow } from "@/lib/types";
+
+const statusStyles: Record<LiveTimingRow["pitStatus"], string> = {
+  OUT: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen",
+  PIT: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber",
+  IN: "border-neonRed/40 bg-neonRed/10 text-neonRed"
+};
+
+const teamAccent: Record<string, string> = {
+  "Red Bull": "bg-blue-500",
+  McLaren: "bg-orange-400",
+  Ferrari: "bg-neonRed"
+};
 
 export function LiveTimingTable({ initialData }: { initialData: LiveTimingRow[] }) {
   const [rows, setRows] = useState(initialData);
@@ -18,31 +30,146 @@ export function LiveTimingTable({ initialData }: { initialData: LiveTimingRow[] 
     return () => clearInterval(id);
   }, []);
 
+  const leader = rows[0];
+  const averageLastLap = useMemo(() => {
+    const seconds = rows
+      .map((row) => row.lastLap)
+      .map((lap) => {
+        const [minutes, rest] = lap.split(":");
+        return Number(minutes) * 60 + Number(rest);
+      })
+      .filter((value) => Number.isFinite(value));
+
+    if (!seconds.length) {
+      return "--";
+    }
+
+    const average = seconds.reduce((sum, value) => sum + value, 0) / seconds.length;
+    const minutes = Math.floor(average / 60);
+    const remaining = (average - minutes * 60).toFixed(3).padStart(6, "0");
+
+    return `${minutes}:${remaining}`;
+  }, [rows]);
+
   return (
-    <section className="card overflow-x-auto">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">实时计时</h2>
-        <span className="text-xs text-pitGreen">每 10 秒自动刷新 · {updatedAt.toLocaleTimeString("zh-CN")}</span>
+    <section className="space-y-4">
+      <div className="motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow">Live Timing</p>
+            <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">实时计时</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+              模拟比赛数据流，展示车手排名、差距、上一圈与最快圈。后续可直接接入真实 F1 timing feed。
+            </p>
+          </div>
+          <div className="w-fit rounded-full border border-pitGreen/60 bg-black/60 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.16)]">
+            <span className="mr-2 inline-flex align-middle live-dot" aria-hidden="true" />
+            AUTO REFRESH · {updatedAt.toLocaleTimeString("zh-CN")}
+          </div>
+        </div>
       </div>
-      <table className="min-w-full text-left text-sm">
-        <thead className="text-zinc-400">
-          <tr>
-            {["名次", "车手", "车队", "差距", "上一圈", "最快圈", "进站状态"].map((h) => (
-              <th key={h} className="px-2 py-2">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <section className="card motion-fade-up motion-delay-1">
+          <p className="eyebrow">Leader</p>
+          <p className="mt-3 text-3xl font-bold text-white">{leader?.driver ?? "--"}</p>
+          <p className="mt-1 text-sm text-zinc-400">{leader?.team ?? "暂无数据"}</p>
+        </section>
+        <section className="card motion-fade-up motion-delay-2">
+          <p className="eyebrow">Best Lap</p>
+          <p className="mt-3 font-mono text-3xl font-bold text-neonAmber">{leader?.bestLap ?? "--"}</p>
+          <p className="mt-1 text-sm text-zinc-400">当前最快圈</p>
+        </section>
+        <section className="card motion-fade-up motion-delay-3">
+          <p className="eyebrow">Avg Last Lap</p>
+          <p className="mt-3 font-mono text-3xl font-bold text-white">{averageLastLap}</p>
+          <p className="mt-1 text-sm text-zinc-400">前三名上一圈均值</p>
+        </section>
+      </div>
+
+      <section className="card motion-fade-up motion-delay-4 overflow-hidden p-0">
+        <div className="border-b border-zinc-800 bg-black/25 px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow">Timing Tower</p>
+              <h2 className="mt-1 text-lg font-semibold text-white">赛道排名</h2>
+            </div>
+            <span className="race-code">MOCK FEED</span>
+          </div>
+        </div>
+
+        <div className="space-y-2 p-3 md:hidden">
           {rows.map((row) => (
-            <tr key={row.driver} className="border-t border-zinc-800">
-              <td className="px-2 py-2">{row.position}</td><td className="px-2 py-2 font-semibold">{row.driver}</td>
-              <td className="px-2 py-2">{row.team}</td><td className="px-2 py-2">{row.gap}</td>
-              <td className="px-2 py-2">{row.lastLap}</td><td className="px-2 py-2 text-neonAmber">{row.bestLap}</td>
-              <td className="px-2 py-2">{row.pitStatus}</td>
-            </tr>
+            <article key={row.driver} className="rounded-xl border border-zinc-800 bg-black/25 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-sm text-zinc-500">P{row.position}</span>
+                  <span className={`h-8 w-1 rounded-full ${teamAccent[row.team] ?? "bg-zinc-500"}`} aria-hidden="true" />
+                  <div>
+                    <p className="text-lg font-bold text-white">{row.driver}</p>
+                    <p className="text-xs text-zinc-500">{row.team}</p>
+                  </div>
+                </div>
+                <span className={`rounded-full border px-2 py-1 text-[0.65rem] font-bold tracking-[0.18em] ${statusStyles[row.pitStatus]}`}>
+                  {row.pitStatus}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded-lg bg-zinc-950/70 p-2">
+                  <p className="text-zinc-500">GAP</p>
+                  <p className="mt-1 font-mono text-zinc-100">{row.gap}</p>
+                </div>
+                <div className="rounded-lg bg-zinc-950/70 p-2">
+                  <p className="text-zinc-500">LAST</p>
+                  <p className="mt-1 font-mono text-zinc-100">{row.lastLap}</p>
+                </div>
+                <div className="rounded-lg bg-zinc-950/70 p-2">
+                  <p className="text-zinc-500">BEST</p>
+                  <p className="mt-1 font-mono text-neonAmber">{row.bestLap}</p>
+                </div>
+              </div>
+            </article>
           ))}
-        </tbody>
-      </table>
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-zinc-800 bg-zinc-950/60 text-xs uppercase tracking-[0.18em] text-zinc-500">
+              <tr>
+                <th className="px-4 py-3">Pos</th>
+                <th className="px-4 py-3">Driver</th>
+                <th className="px-4 py-3">Team</th>
+                <th className="px-4 py-3">Gap</th>
+                <th className="px-4 py-3">Last Lap</th>
+                <th className="px-4 py-3">Best Lap</th>
+                <th className="px-4 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.driver} className="border-b border-zinc-900 transition hover:bg-white/[0.03]">
+                  <td className="px-4 py-4 font-mono text-zinc-500">P{row.position}</td>
+                  <td className="px-4 py-4 text-lg font-bold text-white">{row.driver}</td>
+                  <td className="px-4 py-4">
+                    <span className="inline-flex items-center gap-2 text-zinc-300">
+                      <span className={`h-6 w-1 rounded-full ${teamAccent[row.team] ?? "bg-zinc-500"}`} aria-hidden="true" />
+                      {row.team}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 font-mono text-zinc-300">{row.gap}</td>
+                  <td className="px-4 py-4 font-mono text-zinc-300">{row.lastLap}</td>
+                  <td className="px-4 py-4 font-mono text-neonAmber">{row.bestLap}</td>
+                  <td className="px-4 py-4">
+                    <span className={`rounded-full border px-2 py-1 text-[0.65rem] font-bold tracking-[0.18em] ${statusStyles[row.pitStatus]}`}>
+                      {row.pitStatus}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   );
 }
