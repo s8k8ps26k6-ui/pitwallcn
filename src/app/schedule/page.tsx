@@ -1,12 +1,5 @@
 import Link from "next/link";
-
-const scheduleItems = [
-  { date: "5月23日 周六", title: "第一次自由练习赛", time: "00:30 - 01:30", type: "FP1", tone: "bg-neonAmber" },
-  { date: "5月23日 周六", title: "冲刺排位赛", time: "04:30 - 05:30", type: "SQ", tone: "bg-purple-500" },
-  { date: "5月24日 周日", title: "冲刺赛", time: "00:00 - 00:30", type: "Sprint", tone: "bg-purple-500" },
-  { date: "5月24日 周日", title: "排位赛", time: "04:00 - 05:00", type: "Qualifying", tone: "bg-neonRed" },
-  { date: "5月25日 周一", title: "正赛", time: "02:00 - 04:00", type: "Race", tone: "bg-pitGreen" }
-] as const;
+import { ScheduleView } from "@/components/schedule-view";
 
 const countdown = [
   { value: "15", label: "天" },
@@ -54,38 +47,7 @@ export default function SchedulePage() {
         </Link>
       </section>
 
-      <section className="motion-fade-up motion-delay-1 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="eyebrow">Weekend Schedule</p>
-            <h2 className="mt-1 text-2xl font-bold text-white">赛事时间安排</h2>
-          </div>
-          <div className="rounded-full border border-zinc-800 bg-black/30 p-1 text-xs">
-            <span className="rounded-full bg-blue-500 px-3 py-1 font-semibold text-white">本地时间</span>
-            <span className="px-3 py-1 text-zinc-500">赛道时间</span>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {scheduleItems.map((item, index) => (
-            <article key={`${item.title}-${item.time}`} className={`motion-fade-up motion-delay-${(index % 6) + 1} rounded-2xl border border-zinc-800 bg-[#11182f]/90 p-4 shadow-lg shadow-black/20`}>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <span className={`h-3 w-3 rounded-full ${item.tone} shadow-[0_0_18px_rgba(59,130,246,0.4)]`} />
-                  <div>
-                    <p className="text-lg font-semibold text-white">{item.date}</p>
-                    <p className="mt-1 text-sm text-zinc-400">{item.title}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-lg font-bold text-neonAmber">{item.time}</p>
-                  <p className="mt-1 race-code">{item.type}</p>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      <ScheduleView />
     </main>
   );
 }
