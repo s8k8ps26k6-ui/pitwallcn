@@ -21,15 +21,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-CN">
       <body>
         <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 sm:px-6">
-          <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <Link className="text-2xl font-bold tracking-wide text-neonRed transition hover:text-red-400" href="/">
               Pitwall CN
             </Link>
-            <nav className="flex w-fit max-w-full flex-wrap gap-1.5 rounded-full border border-zinc-800/80 bg-black/20 p-1 text-sm shadow-lg shadow-black/10 backdrop-blur">
+            <nav className="grid w-full grid-cols-3 gap-1.5 rounded-2xl border border-zinc-800/80 bg-black/20 p-1 text-center text-sm shadow-lg shadow-black/10 backdrop-blur sm:w-fit sm:min-w-[27rem] lg:flex lg:min-w-0 lg:flex-wrap lg:text-left">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
-                  className="rounded-full px-3 py-1.5 text-zinc-300 transition hover:bg-zinc-800 hover:text-white"
+                  className="rounded-xl px-2.5 py-2 text-zinc-300 transition hover:bg-zinc-800 hover:text-white sm:px-3 lg:rounded-full lg:py-1.5"
                   href={item.href}
                 >
                   {item.label}
