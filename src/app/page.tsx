@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RaceCountdown } from "@/components/race-countdown";
+import { getScheduleCalendar } from "@/lib/f1-service";
 
 const primaryModules = [
   {
@@ -52,7 +53,19 @@ const primaryModules = [
   }
 ] as const;
 
-export default function Home() {
+function formatDateRange(startIso: string, endIso: string) {
+  const formatter = new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Shanghai"
+  });
+  return `${formatter.format(new Date(startIso))} - ${formatter.format(new Date(endIso))}`;
+}
+
+export default async function Home() {
+  const { nextRace, source } = await getScheduleCalendar();
+
   return (
     <main className="space-y-6">
       <section
@@ -64,7 +77,7 @@ export default function Home() {
         <div className="relative max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-pitGreen/60 bg-black/65 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.18)] backdrop-blur">
             <span className="live-dot" aria-hidden="true" />
-            主控台在线 · Mock data feed
+            主控台在线 · {source === "openf1" ? "OpenF1 data feed" : "Mock fallback"}
           </div>
           <p className="text-sm tracking-wide text-zinc-300">图片由站长于上海大奖赛现场拍摄</p>
           <h1 className="text-4xl font-bold text-white sm:text-6xl">Pitwall CN</h1>
@@ -87,13 +100,15 @@ export default function Home() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="race-code text-zinc-400">第 5 站 · 下一站</span>
-              <span className="rounded-full border border-purple-400/40 bg-purple-500/20 px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] text-purple-200">冲刺赛</span>
+              <span className="race-code text-zinc-400">下一站 · {source === "openf1" ? "OpenF1" : "Mock"}</span>
+              <span className="rounded-full border border-purple-400/40 bg-purple-500/20 px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] text-purple-200">Race Weekend</span>
             </div>
-            <h2 className="text-3xl font-bold text-white">加拿大大奖赛</h2>
-            <p className="mt-3 text-sm leading-6 text-zinc-300">🇨🇦 吉尔斯·维伦纽夫赛道 · 蒙特利尔 · 2026.05.23 - 25</p>
+            <h2 className="text-3xl font-bold text-white">{nextRace.raceName}</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-300">
+              {nextRace.country} · {nextRace.circuitName} · {nextRace.location} · {formatDateRange(nextRace.startDate, nextRace.endDate)}
+            </p>
           </div>
-          <RaceCountdown />
+          <RaceCountdown targetIso={nextRace.countdownTarget} />
         </div>
         <Link className="mt-5 flex items-center justify-center rounded-2xl border border-blue-400/40 bg-blue-500/20 px-4 py-3 text-sm font-semibold text-blue-100 transition hover:bg-blue-500/30" href="/schedule">
           查看完整赛事时间安排 →
@@ -136,7 +151,7 @@ export default function Home() {
             <p className="eyebrow">Project Status</p>
             <h2 className="mt-2 text-xl font-semibold text-neonAmber">v1 数据主控台</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">
-              当前版本以 Mock 数据展示完整界面结构。页面结构已拆分为赛程、实时、赛控、车手、积分与圈速分析六个模块，后续可逐步接入真实 F1 数据源。
+              当前版本已经接入 OpenF1 赛程服务层，并保留 Mock fallback。实时计时、赛控、积分与圈速模块后续可继续逐步接入真实数据。
             </p>
           </div>
         </div>
@@ -145,7 +160,7 @@ export default function Home() {
       <footer className="motion-fade-up rounded-2xl border border-zinc-900 bg-black/20 px-5 py-6 text-sm text-zinc-500">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-semibold text-zinc-300">Pitwall CN</p>
-          <p>非官方项目 · 当前使用 Mock 数据展示 · For Chinese F1 fans</p>
+          <p>非官方项目 · 当前使用 OpenF1 + Mock fallback · For Chinese F1 fans</p>
         </div>
       </footer>
     </main>
