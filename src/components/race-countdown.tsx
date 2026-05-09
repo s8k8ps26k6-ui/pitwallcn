@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const targetDate = new Date("2026-05-23T00:30:00+08:00");
-
-function getTimeLeft() {
+function getTimeLeft(targetDate: Date) {
   const diff = targetDate.getTime() - Date.now();
 
   if (diff <= 0) {
@@ -31,13 +29,14 @@ function getTimeLeft() {
   };
 }
 
-export function RaceCountdown() {
-  const [timeLeft, setTimeLeft] = useState(getTimeLeft);
+export function RaceCountdown({ targetIso }: { targetIso: string }) {
+  const targetDate = new Date(targetIso);
+  const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(targetDate));
 
   useEffect(() => {
-    const id = setInterval(() => setTimeLeft(getTimeLeft()), 1000);
+    const id = setInterval(() => setTimeLeft(getTimeLeft(targetDate)), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [targetIso]);
 
   const items = [
     { value: timeLeft.days, label: "天" },
@@ -54,9 +53,7 @@ export function RaceCountdown() {
           <p className="mt-1 text-xs text-zinc-500">{item.label}</p>
         </div>
       ))}
-      {timeLeft.isStarted ? (
-        <p className="col-span-4 mt-1 text-xs font-semibold text-pitGreen">比赛周末进行中</p>
-      ) : null}
+      {timeLeft.isStarted ? <p className="col-span-4 mt-1 text-xs font-semibold text-pitGreen">比赛周末进行中</p> : null}
     </div>
   );
 }
