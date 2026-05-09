@@ -15,14 +15,11 @@ export function DriverIndex({ drivers }: { drivers: DriverProfile[] }) {
 
     return drivers.filter((driver) => {
       const matchesTeam = selectedTeam === "All Teams" || driver.team === selectedTeam;
-      const matchesKeyword =
-        !keyword ||
-        driver.code.toLowerCase().includes(keyword) ||
-        driver.name.toLowerCase().includes(keyword) ||
-        driver.team.toLowerCase().includes(keyword) ||
-        driver.number.includes(keyword);
+      const searchableText = [driver.code, driver.name, driver.team, driver.number, driver.status]
+        .join(" ")
+        .toLowerCase();
 
-      return matchesTeam && matchesKeyword;
+      return matchesTeam && (!keyword || searchableText.includes(keyword));
     });
   }, [drivers, query, selectedTeam]);
 
@@ -33,8 +30,14 @@ export function DriverIndex({ drivers }: { drivers: DriverProfile[] }) {
           <label className="block">
             <span className="race-code">Search Driver</span>
             <input
+              autoCapitalize="none"
+              autoComplete="off"
+              autoCorrect="off"
               className="mt-2 w-full rounded-xl border border-zinc-800 bg-black/30 px-4 py-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-neonAmber"
-              placeholder="搜索车手代码、姓名、车队或车号，例如 VER / Norris / Ferrari / 44"
+              inputMode="search"
+              placeholder="支持大小写搜索，例如 ver / VER / Norris / Ferrari / 44"
+              spellCheck={false}
+              type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
