@@ -1,4 +1,4 @@
-import { mockRaceControl } from "@/lib/mockData";
+import { getRaceControlFeed } from "@/lib/f1-service";
 
 const colors: Record<string, string> = {
   FLAG: "text-neonAmber",
@@ -14,15 +14,23 @@ const categoryText: Record<string, string> = {
   NOTICE: "通知"
 };
 
-export default function RaceControlPage() {
+export default async function RaceControlPage() {
+  const { data, source } = await getRaceControlFeed();
+
   return (
     <section className="card">
-      <h2 className="mb-3 text-lg font-semibold">赛会控制</h2>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">赛会控制</h2>
+        <span className="text-xs text-zinc-500">数据来源：{source === "openf1" ? "OpenF1" : "Mock"}</span>
+      </div>
       <ul className="space-y-2">
-        {mockRaceControl.map((msg) => (
+        {data.map((msg) => (
           <li key={msg.id} className="rounded border border-zinc-800 p-3">
             <div className="flex items-center justify-between text-xs text-zinc-400"><span>{msg.timestamp}</span><span className={colors[msg.category]}>{categoryText[msg.category]}</span></div>
             <p className="mt-1 text-sm">{msg.message}</p>
+            {(msg.flag || typeof msg.lapNumber === "number") && (
+              <p className="mt-1 text-xs text-zinc-500">{msg.flag ? `旗语：${msg.flag}` : ""}{msg.flag && typeof msg.lapNumber === "number" ? " · " : ""}{typeof msg.lapNumber === "number" ? `圈数：${msg.lapNumber}` : ""}</p>
+            )}
           </li>
         ))}
       </ul>

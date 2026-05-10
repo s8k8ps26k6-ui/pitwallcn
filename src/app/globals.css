@@ -14,3 +14,73 @@ body {
 .card {
   @apply rounded-xl border border-zinc-800 bg-carbon/80 p-4 shadow-lg shadow-black/20;
 }
+
+.dashboard-hero {
+  isolation: isolate;
+}
+
+.dashboard-chip {
+  @apply rounded-full border border-zinc-700/90 bg-zinc-900/70 px-3 py-1.5 text-sm text-zinc-100 transition-colors hover:border-neonAmber hover:text-neonAmber;
+}
+
+.dashboard-elevated {
+  background: linear-gradient(165deg, rgba(31, 41, 55, 0.58) 0%, rgba(17, 24, 39, 0.8) 100%);
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.dashboard-elevated:hover {
+  transform: translateY(-2px);
+  border-color: rgba(250, 204, 21, 0.45);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
+.live-pulse {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  animation: livePulse 1.8s ease-out infinite;
+}
+
+.reveal-up {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: revealUp 520ms ease-out forwards;
+}
+
+.stagger-1 { animation-delay: 80ms; }
+.stagger-2 { animation-delay: 140ms; }
+.stagger-3 { animation-delay: 200ms; }
+.stagger-4 { animation-delay: 260ms; }
+.stagger-5 { animation-delay: 320ms; }
+
+@keyframes revealUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes livePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.45);
+  }
+  75% {
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-up,
+  .live-pulse,
+  .dashboard-elevated {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
