@@ -3,7 +3,7 @@ import {
   getRaceControlFeed,
   getRaceControlFeedBySession,
   getRaceControlSelectionData
-} from "@/lib/f1-service";
+} from "@/lib/race-control-service";
 import type { RaceControlMessage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -97,10 +97,16 @@ function translateMeetingName(name: string) {
   return replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), name);
 }
 
+function sourceLabel(source: string) {
+  if (source === "openf1") return "OPENF1";
+  if (source === "openf1-error") return "OPENF1 WAITING";
+  if (source === "openf1-empty") return "OPENF1 EMPTY";
+  return "OPENF1";
+}
+
 export default async function RaceControlPage({ searchParams }: { searchParams?: RaceControlSearchParams }) {
   const selection = await getRaceControlSelectionData();
   const requestedSession = parseSessionKey(searchParams?.session);
-  const isExplicitSession = requestedSession !== null;
   const selectedSessionKey = requestedSession ?? selection.defaultSessionKey;
 
   const selectedMeeting = selection.meetings.find((meeting) =>
@@ -110,19 +116,18 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
 
   const feed = selectedSessionKey ? await getRaceControlFeedBySession(selectedSessionKey) : await getRaceControlFeed();
   const { data, source, sessionName } = feed;
-  const visibleData = isExplicitSession && source === "mock" ? [] : data;
-  const displaySource = isExplicitSession && source === "mock" ? "openf1" : source;
   const quickSessions = selection.meetings.flatMap((meeting) =>
     meeting.sessions.slice(0, 2).map((session) => ({ ...session, meetingName: meeting.meetingName }))
   ).slice(0, 8);
 
   const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : null;
   const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : null;
+  const displaySource = sourceLabel(source);
 
   const summaryCards = [
-    { label: "Messages", value: visibleData.length.toString(), hint: "当前消息数" },
-    { label: "Latest", value: visibleData[0]?.timestamp ?? "--", hint: "最新更新时间" },
-    { label: "Mode", value: displaySource === "openf1" ? "OPENF1" : "MOCK", hint: selectedSessionName ?? sessionName ?? "数据源状态" }
+    { label: "Messages", value: data.length.toString(), hint: "当前消息数" },
+    { label: "Latest", value: data[0]?.timestamp ?? "--", hint: "最新更新时间" },
+    { label: "Mode", value: displaySource, hint: selectedSessionName ?? sessionName ?? "数据源状态" }
   ];
 
   return (
@@ -142,7 +147,7 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           </div>
           <div className="w-fit rounded-full border border-neonAmber/50 bg-black/60 px-3 py-1 text-xs font-semibold text-neonAmber shadow-[0_0_24px_rgba(255,176,32,0.14)]">
             <span className="mr-2 inline-flex h-2 w-2 rounded-full bg-neonAmber shadow-[0_0_14px_rgba(255,176,32,0.9)]" aria-hidden="true" />
-            CONTROL FEED · {displaySource === "openf1" ? "OPENF1" : "MOCK"}
+            CONTROL FEED · {displaySource}
           </div>
         </div>
       </section>
@@ -152,7 +157,7 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           <p className="eyebrow">Session Selector</p>
           <h2 className="mt-1 text-lg font-semibold text-white">选择比赛与赛段</h2>
           <p className="mt-1 text-sm text-zinc-400">
-            当前：{selectedMeetingName ? `${selectedMeetingName} · ${selectedSessionName ?? "自动选择"}` : "Mock fallback"}
+            当前：{selectedMeetingName ? `${selectedMeetingName} · ${selectedSessionName ?? "自动选择"}` : "等待 OpenF1 返回赛段列表"}
           </p>
           <p className="mt-1 text-xs text-zinc-600">数据标识：{selectedSessionKey ?? "暂无"}</p>
         </div>
@@ -218,14 +223,14 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           </div>
         </div>
 
-        {visibleData.length ? (
+        {data.length ? (
           <ol className="space-y-0 p-3">
-            {visibleData.map((msg, index) => (
+            {data.map((msg, index) => (
               <li key={msg.id} className="relative grid gap-3 border-l border-zinc-800 pb-5 pl-5 last:pb-0 sm:grid-cols-[6rem_1fr]">
                 <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-neonRed shadow-[0_0_12px_rgba(255,46,46,0.7)]" aria-hidden="true" />
                 <div className="font-mono text-xs text-zinc-500">
                   <p>{msg.timestamp}</p>
-                  <p className="mt-1">#{String(visibleData.length - index).padStart(2, "0")}</p>
+                  <p className="mt-1">#{String(data.length - index).padStart(2, "0")}</p>
                 </div>
                 <article className="rounded-xl border border-zinc-800 bg-black/25 p-3 transition hover:border-zinc-700 hover:bg-black/35">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -249,7 +254,7 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
         ) : (
           <div className="p-5 text-sm leading-6 text-zinc-400">
             <p className="font-semibold text-zinc-200">该赛段暂无赛会控制消息。</p>
-            <p className="mt-1">这通常表示 OpenF1 当前没有为这个 session 返回 race_control 数据；页面不会再用 Mock 数据冒充该赛段。</p>
+            <p className="mt-1">这通常表示比赛尚未进行，或 OpenF1 当前没有为这个 session 返回 race_control 数据。这里不会再用 Mock 数据冒充真实赛段。</p>
           </div>
         )}
       </section>
