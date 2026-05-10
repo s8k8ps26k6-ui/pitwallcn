@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { mockRaceControl } from "@/lib/mockData";
+import { getRaceControlFeed } from "@/lib/f1-service";
 import type { RaceControlMessage } from "@/lib/types";
 
 const categoryStyles: Record<RaceControlMessage["category"], string> = {
@@ -23,14 +23,14 @@ const categoryName: Record<RaceControlMessage["category"], string> = {
   NOTICE: "通知"
 };
 
-const summaryCards = [
-  { label: "Messages", value: mockRaceControl.length.toString(), hint: "当前消息数" },
-  { label: "Latest", value: mockRaceControl[mockRaceControl.length - 1]?.timestamp ?? "--", hint: "最新更新时间" },
-  { label: "Mode", value: "MOCK", hint: "数据源状态" }
-];
+export default async function RaceControlPage() {
+  const { data, source, sessionName } = await getRaceControlFeed();
 
-export default function RaceControlPage() {
-  const latestMessages = [...mockRaceControl].reverse();
+  const summaryCards = [
+    { label: "Messages", value: data.length.toString(), hint: "当前消息数" },
+    { label: "Latest", value: data[0]?.timestamp ?? "--", hint: "最新更新时间" },
+    { label: "Mode", value: source === "openf1" ? "OPENF1" : "MOCK", hint: sessionName ?? "数据源状态" }
+  ];
 
   return (
     <main className="space-y-4">
@@ -44,12 +44,12 @@ export default function RaceControlPage() {
             <p className="eyebrow">Race Control</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">赛会控制</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              模拟 FIA Race Control 消息流，集中展示旗语、安全车、事件记录与比赛控制通知。
+              FIA Race Control 消息流，集中展示旗语、安全车、事件记录与比赛控制通知。OpenF1 无可用数据时自动使用 Mock fallback。
             </p>
           </div>
           <div className="w-fit rounded-full border border-neonAmber/50 bg-black/60 px-3 py-1 text-xs font-semibold text-neonAmber shadow-[0_0_24px_rgba(255,176,32,0.14)]">
             <span className="mr-2 inline-flex h-2 w-2 rounded-full bg-neonAmber shadow-[0_0_14px_rgba(255,176,32,0.9)]" aria-hidden="true" />
-            CONTROL FEED · ACTIVE
+            CONTROL FEED · {source === "openf1" ? "OPENF1" : "MOCK"}
           </div>
         </div>
       </section>
@@ -76,12 +76,12 @@ export default function RaceControlPage() {
         </div>
 
         <ol className="space-y-0 p-3">
-          {latestMessages.map((msg, index) => (
+          {data.map((msg, index) => (
             <li key={msg.id} className="relative grid gap-3 border-l border-zinc-800 pb-5 pl-5 last:pb-0 sm:grid-cols-[6rem_1fr]">
               <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-neonRed shadow-[0_0_12px_rgba(255,46,46,0.7)]" aria-hidden="true" />
               <div className="font-mono text-xs text-zinc-500">
                 <p>{msg.timestamp}</p>
-                <p className="mt-1">#{String(latestMessages.length - index).padStart(2, "0")}</p>
+                <p className="mt-1">#{String(data.length - index).padStart(2, "0")}</p>
               </div>
               <article className="rounded-xl border border-zinc-800 bg-black/25 p-3 transition hover:border-zinc-700 hover:bg-black/35">
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -91,6 +91,13 @@ export default function RaceControlPage() {
                   <span className="text-xs text-zinc-500">{categoryName[msg.category]}</span>
                 </div>
                 <p className="text-sm leading-6 text-zinc-100">{msg.message}</p>
+                {(msg.flag || typeof msg.lapNumber === "number" || msg.scope) ? (
+                  <p className="mt-2 text-xs text-zinc-500">
+                    {[msg.flag ? `旗语：${msg.flag}` : null, typeof msg.lapNumber === "number" ? `圈数：${msg.lapNumber}` : null, msg.scope ? `范围：${msg.scope}` : null]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
               </article>
             </li>
           ))}
