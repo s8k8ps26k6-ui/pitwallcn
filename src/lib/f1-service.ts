@@ -49,6 +49,12 @@ async function fetchOpenF1Sessions(meetingKey: number): Promise<OpenF1Session[]>
   return (await response.json()) as OpenF1Session[];
 }
 
+function buildOpenF1Url(path: string, params: Record<string, string | number>) {
+  const url = new URL(`${OPENF1_BASE_URL}${path}`);
+  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));
+  return url.toString();
+}
+
 async function fetchRaceControlByUrl(url: string): Promise<OpenF1RaceControl[]> {
   const response = await fetch(url, { next: { revalidate: 60 } });
   if (!response.ok) throw new Error(`OpenF1 race_control failed: ${response.status}`);
@@ -56,11 +62,11 @@ async function fetchRaceControlByUrl(url: string): Promise<OpenF1RaceControl[]> 
 }
 
 async function fetchRaceControlBySession(sessionKey: number | "latest"): Promise<OpenF1RaceControl[]> {
-  return fetchRaceControlByUrl(`${OPENF1_BASE_URL}/race_control?session_key=${sessionKey}`);
+  return fetchRaceControlByUrl(buildOpenF1Url("/race_control", { session_key: sessionKey }));
 }
 
 async function fetchRaceControlSince(dateIso: string): Promise<OpenF1RaceControl[]> {
-  return fetchRaceControlByUrl(`${OPENF1_BASE_URL}/race_control?date>=${encodeURIComponent(dateIso)}`);
+  return fetchRaceControlByUrl(buildOpenF1Url("/race_control", { "date>=": dateIso }));
 }
 
 function normalizeSessions(meeting: OpenF1Meeting, sessions: OpenF1Session[]): ScheduleSession[] {
