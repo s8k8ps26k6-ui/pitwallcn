@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { getRaceControlFeed } from "@/lib/f1-service";
+import {
+  getRaceControlFeed,
+  getRaceControlFeedBySession,
+  getRaceControlSelectionData
+} from "@/lib/f1-service";
 import type { RaceControlMessage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -26,13 +30,41 @@ const categoryName: Record<RaceControlMessage["category"], string> = {
   NOTICE: "通知"
 };
 
-export default async function RaceControlPage() {
-  const { data, source, sessionName } = await getRaceControlFeed();
+type RaceControlSearchParams = {
+  session?: string;
+};
+
+function formatSessionTime(iso: string) {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "时间未知";
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Shanghai"
+  }).format(parsed);
+}
+
+export default async function RaceControlPage({ searchParams }: { searchParams?: RaceControlSearchParams }) {
+  const selection = await getRaceControlSelectionData();
+  const requestedSession = searchParams?.session ? Number(searchParams.session) : null;
+  const selectedSessionKey = Number.isFinite(requestedSession) ? requestedSession : selection.defaultSessionKey;
+
+  const selectedMeeting = selection.meetings.find((meeting) =>
+    meeting.sessions.some((session) => session.sessionKey === selectedSessionKey)
+  );
+  const selectedSession = selectedMeeting?.sessions.find((session) => session.sessionKey === selectedSessionKey);
+
+  const feed = selectedSessionKey ? await getRaceControlFeedBySession(selectedSessionKey) : await getRaceControlFeed();
+  const { data, source, sessionName } = feed;
 
   const summaryCards = [
     { label: "Messages", value: data.length.toString(), hint: "当前消息数" },
     { label: "Latest", value: data[0]?.timestamp ?? "--", hint: "最新更新时间" },
-    { label: "Mode", value: source === "openf1" ? "OPENF1" : "MOCK", hint: sessionName ?? "数据源状态" }
+    { label: "Mode", value: source === "openf1" ? "OPENF1" : "MOCK", hint: selectedSession?.sessionName ?? sessionName ?? "数据源状态" }
   ];
 
   return (
@@ -47,7 +79,7 @@ export default async function RaceControlPage() {
             <p className="eyebrow">Race Control</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">赛会控制</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              FIA Race Control 消息流，集中展示旗语、安全车、事件记录与比赛控制通知。OpenF1 无可用数据时自动使用 Mock fallback。
+              FIA Race Control 消息流，集中展示旗语、安全车、事件记录与比赛控制通知。现在可按 OpenF1 比赛周末与赛段单独筛选。
             </p>
           </div>
           <div className="w-fit rounded-full border border-neonAmber/50 bg-black/60 px-3 py-1 text-xs font-semibold text-neonAmber shadow-[0_0_24px_rgba(255,176,32,0.14)]">
@@ -57,9 +89,41 @@ export default async function RaceControlPage() {
         </div>
       </section>
 
+      <section className="card motion-fade-up motion-delay-1 space-y-3">
+        <div>
+          <p className="eyebrow">Session Selector</p>
+          <h2 className="mt-1 text-lg font-semibold text-white">选择比赛与赛段</h2>
+          <p className="mt-1 text-sm text-zinc-400">
+            当前：{selectedMeeting ? `${selectedMeeting.meetingName} · ${selectedSession?.sessionName ?? "自动选择"}` : "Mock fallback"}
+          </p>
+        </div>
+
+        <form className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
+          <select
+            className="rounded-xl border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-neonAmber"
+            defaultValue={selectedSessionKey ?? ""}
+            name="session"
+          >
+            {!selectedSessionKey ? <option value="">自动选择最新可用赛段</option> : null}
+            {selection.meetings.map((meeting) => (
+              <optgroup key={meeting.meetingKey} label={`${meeting.meetingName} · ${meeting.country} · ${meeting.location}`}>
+                {meeting.sessions.map((session) => (
+                  <option key={session.sessionKey} value={session.sessionKey}>
+                    {session.sessionName} · {formatSessionTime(session.sessionStart)}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <button className="rounded-xl border border-zinc-800 bg-black/40 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-neonAmber hover:text-neonAmber" type="submit">
+            切换赛段
+          </button>
+        </form>
+      </section>
+
       <section className="grid gap-4 sm:grid-cols-3">
         {summaryCards.map((item, index) => (
-          <article key={item.label} className={`card motion-fade-up motion-delay-${index + 1}`}>
+          <article key={item.label} className={`card motion-fade-up motion-delay-${index + 2}`}>
             <p className="eyebrow">{item.label}</p>
             <p className="mt-3 font-mono text-3xl font-bold text-white">{item.value}</p>
             <p className="mt-1 text-sm text-zinc-400">{item.hint}</p>
@@ -67,7 +131,7 @@ export default async function RaceControlPage() {
         ))}
       </section>
 
-      <section className="card motion-fade-up motion-delay-4 overflow-hidden p-0">
+      <section className="card motion-fade-up motion-delay-5 overflow-hidden p-0">
         <div className="border-b border-zinc-800 bg-black/25 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
