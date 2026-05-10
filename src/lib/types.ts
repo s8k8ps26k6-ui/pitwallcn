@@ -18,6 +18,7 @@ export type RaceControlMessage = {
 export type ScheduleSession = {
   name: string;
   startTime: string;
+  isTimeConfirmed?: boolean;
 };
 
 export type RaceWeekend = {
@@ -26,6 +27,7 @@ export type RaceWeekend = {
   country: string;
   location: string;
   circuitName: string;
+  timeZone?: string;
   startDate: string;
   endDate: string;
   sessions: ScheduleSession[];
