@@ -21,7 +21,6 @@ function tbdSession(name: string, iso: string): ScheduleSession {
 function buildSessions(race: CalendarRaceInput): ScheduleSession[] {
   if (race.confirmedSessions?.length) return race.confirmedSessions;
 
-  const start = new Date(race.startDate);
   const end = new Date(race.endDate);
   const saturday = new Date(end);
   saturday.setUTCDate(end.getUTCDate() - 1);
