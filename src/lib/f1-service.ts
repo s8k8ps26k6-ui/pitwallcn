@@ -145,6 +145,67 @@ function formatRaceControlTimestamp(date?: string) {
   }).format(parsed);
 }
 
+function translateRaceControlMessage(message: string) {
+  let translated = message.trim();
+
+  const replacements: Array<[RegExp, string]> = [
+    [/^CHEQUERED FLAG$/i, "方格旗，赛段结束"],
+    [/^GREEN FLAG$/i, "绿旗，赛道恢复正常"],
+    [/^YELLOW FLAG$/i, "黄旗，赛道存在危险"],
+    [/^DOUBLE YELLOW FLAG$/i, "双黄旗，赛道存在严重危险"],
+    [/^RED FLAG$/i, "红旗，赛段暂停"],
+    [/^BLUE FLAG$/i, "蓝旗，后方快车接近"],
+    [/VIRTUAL SAFETY CAR DEPLOYED/i, "虚拟安全车已部署"],
+    [/VIRTUAL SAFETY CAR ENDING/i, "虚拟安全车即将结束"],
+    [/VIRTUAL SAFETY CAR ENDED/i, "虚拟安全车已结束"],
+    [/SAFETY CAR DEPLOYED/i, "安全车已部署"],
+    [/SAFETY CAR IN THIS LAP/i, "安全车本圈进站"],
+    [/SAFETY CAR ENDING/i, "安全车即将结束"],
+    [/DRS ENABLED/i, "DRS 已启用"],
+    [/DRS DISABLED/i, "DRS 已关闭"],
+    [/PIT EXIT OPEN/i, "维修区出口开放"],
+    [/PIT EXIT CLOSED/i, "维修区出口关闭"],
+    [/SESSION STARTED/i, "赛段开始"],
+    [/SESSION RESUMED/i, "赛段恢复"],
+    [/SESSION SUSPENDED/i, "赛段暂停"],
+    [/SESSION WILL NOT BE RESUMED/i, "赛段不会恢复"],
+    [/SESSION ENDED/i, "赛段结束"],
+    [/TRACK CLEAR/i, "赛道已清理"],
+    [/TRACK LIMITS/i, "赛道边界"],
+    [/INCIDENT INVOLVING/i, "涉及事故"],
+    [/INCIDENT NOTED/i, "事件已记录"],
+    [/NO FURTHER INVESTIGATION/i, "无需进一步调查"],
+    [/INVESTIGATION/i, "调查中"],
+    [/BLACK AND WHITE FLAG/i, "黑白旗警告"],
+    [/LAP TIME DELETED/i, "单圈成绩被删除"],
+    [/TIME DELETED/i, "成绩被删除"],
+    [/NOTED/i, "已记录"],
+    [/CARS (\d+) AND (\d+)/gi, "$1 号车与 $2 号车"],
+    [/CAR (\d+)/gi, "$1 号车"],
+    [/DRIVER (\d+)/gi, "$1 号车手"],
+    [/TURN (\d+)/gi, "第 $1 弯"],
+    [/T(\d+)/gi, "第 $1 弯"],
+    [/SECTOR (\d+)/gi, "第 $1 计时段"],
+    [/LAP (\d+)/gi, "第 $1 圈"],
+    [/DEBRIS/i, "赛道碎片"],
+    [/STOPPED ON TRACK/i, "停在赛道上"],
+    [/OFF TRACK/i, "驶离赛道"],
+    [/FALSE START/i, "抢跑嫌疑"],
+    [/UNSAFE RELEASE/i, "不安全释放"],
+    [/SPEEDING IN THE PIT LANE/i, "维修区超速"],
+    [/DRIVING UNNECESSARILY SLOWLY/i, "不必要地低速行驶"],
+    [/LEAVING THE TRACK AND GAINING AN ADVANTAGE/i, "驶离赛道并获利"],
+    [/CAUSING A COLLISION/i, "造成碰撞"],
+    [/IMPEDING/i, "阻挡其他车辆"]
+  ];
+
+  replacements.forEach(([pattern, replacement]) => {
+    translated = translated.replace(pattern, replacement);
+  });
+
+  return translated;
+}
+
 function normalizeRaceControl(rows: OpenF1RaceControl[]): RaceControlMessage[] {
   return rows
     .filter((row) => row.message)
@@ -159,7 +220,7 @@ function normalizeRaceControl(rows: OpenF1RaceControl[]): RaceControlMessage[] {
       flag: row.flag,
       lapNumber: row.lap_number,
       scope: row.scope,
-      message: row.message ?? "Race control message"
+      message: translateRaceControlMessage(row.message ?? "Race control message")
     }));
 }
 
@@ -232,7 +293,22 @@ export async function getRaceControlSelectionData() {
       }
     }
 
-    const defaultSessionKey = meetingsWithSessions[0]?.sessions[0]?.sessionKey ?? null;
+    let defaultSessionKey = meetingsWithSessions[0]?.sessions[0]?.sessionKey ?? null;
+
+    for (const meeting of meetingsWithSessions) {
+      for (const session of meeting.sessions) {
+        try {
+          const rows = await fetchRaceControlBySession(session.sessionKey);
+          if (rows.some((row) => row.message)) {
+            defaultSessionKey = session.sessionKey;
+            return { meetings: meetingsWithSessions, defaultSessionKey, source: "openf1" as const };
+          }
+        } catch {
+          // Continue checking other sessions.
+        }
+      }
+    }
+
     return { meetings: meetingsWithSessions, defaultSessionKey, source: "openf1" as const };
   } catch {
     return { meetings: [], defaultSessionKey: null, source: "mock" as const };
