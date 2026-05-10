@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function getTimeLeft(targetDate: Date) {
   const diff = targetDate.getTime() - Date.now();
@@ -30,13 +30,14 @@ function getTimeLeft(targetDate: Date) {
 }
 
 export function RaceCountdown({ targetIso }: { targetIso: string }) {
-  const targetDate = new Date(targetIso);
+  const targetDate = useMemo(() => new Date(targetIso), [targetIso]);
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(targetDate));
 
   useEffect(() => {
+    setTimeLeft(getTimeLeft(targetDate));
     const id = setInterval(() => setTimeLeft(getTimeLeft(targetDate)), 1000);
     return () => clearInterval(id);
-  }, [targetIso]);
+  }, [targetDate]);
 
   const items = [
     { value: timeLeft.days, label: "天" },
