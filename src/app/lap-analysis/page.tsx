@@ -32,13 +32,17 @@ export default function LapAnalysisPage() {
             <p className="eyebrow">Lap Analysis</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">圈速分析</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              单独承载比赛中的圈速、分段、stint 与差距变化分析。当前使用 Mock 数据，后续可接入真实 session feed。
+              单独承载比赛中的圈速、分段、stint 与差距变化分析。页面已预留 OpenF1 接口位，比赛 session 有数据后可切换为真实圈速源。
             </p>
           </div>
           <div className="w-fit rounded-full border border-pitGreen/50 bg-black/60 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.14)]">
-            SESSION ANALYSIS · MOCK
+            SESSION ANALYSIS · API READY
           </div>
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-zinc-800 bg-black/20 p-4 text-sm leading-6 text-zinc-400">
+        当前为演示样例数据。下一步将接入 OpenF1 的 laps / stints / position / intervals 数据，并在无 session 数据时显示“等待比赛数据”，不再使用 Mock 标签。
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
