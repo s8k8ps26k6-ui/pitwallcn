@@ -31,6 +31,20 @@ type OpenF1RaceControl = {
   session_key?: number;
 };
 
+export type RaceControlSelectorSession = {
+  sessionKey: number;
+  sessionName: string;
+  sessionStart: string;
+};
+
+export type RaceControlSelectorMeeting = {
+  meetingKey: number;
+  meetingName: string;
+  location: string;
+  country: string;
+  sessions: RaceControlSelectorSession[];
+};
+
 function isoOrFallback(value: string | undefined, fallback: string) {
   if (!value) return fallback;
   const parsed = new Date(value);
@@ -181,6 +195,50 @@ async function findRecentSessions() {
     .slice(0, 12);
 }
 
+export async function getRaceControlSelectionData() {
+  try {
+    const now = Date.now();
+    const currentYear = new Date().getUTCFullYear();
+    const candidateYears = [currentYear, currentYear - 1].filter((year) => year >= 2023);
+    const meetingsWithSessions: RaceControlSelectorMeeting[] = [];
+
+    for (const year of candidateYears) {
+      const meetings = await fetchOpenF1Meetings(year);
+      const recentMeetings = meetings
+        .filter((meeting) => new Date(meeting.date_start).getTime() <= now)
+        .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
+        .slice(0, 6);
+
+      for (const meeting of recentMeetings) {
+        const sessions = await fetchOpenF1Sessions(meeting.meeting_key);
+        const availableSessions = sessions
+          .filter((session) => session.session_key && session.session_name && session.date_start && new Date(session.date_start).getTime() <= now)
+          .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
+          .map((session) => ({
+            sessionKey: Number(session.session_key),
+            sessionName: session.session_name,
+            sessionStart: session.date_start
+          }));
+
+        if (availableSessions.length) {
+          meetingsWithSessions.push({
+            meetingKey: meeting.meeting_key,
+            meetingName: meeting.meeting_name,
+            location: meeting.location,
+            country: meeting.country_name,
+            sessions: availableSessions
+          });
+        }
+      }
+    }
+
+    const defaultSessionKey = meetingsWithSessions[0]?.sessions[0]?.sessionKey ?? null;
+    return { meetings: meetingsWithSessions, defaultSessionKey, source: "openf1" as const };
+  } catch {
+    return { meetings: [], defaultSessionKey: null, source: "mock" as const };
+  }
+}
+
 export async function getScheduleCalendar() {
   const now = new Date();
   const localSchedule = officialRaceCalendar2026;
@@ -194,6 +252,17 @@ export async function getScheduleCalendar() {
     return { schedule, nextRace: enrichedNextRace, source: "local+openf1" as const };
   } catch {
     return { schedule: localSchedule, nextRace: localNextRace, source: "local" as const };
+  }
+}
+
+export async function getRaceControlFeedBySession(sessionKey: number) {
+  try {
+    const feed = await fetchRaceControlBySession(sessionKey);
+    const normalized = normalizeRaceControl(feed);
+    if (!normalized.length) throw new Error("No race control data");
+    return { data: normalized, source: "openf1" as const, sessionName: `Session ${sessionKey}` };
+  } catch {
+    return { data: [...mockRaceControl].reverse(), source: "mock" as const, sessionName: "Mock session" };
   }
 }
 
