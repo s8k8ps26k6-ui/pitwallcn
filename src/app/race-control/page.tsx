@@ -57,6 +57,7 @@ function parseSessionKey(value?: string) {
 export default async function RaceControlPage({ searchParams }: { searchParams?: RaceControlSearchParams }) {
   const selection = await getRaceControlSelectionData();
   const requestedSession = parseSessionKey(searchParams?.session);
+  const isExplicitSession = requestedSession !== null;
   const selectedSessionKey = requestedSession ?? selection.defaultSessionKey;
 
   const selectedMeeting = selection.meetings.find((meeting) =>
@@ -66,14 +67,16 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
 
   const feed = selectedSessionKey ? await getRaceControlFeedBySession(selectedSessionKey) : await getRaceControlFeed();
   const { data, source, sessionName } = feed;
+  const visibleData = isExplicitSession && source === "mock" ? [] : data;
+  const displaySource = isExplicitSession && source === "mock" ? "openf1" : source;
   const quickSessions = selection.meetings.flatMap((meeting) =>
     meeting.sessions.slice(0, 2).map((session) => ({ ...session, meetingName: meeting.meetingName }))
   ).slice(0, 8);
 
   const summaryCards = [
-    { label: "Messages", value: data.length.toString(), hint: "当前消息数" },
-    { label: "Latest", value: data[0]?.timestamp ?? "--", hint: "最新更新时间" },
-    { label: "Mode", value: source === "openf1" ? "OPENF1" : "MOCK", hint: selectedSession?.sessionName ?? sessionName ?? "数据源状态" }
+    { label: "Messages", value: visibleData.length.toString(), hint: "当前消息数" },
+    { label: "Latest", value: visibleData[0]?.timestamp ?? "--", hint: "最新更新时间" },
+    { label: "Mode", value: displaySource === "openf1" ? "OPENF1" : "MOCK", hint: selectedSession?.sessionName ?? sessionName ?? "数据源状态" }
   ];
 
   return (
@@ -93,7 +96,7 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           </div>
           <div className="w-fit rounded-full border border-neonAmber/50 bg-black/60 px-3 py-1 text-xs font-semibold text-neonAmber shadow-[0_0_24px_rgba(255,176,32,0.14)]">
             <span className="mr-2 inline-flex h-2 w-2 rounded-full bg-neonAmber shadow-[0_0_14px_rgba(255,176,32,0.9)]" aria-hidden="true" />
-            CONTROL FEED · {source === "openf1" ? "OPENF1" : "MOCK"}
+            CONTROL FEED · {displaySource === "openf1" ? "OPENF1" : "MOCK"}
           </div>
         </div>
       </section>
@@ -169,33 +172,40 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           </div>
         </div>
 
-        <ol className="space-y-0 p-3">
-          {data.map((msg, index) => (
-            <li key={msg.id} className="relative grid gap-3 border-l border-zinc-800 pb-5 pl-5 last:pb-0 sm:grid-cols-[6rem_1fr]">
-              <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-neonRed shadow-[0_0_12px_rgba(255,46,46,0.7)]" aria-hidden="true" />
-              <div className="font-mono text-xs text-zinc-500">
-                <p>{msg.timestamp}</p>
-                <p className="mt-1">#{String(data.length - index).padStart(2, "0")}</p>
-              </div>
-              <article className="rounded-xl border border-zinc-800 bg-black/25 p-3 transition hover:border-zinc-700 hover:bg-black/35">
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                  <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] ${categoryStyles[msg.category]}`}>
-                    {categoryText[msg.category]}
-                  </span>
-                  <span className="text-xs text-zinc-500">{categoryName[msg.category]}</span>
+        {visibleData.length ? (
+          <ol className="space-y-0 p-3">
+            {visibleData.map((msg, index) => (
+              <li key={msg.id} className="relative grid gap-3 border-l border-zinc-800 pb-5 pl-5 last:pb-0 sm:grid-cols-[6rem_1fr]">
+                <span className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-neonRed shadow-[0_0_12px_rgba(255,46,46,0.7)]" aria-hidden="true" />
+                <div className="font-mono text-xs text-zinc-500">
+                  <p>{msg.timestamp}</p>
+                  <p className="mt-1">#{String(visibleData.length - index).padStart(2, "0")}</p>
                 </div>
-                <p className="text-sm leading-6 text-zinc-100">{msg.message}</p>
-                {(msg.flag || typeof msg.lapNumber === "number" || msg.scope) ? (
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {[msg.flag ? `旗语：${msg.flag}` : null, typeof msg.lapNumber === "number" ? `圈数：${msg.lapNumber}` : null, msg.scope ? `范围：${msg.scope}` : null]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                ) : null}
-              </article>
-            </li>
-          ))}
-        </ol>
+                <article className="rounded-xl border border-zinc-800 bg-black/25 p-3 transition hover:border-zinc-700 hover:bg-black/35">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] ${categoryStyles[msg.category]}`}>
+                      {categoryText[msg.category]}
+                    </span>
+                    <span className="text-xs text-zinc-500">{categoryName[msg.category]}</span>
+                  </div>
+                  <p className="text-sm leading-6 text-zinc-100">{msg.message}</p>
+                  {(msg.flag || typeof msg.lapNumber === "number" || msg.scope) ? (
+                    <p className="mt-2 text-xs text-zinc-500">
+                      {[msg.flag ? `旗语：${msg.flag}` : null, typeof msg.lapNumber === "number" ? `圈数：${msg.lapNumber}` : null, msg.scope ? `范围：${msg.scope}` : null]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  ) : null}
+                </article>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div className="p-5 text-sm leading-6 text-zinc-400">
+            <p className="font-semibold text-zinc-200">该赛段暂无赛会控制消息。</p>
+            <p className="mt-1">这通常表示 OpenF1 当前没有为这个 session 返回 race_control 数据；页面不会再用 Mock 数据冒充该赛段。</p>
+          </div>
+        )}
       </section>
     </main>
   );
