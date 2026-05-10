@@ -2,6 +2,9 @@ import Link from "next/link";
 import { getRaceControlFeed } from "@/lib/f1-service";
 import type { RaceControlMessage } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const categoryStyles: Record<RaceControlMessage["category"], string> = {
   FLAG: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber",
   SAFETY_CAR: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen",
