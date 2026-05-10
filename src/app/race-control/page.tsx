@@ -54,6 +54,49 @@ function parseSessionKey(value?: string) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function translateSessionName(name: string) {
+  const normalized = name.toLowerCase();
+  if (normalized.includes("sprint qualifying")) return "冲刺排位赛";
+  if (normalized.includes("sprint shootout")) return "冲刺排位赛";
+  if (normalized.includes("sprint")) return "冲刺赛";
+  if (normalized.includes("qualifying")) return "排位赛";
+  if (normalized === "race" || normalized.includes("race")) return "正赛";
+  if (normalized.includes("practice 1") || normalized.includes("free practice 1")) return "第一次自由练习赛";
+  if (normalized.includes("practice 2") || normalized.includes("free practice 2")) return "第二次自由练习赛";
+  if (normalized.includes("practice 3") || normalized.includes("free practice 3")) return "第三次自由练习赛";
+  if (normalized.includes("practice")) return "自由练习赛";
+  return name;
+}
+
+function translateMeetingName(name: string) {
+  const replacements: Array<[RegExp, string]> = [
+    [/Australian Grand Prix/i, "澳大利亚大奖赛"],
+    [/Chinese Grand Prix/i, "中国大奖赛"],
+    [/Japanese Grand Prix/i, "日本大奖赛"],
+    [/Miami Grand Prix/i, "迈阿密大奖赛"],
+    [/Canadian Grand Prix/i, "加拿大大奖赛"],
+    [/Monaco Grand Prix/i, "摩纳哥大奖赛"],
+    [/Spanish Grand Prix/i, "西班牙大奖赛"],
+    [/Austrian Grand Prix/i, "奥地利大奖赛"],
+    [/British Grand Prix/i, "英国大奖赛"],
+    [/Belgian Grand Prix/i, "比利时大奖赛"],
+    [/Hungarian Grand Prix/i, "匈牙利大奖赛"],
+    [/Dutch Grand Prix/i, "荷兰大奖赛"],
+    [/Italian Grand Prix/i, "意大利大奖赛"],
+    [/Azerbaijan Grand Prix/i, "阿塞拜疆大奖赛"],
+    [/Singapore Grand Prix/i, "新加坡大奖赛"],
+    [/United States Grand Prix/i, "美国大奖赛"],
+    [/Mexico City Grand Prix/i, "墨西哥城大奖赛"],
+    [/São Paulo Grand Prix/i, "圣保罗大奖赛"],
+    [/Sao Paulo Grand Prix/i, "圣保罗大奖赛"],
+    [/Las Vegas Grand Prix/i, "拉斯维加斯大奖赛"],
+    [/Qatar Grand Prix/i, "卡塔尔大奖赛"],
+    [/Abu Dhabi Grand Prix/i, "阿布扎比大奖赛"]
+  ];
+
+  return replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), name);
+}
+
 export default async function RaceControlPage({ searchParams }: { searchParams?: RaceControlSearchParams }) {
   const selection = await getRaceControlSelectionData();
   const requestedSession = parseSessionKey(searchParams?.session);
@@ -73,10 +116,13 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
     meeting.sessions.slice(0, 2).map((session) => ({ ...session, meetingName: meeting.meetingName }))
   ).slice(0, 8);
 
+  const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : null;
+  const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : null;
+
   const summaryCards = [
     { label: "Messages", value: visibleData.length.toString(), hint: "当前消息数" },
     { label: "Latest", value: visibleData[0]?.timestamp ?? "--", hint: "最新更新时间" },
-    { label: "Mode", value: displaySource === "openf1" ? "OPENF1" : "MOCK", hint: selectedSession?.sessionName ?? sessionName ?? "数据源状态" }
+    { label: "Mode", value: displaySource === "openf1" ? "OPENF1" : "MOCK", hint: selectedSessionName ?? sessionName ?? "数据源状态" }
   ];
 
   return (
@@ -106,9 +152,9 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           <p className="eyebrow">Session Selector</p>
           <h2 className="mt-1 text-lg font-semibold text-white">选择比赛与赛段</h2>
           <p className="mt-1 text-sm text-zinc-400">
-            当前：{selectedMeeting ? `${selectedMeeting.meetingName} · ${selectedSession?.sessionName ?? "自动选择"}` : "Mock fallback"}
+            当前：{selectedMeetingName ? `${selectedMeetingName} · ${selectedSessionName ?? "自动选择"}` : "Mock fallback"}
           </p>
-          <p className="mt-1 font-mono text-xs text-zinc-600">Session key: {selectedSessionKey ?? "none"}</p>
+          <p className="mt-1 text-xs text-zinc-600">数据标识：{selectedSessionKey ?? "暂无"}</p>
         </div>
 
         <form action="/race-control" className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
@@ -119,10 +165,10 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           >
             {!selectedSessionKey ? <option value="">自动选择最新可用赛段</option> : null}
             {selection.meetings.map((meeting) => (
-              <optgroup key={meeting.meetingKey} label={`${meeting.meetingName} · ${meeting.country} · ${meeting.location}`}>
+              <optgroup key={meeting.meetingKey} label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}>
                 {meeting.sessions.map((session) => (
                   <option key={session.sessionKey} value={session.sessionKey}>
-                    {session.sessionName} · {formatSessionTime(session.sessionStart)}
+                    {translateSessionName(session.sessionName)} · {formatSessionTime(session.sessionStart)}
                   </option>
                 ))}
               </optgroup>
@@ -143,7 +189,7 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
                   href={`/race-control?session=${session.sessionKey}`}
                   key={session.sessionKey}
                 >
-                  {session.meetingName} · {session.sessionName}
+                  {translateMeetingName(session.meetingName)} · {translateSessionName(session.sessionName)}
                 </Link>
               );
             })}
