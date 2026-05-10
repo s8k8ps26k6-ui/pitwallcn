@@ -1,6 +1,6 @@
 import { mockLiveTiming, mockRaceControl } from "@/lib/mockData";
 import { findNextRaceFromCalendar, officialRaceCalendar2026 } from "@/lib/race-calendar";
-import { RaceWeekend, ScheduleSession } from "@/lib/types";
+import { RaceControlMessage, RaceWeekend, ScheduleSession } from "@/lib/types";
 
 const OPENF1_BASE_URL = "https://api.openf1.org/v1";
 
@@ -16,8 +16,19 @@ type OpenF1Meeting = {
 };
 
 type OpenF1Session = {
+  session_key?: number;
   session_name: string;
   date_start: string;
+};
+
+type OpenF1RaceControl = {
+  category?: string;
+  date?: string;
+  flag?: string;
+  lap_number?: number;
+  message?: string;
+  scope?: string;
+  session_key?: number;
 };
 
 function isoOrFallback(value: string | undefined, fallback: string) {
@@ -36,6 +47,12 @@ async function fetchOpenF1Sessions(meetingKey: number): Promise<OpenF1Session[]>
   const response = await fetch(`${OPENF1_BASE_URL}/sessions?meeting_key=${meetingKey}`, { next: { revalidate: 300 } });
   if (!response.ok) throw new Error(`OpenF1 sessions failed: ${response.status}`);
   return (await response.json()) as OpenF1Session[];
+}
+
+async function fetchRaceControlBySession(sessionKey: number): Promise<OpenF1RaceControl[]> {
+  const response = await fetch(`${OPENF1_BASE_URL}/race_control?session_key=${sessionKey}`, { next: { revalidate: 60 } });
+  if (!response.ok) throw new Error(`OpenF1 race_control failed: ${response.status}`);
+  return (await response.json()) as OpenF1RaceControl[];
 }
 
 function normalizeSessions(meeting: OpenF1Meeting, sessions: OpenF1Session[]): ScheduleSession[] {
@@ -77,6 +94,79 @@ async function enrichRaceWithOpenF1Sessions(localRace: RaceWeekend): Promise<Rac
   };
 }
 
+function mapRaceControlCategory(row: OpenF1RaceControl): RaceControlMessage["category"] {
+  const text = `${row.category ?? ""} ${row.flag ?? ""} ${row.message ?? ""}`.toUpperCase();
+
+  if (text.includes("SAFETY") || text.includes("VSC")) return "SAFETY_CAR";
+  if (text.includes("FLAG") || text.includes("YELLOW") || text.includes("GREEN") || text.includes("RED") || text.includes("CHEQUERED")) return "FLAG";
+  if (text.includes("INCIDENT") || text.includes("INVESTIGAT") || text.includes("TRACK LIMIT") || text.includes("COLLISION") || text.includes("NOTED")) return "INCIDENT";
+  return "NOTICE";
+}
+
+function formatRaceControlTimestamp(date?: string) {
+  if (!date) return "--:--:--";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "--:--:--";
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Shanghai"
+  }).format(parsed);
+}
+
+function normalizeRaceControl(rows: OpenF1RaceControl[]): RaceControlMessage[] {
+  return rows
+    .filter((row) => row.message)
+    .sort((a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime())
+    .slice(-30)
+    .reverse()
+    .map((row, index) => ({
+      id: `${row.session_key ?? "session"}-${row.date ?? "row"}-${index}`,
+      timestamp: formatRaceControlTimestamp(row.date),
+      date: row.date,
+      category: mapRaceControlCategory(row),
+      flag: row.flag,
+      lapNumber: row.lap_number,
+      scope: row.scope,
+      message: row.message ?? "Race control message"
+    }));
+}
+
+async function findRecentSessions() {
+  const now = Date.now();
+  const currentYear = new Date().getUTCFullYear();
+  const candidateYears = [currentYear, currentYear - 1].filter((year) => year >= 2023);
+  const candidates: Array<OpenF1Session & { meetingDate: string }> = [];
+
+  for (const year of candidateYears) {
+    try {
+      const meetings = await fetchOpenF1Meetings(year);
+      const recentMeetings = meetings
+        .filter((meeting) => new Date(meeting.date_start).getTime() <= now)
+        .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
+        .slice(0, 4);
+
+      for (const meeting of recentMeetings) {
+        const sessions = await fetchOpenF1Sessions(meeting.meeting_key);
+        candidates.push(
+          ...sessions
+            .filter((session) => session.session_key && session.date_start && new Date(session.date_start).getTime() <= now)
+            .map((session) => ({ ...session, meetingDate: meeting.date_start }))
+        );
+      }
+    } catch {
+      // Try the next available year/source before falling back to mock data.
+    }
+  }
+
+  return candidates
+    .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
+    .slice(0, 8);
+}
+
 export async function getScheduleCalendar() {
   const now = new Date();
   const localSchedule = officialRaceCalendar2026;
@@ -93,6 +183,23 @@ export async function getScheduleCalendar() {
   }
 }
 
+export async function getRaceControlFeed() {
+  try {
+    const recentSessions = await findRecentSessions();
+
+    for (const session of recentSessions) {
+      if (!session.session_key) continue;
+      const feed = await fetchRaceControlBySession(session.session_key);
+      const normalized = normalizeRaceControl(feed);
+      if (normalized.length) return { data: normalized, source: "openf1" as const, sessionName: session.session_name };
+    }
+
+    throw new Error("No usable race control feed");
+  } catch {
+    return { data: [...mockRaceControl].reverse(), source: "mock" as const, sessionName: "Mock session" };
+  }
+}
+
 export async function getStandings() {
   return {
     drivers: [{ position: 1, driver: "VER", points: 168 }],
@@ -106,5 +213,5 @@ export async function getLiveTiming() {
 }
 
 export async function getRaceControl() {
-  return { data: mockRaceControl, source: process.env.F1_DATA_SOURCE ?? "mock" };
+  return getRaceControlFeed();
 }
