@@ -152,7 +152,7 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
         </div>
       </section>
 
-      <section className="card motion-fade-up motion-delay-1 space-y-3">
+      <section id="session-selector" className="card scroll-mt-6 motion-fade-up motion-delay-1 space-y-3">
         <div>
           <p className="eyebrow">Session Selector</p>
           <h2 className="mt-1 text-lg font-semibold text-white">选择比赛与赛段</h2>
@@ -162,7 +162,7 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           <p className="mt-1 text-xs text-zinc-600">数据标识：{selectedSessionKey ?? "暂无"}</p>
         </div>
 
-        <form action="/race-control" className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
+        <form action="/race-control#session-selector" className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
           <select
             className="rounded-xl border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-neonAmber"
             defaultValue={selectedSessionKey ?? ""}
@@ -191,8 +191,9 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
               return (
                 <Link
                   className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${active ? "border-neonAmber bg-neonAmber/10 text-neonAmber" : "border-zinc-800 bg-black/25 text-zinc-400 hover:border-neonAmber hover:text-neonAmber"}`}
-                  href={`/race-control?session=${session.sessionKey}`}
+                  href={`/race-control?session=${session.sessionKey}#session-selector`}
                   key={session.sessionKey}
+                  scroll={false}
                 >
                   {translateMeetingName(session.meetingName)} · {translateSessionName(session.sessionName)}
                 </Link>
