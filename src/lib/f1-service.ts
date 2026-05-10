@@ -1,5 +1,6 @@
-import { mockLiveTiming, mockRaceControl, mockSchedule } from "@/lib/mockData";
-import { RaceWeekend } from "@/lib/types";
+import { mockLiveTiming, mockRaceControl } from "@/lib/mockData";
+import { findNextRaceFromCalendar, officialRaceCalendar2026 } from "@/lib/race-calendar";
+import { RaceWeekend, ScheduleSession } from "@/lib/types";
 
 const OPENF1_BASE_URL = "https://api.openf1.org/v1";
 
@@ -37,51 +38,58 @@ async function fetchOpenF1Sessions(meetingKey: number): Promise<OpenF1Session[]>
   return (await response.json()) as OpenF1Session[];
 }
 
-function normalizeMeeting(meeting: OpenF1Meeting, sessions: OpenF1Session[]): RaceWeekend {
-  const sortedSessions = [...sessions].sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
-  const raceSession = sortedSessions.find((s) => s.session_name.includes("Race"));
-  const fallbackTarget = sortedSessions.at(-1)?.date_start ?? meeting.date_start;
-
-  return {
-    id: `openf1-${meeting.meeting_key}`,
-    raceName: meeting.meeting_name,
-    country: meeting.country_name,
-    location: meeting.location,
-    circuitName: meeting.circuit_short_name,
-    startDate: isoOrFallback(meeting.date_start, new Date().toISOString()),
-    endDate: isoOrFallback(meeting.date_end ?? fallbackTarget, meeting.date_start),
-    countdownTarget: isoOrFallback(raceSession?.date_start ?? fallbackTarget, meeting.date_start),
-    sessions: sortedSessions.map((s) => ({ name: s.session_name, startTime: isoOrFallback(s.date_start, meeting.date_start) }))
-  };
+function normalizeSessions(meeting: OpenF1Meeting, sessions: OpenF1Session[]): ScheduleSession[] {
+  return [...sessions]
+    .filter((session) => session.session_name && session.date_start)
+    .sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime())
+    .map((session) => ({
+      name: session.session_name,
+      startTime: isoOrFallback(session.date_start, meeting.date_start),
+      isTimeConfirmed: true
+    }));
 }
 
-function findNextRace(schedule: RaceWeekend[], now: Date): RaceWeekend {
-  const sorted = [...schedule].sort((a, b) => new Date(a.countdownTarget).getTime() - new Date(b.countdownTarget).getTime());
-  return sorted.find((item) => new Date(item.countdownTarget).getTime() >= now.getTime()) ?? sorted[0];
+function isSameRace(localRace: RaceWeekend, meeting: OpenF1Meeting) {
+  const localStart = new Date(localRace.startDate).getTime();
+  const meetingStart = new Date(meeting.date_start).getTime();
+  const dateClose = Math.abs(localStart - meetingStart) < 1000 * 60 * 60 * 24 * 4;
+  const text = `${meeting.meeting_name} ${meeting.location} ${meeting.country_name} ${meeting.circuit_short_name}`.toLowerCase();
+  const localHints = [localRace.location, localRace.country, localRace.circuitName, localRace.raceName].map((value) => value.toLowerCase());
+  return dateClose || localHints.some((hint) => hint && text.includes(hint));
+}
+
+async function enrichRaceWithOpenF1Sessions(localRace: RaceWeekend): Promise<RaceWeekend | null> {
+  const year = new Date(localRace.startDate).getUTCFullYear();
+  const meetings = await fetchOpenF1Meetings(year);
+  const meeting = meetings.find((item) => isSameRace(localRace, item));
+  if (!meeting) return null;
+
+  const sessions = await fetchOpenF1Sessions(meeting.meeting_key);
+  const normalizedSessions = normalizeSessions(meeting, sessions);
+  if (!normalizedSessions.length) return null;
+
+  const raceSession = normalizedSessions.find((session) => session.name.toLowerCase().includes("race"));
+
+  return {
+    ...localRace,
+    sessions: normalizedSessions,
+    countdownTarget: raceSession?.startTime ?? localRace.countdownTarget
+  };
 }
 
 export async function getScheduleCalendar() {
   const now = new Date();
-  const currentYear = now.getUTCFullYear();
+  const localSchedule = officialRaceCalendar2026;
+  const localNextRace = findNextRaceFromCalendar(now, localSchedule);
 
   try {
-    const meetings = await fetchOpenF1Meetings(currentYear);
-    if (!meetings.length) throw new Error("No meetings returned");
+    const enrichedNextRace = await enrichRaceWithOpenF1Sessions(localNextRace);
+    if (!enrichedNextRace) throw new Error("OpenF1 sessions unavailable for next race");
 
-    const weekends = await Promise.all(
-      meetings.map(async (meeting) => {
-        const sessions = await fetchOpenF1Sessions(meeting.meeting_key);
-        return normalizeMeeting(meeting, sessions);
-      })
-    );
-
-    const usable = weekends.filter((w) => w.sessions.length > 0);
-    if (!usable.length) throw new Error("No sessions available");
-
-    return { schedule: usable, nextRace: findNextRace(usable, now), source: "openf1" as const };
+    const schedule = localSchedule.map((race) => (race.id === localNextRace.id ? enrichedNextRace : race));
+    return { schedule, nextRace: enrichedNextRace, source: "local+openf1" as const };
   } catch {
-    const fallback = [...mockSchedule];
-    return { schedule: fallback, nextRace: findNextRace(fallback, now), source: "mock" as const };
+    return { schedule: localSchedule, nextRace: localNextRace, source: "local" as const };
   }
 }
 
