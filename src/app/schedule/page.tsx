@@ -13,8 +13,13 @@ function formatDateRange(startIso: string, endIso: string) {
   return `${formatter.format(new Date(startIso))} - ${formatter.format(new Date(endIso))}`;
 }
 
+function getScheduleSourceLabel(source: "local" | "local+openf1") {
+  return source === "local+openf1" ? "Local + OpenF1" : "Local Calendar";
+}
+
 export default async function SchedulePage() {
   const { nextRace, source } = await getScheduleCalendar();
+  const sourceLabel = getScheduleSourceLabel(source);
 
   return (
     <main className="space-y-5">
@@ -26,7 +31,7 @@ export default async function SchedulePage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="race-code text-zinc-400">下一站 · {source === "openf1" ? "OpenF1" : "Mock"}</span>
+              <span className="race-code text-zinc-400">下一站 · {sourceLabel}</span>
               <span className="rounded-full border border-purple-400/40 bg-purple-500/20 px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] text-purple-200">
                 Race Weekend
               </span>
