@@ -11,7 +11,11 @@ export type LiveTimingRow = {
 export type RaceControlMessage = {
   id: string;
   timestamp: string;
+  date?: string;
   category: "FLAG" | "SAFETY_CAR" | "INCIDENT" | "NOTICE";
+  flag?: string;
+  lapNumber?: number;
+  scope?: string;
   message: string;
 };
 
