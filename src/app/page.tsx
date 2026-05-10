@@ -63,8 +63,18 @@ function formatDateRange(startIso: string, endIso: string) {
   return `${formatter.format(new Date(startIso))} - ${formatter.format(new Date(endIso))}`;
 }
 
+function getScheduleSourceLabel(source: "local" | "local+openf1") {
+  return source === "local+openf1" ? "Local calendar + OpenF1 sessions" : "Local official calendar";
+}
+
+function getScheduleShortLabel(source: "local" | "local+openf1") {
+  return source === "local+openf1" ? "Local + OpenF1" : "Local Calendar";
+}
+
 export default async function Home() {
   const { nextRace, source } = await getScheduleCalendar();
+  const sourceLabel = getScheduleSourceLabel(source);
+  const sourceShortLabel = getScheduleShortLabel(source);
 
   return (
     <main className="space-y-6">
@@ -77,7 +87,7 @@ export default async function Home() {
         <div className="relative max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-pitGreen/60 bg-black/65 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.18)] backdrop-blur">
             <span className="live-dot" aria-hidden="true" />
-            主控台在线 · {source === "openf1" ? "OpenF1 data feed" : "Mock fallback"}
+            主控台在线 · {sourceLabel}
           </div>
           <p className="text-sm tracking-wide text-zinc-300">图片由站长于上海大奖赛现场拍摄</p>
           <h1 className="text-4xl font-bold text-white sm:text-6xl">Pitwall CN</h1>
@@ -100,7 +110,7 @@ export default async function Home() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="race-code text-zinc-400">下一站 · {source === "openf1" ? "OpenF1" : "Mock"}</span>
+              <span className="race-code text-zinc-400">下一站 · {sourceShortLabel}</span>
               <span className="rounded-full border border-purple-400/40 bg-purple-500/20 px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] text-purple-200">Race Weekend</span>
             </div>
             <h2 className="text-3xl font-bold text-white">{nextRace.raceName}</h2>
@@ -151,7 +161,7 @@ export default async function Home() {
             <p className="eyebrow">Project Status</p>
             <h2 className="mt-2 text-xl font-semibold text-neonAmber">v1 数据主控台</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">
-              当前版本已经接入 OpenF1 赛程服务层，并保留 Mock fallback。实时计时、赛控、积分与圈速模块后续可继续逐步接入真实数据。
+              当前版本已经接入本地官方赛历，并尝试使用 OpenF1 补充可用 session 数据。实时计时、赛控、积分与圈速模块后续可继续逐步接入真实数据。
             </p>
           </div>
         </div>
@@ -160,7 +170,7 @@ export default async function Home() {
       <footer className="motion-fade-up rounded-2xl border border-zinc-900 bg-black/20 px-5 py-6 text-sm text-zinc-500">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-semibold text-zinc-300">Pitwall CN</p>
-          <p>非官方项目 · 当前使用 OpenF1 + Mock fallback · For Chinese F1 fans</p>
+          <p>非官方项目 · 当前使用本地官方赛历 + OpenF1 辅助 · For Chinese F1 fans</p>
         </div>
       </footer>
     </main>
