@@ -254,7 +254,7 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
         ) : (
           <div className="p-5 text-sm leading-6 text-zinc-400">
             <p className="font-semibold text-zinc-200">该赛段暂无赛会控制消息。</p>
-            <p className="mt-1">这通常表示比赛尚未进行，或 OpenF1 当前没有为这个 session 返回 race_control 数据。这里不会再用 Mock 数据冒充真实赛段。</p>
+            <p className="mt-1">比赛尚未开始或该赛段暂未产生控制消息。</p>
           </div>
         )}
       </section>
