@@ -40,10 +40,10 @@ export function ScheduleView({ race }: { race: RaceWeekend }) {
       },
       circuit: {
         hint: `按${race.location || race.country}当地时间展示`,
-        timeZone: "America/Toronto"
+        timeZone: race.timeZone ?? "UTC"
       }
     }),
-    [race.country, race.location]
+    [race.country, race.location, race.timeZone]
   );
 
   const currentMeta = modeMeta[timeMode];
@@ -97,7 +97,7 @@ export function ScheduleView({ race }: { race: RaceWeekend }) {
                 </div>
                 <div className="text-right">
                   <p className="font-mono text-lg font-bold text-neonAmber">{formatted.time}</p>
-                  <p className="mt-1 race-code">SESSION</p>
+                  <p className="mt-1 race-code">{item.isTimeConfirmed === false ? "TBC" : "SESSION"}</p>
                 </div>
               </div>
             </article>
