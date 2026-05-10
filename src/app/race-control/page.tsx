@@ -48,10 +48,16 @@ function formatSessionTime(iso: string) {
   }).format(parsed);
 }
 
+function parseSessionKey(value?: string) {
+  if (!value) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export default async function RaceControlPage({ searchParams }: { searchParams?: RaceControlSearchParams }) {
   const selection = await getRaceControlSelectionData();
-  const requestedSession = searchParams?.session ? Number(searchParams.session) : null;
-  const selectedSessionKey = Number.isFinite(requestedSession) ? requestedSession : selection.defaultSessionKey;
+  const requestedSession = parseSessionKey(searchParams?.session);
+  const selectedSessionKey = requestedSession ?? selection.defaultSessionKey;
 
   const selectedMeeting = selection.meetings.find((meeting) =>
     meeting.sessions.some((session) => session.sessionKey === selectedSessionKey)
@@ -60,6 +66,9 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
 
   const feed = selectedSessionKey ? await getRaceControlFeedBySession(selectedSessionKey) : await getRaceControlFeed();
   const { data, source, sessionName } = feed;
+  const quickSessions = selection.meetings.flatMap((meeting) =>
+    meeting.sessions.slice(0, 2).map((session) => ({ ...session, meetingName: meeting.meetingName }))
+  ).slice(0, 8);
 
   const summaryCards = [
     { label: "Messages", value: data.length.toString(), hint: "当前消息数" },
@@ -96,9 +105,10 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
           <p className="mt-1 text-sm text-zinc-400">
             当前：{selectedMeeting ? `${selectedMeeting.meetingName} · ${selectedSession?.sessionName ?? "自动选择"}` : "Mock fallback"}
           </p>
+          <p className="mt-1 font-mono text-xs text-zinc-600">Session key: {selectedSessionKey ?? "none"}</p>
         </div>
 
-        <form className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
+        <form action="/race-control" className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
           <select
             className="rounded-xl border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-neonAmber"
             defaultValue={selectedSessionKey ?? ""}
@@ -119,6 +129,23 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
             切换赛段
           </button>
         </form>
+
+        {quickSessions.length ? (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {quickSessions.map((session) => {
+              const active = session.sessionKey === selectedSessionKey;
+              return (
+                <Link
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${active ? "border-neonAmber bg-neonAmber/10 text-neonAmber" : "border-zinc-800 bg-black/25 text-zinc-400 hover:border-neonAmber hover:text-neonAmber"}`}
+                  href={`/race-control?session=${session.sessionKey}`}
+                  key={session.sessionKey}
+                >
+                  {session.meetingName} · {session.sessionName}
+                </Link>
+              );
+            })}
+          </div>
+        ) : null}
       </section>
 
       <section className="grid gap-4 sm:grid-cols-3">
