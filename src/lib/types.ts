@@ -11,6 +11,26 @@ export type LiveTimingRow = {
 export type RaceControlMessage = {
   id: string;
   timestamp: string;
+  date?: string;
   category: "FLAG" | "SAFETY_CAR" | "INCIDENT" | "NOTICE";
+  flag?: string;
+  lapNumber?: number;
   message: string;
+};
+
+export type ScheduleSession = {
+  name: string;
+  startTime: string;
+};
+
+export type RaceWeekend = {
+  id: string;
+  raceName: string;
+  country: string;
+  location: string;
+  circuitName: string;
+  startDate: string;
+  endDate: string;
+  sessions: ScheduleSession[];
+  countdownTarget: string;
 };
