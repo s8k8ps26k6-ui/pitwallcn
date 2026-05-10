@@ -49,10 +49,18 @@ async function fetchOpenF1Sessions(meetingKey: number): Promise<OpenF1Session[]>
   return (await response.json()) as OpenF1Session[];
 }
 
-async function fetchRaceControlBySession(sessionKey: number): Promise<OpenF1RaceControl[]> {
-  const response = await fetch(`${OPENF1_BASE_URL}/race_control?session_key=${sessionKey}`, { next: { revalidate: 60 } });
+async function fetchRaceControlByUrl(url: string): Promise<OpenF1RaceControl[]> {
+  const response = await fetch(url, { next: { revalidate: 60 } });
   if (!response.ok) throw new Error(`OpenF1 race_control failed: ${response.status}`);
   return (await response.json()) as OpenF1RaceControl[];
+}
+
+async function fetchRaceControlBySession(sessionKey: number | "latest"): Promise<OpenF1RaceControl[]> {
+  return fetchRaceControlByUrl(`${OPENF1_BASE_URL}/race_control?session_key=${sessionKey}`);
+}
+
+async function fetchRaceControlSince(dateIso: string): Promise<OpenF1RaceControl[]> {
+  return fetchRaceControlByUrl(`${OPENF1_BASE_URL}/race_control?date>=${encodeURIComponent(dateIso)}`);
 }
 
 function normalizeSessions(meeting: OpenF1Meeting, sessions: OpenF1Session[]): ScheduleSession[] {
@@ -147,7 +155,7 @@ async function findRecentSessions() {
       const recentMeetings = meetings
         .filter((meeting) => new Date(meeting.date_start).getTime() <= now)
         .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
-        .slice(0, 4);
+        .slice(0, 6);
 
       for (const meeting of recentMeetings) {
         const sessions = await fetchOpenF1Sessions(meeting.meeting_key);
@@ -164,7 +172,7 @@ async function findRecentSessions() {
 
   return candidates
     .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
-    .slice(0, 8);
+    .slice(0, 12);
 }
 
 export async function getScheduleCalendar() {
@@ -184,20 +192,42 @@ export async function getScheduleCalendar() {
 }
 
 export async function getRaceControlFeed() {
-  try {
-    const recentSessions = await findRecentSessions();
-
-    for (const session of recentSessions) {
-      if (!session.session_key) continue;
-      const feed = await fetchRaceControlBySession(session.session_key);
+  const attempts: Array<() => Promise<{ data: RaceControlMessage[]; sessionName: string }>> = [
+    async () => {
+      const feed = await fetchRaceControlBySession("latest");
       const normalized = normalizeRaceControl(feed);
-      if (normalized.length) return { data: normalized, source: "openf1" as const, sessionName: session.session_name };
-    }
+      return { data: normalized, sessionName: "Latest session" };
+    },
+    async () => {
+      const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * 45).toISOString();
+      const feed = await fetchRaceControlSince(since);
+      const normalized = normalizeRaceControl(feed);
+      return { data: normalized, sessionName: "Recent race control" };
+    },
+    async () => {
+      const recentSessions = await findRecentSessions();
 
-    throw new Error("No usable race control feed");
-  } catch {
-    return { data: [...mockRaceControl].reverse(), source: "mock" as const, sessionName: "Mock session" };
+      for (const session of recentSessions) {
+        if (!session.session_key) continue;
+        const feed = await fetchRaceControlBySession(session.session_key);
+        const normalized = normalizeRaceControl(feed);
+        if (normalized.length) return { data: normalized, sessionName: session.session_name };
+      }
+
+      return { data: [], sessionName: "Historical sessions" };
+    }
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      const result = await attempt();
+      if (result.data.length) return { ...result, source: "openf1" as const };
+    } catch {
+      // Continue to the next strategy.
+    }
   }
+
+  return { data: [...mockRaceControl].reverse(), source: "mock" as const, sessionName: "Mock session" };
 }
 
 export async function getStandings() {
