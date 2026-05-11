@@ -45,6 +45,13 @@ type OpenF1Interval = {
   date?: string;
 };
 
+type OpenF1Driver = {
+  driver_number: number;
+  broadcast_name?: string;
+  full_name?: string;
+  name_acronym?: string;
+};
+
 export type LapAnalysisSelectorSession = {
   sessionKey: number;
   sessionName: string;
@@ -60,7 +67,9 @@ export type LapAnalysisSelectorMeeting = {
 };
 
 export type LapAnalysisRow = {
+  driverNumber: number;
   driver: string;
+  driverName: string;
   bestLap: string;
   latestLap: string;
   laps: number;
@@ -70,6 +79,29 @@ export type LapAnalysisRow = {
   s1: string;
   s2: string;
   s3: string;
+};
+
+const fallbackDriverNames: Record<number, string> = {
+  1: "VER",
+  4: "NOR",
+  5: "BOR",
+  6: "HAD",
+  7: "DOO",
+  10: "GAS",
+  12: "ANT",
+  14: "ALO",
+  16: "LEC",
+  18: "STR",
+  22: "TSU",
+  23: "ALB",
+  27: "HUL",
+  30: "LAW",
+  31: "OCO",
+  44: "HAM",
+  55: "SAI",
+  63: "RUS",
+  81: "PIA",
+  87: "BEA"
 };
 
 async function fetchOpenF1<T>(path: string, params: Record<string, string | number>) {
@@ -117,7 +149,22 @@ function sortLapAnalysisRows(a: LapAnalysisRow, b: LapAnalysisRow) {
   const lapDiff = b.laps - a.laps;
   if (lapDiff !== 0) return lapDiff;
 
-  return Number(a.driver) - Number(b.driver);
+  return a.driverNumber - b.driverNumber;
+}
+
+function buildDriverNameMap(drivers: OpenF1Driver[]) {
+  const map = new Map<number, string>();
+
+  for (const driver of drivers) {
+    const name = driver.name_acronym || driver.broadcast_name || driver.full_name;
+    if (name) map.set(driver.driver_number, name);
+  }
+
+  return map;
+}
+
+function getDriverName(driverNumber: number, driverNames: Map<number, string>) {
+  return driverNames.get(driverNumber) ?? fallbackDriverNames[driverNumber] ?? "DRIVER";
 }
 
 export async function getLapAnalysisSelectionData() {
@@ -190,21 +237,26 @@ export async function getLapAnalysisSelectionData() {
 
 export async function getLapAnalysisBySession(sessionKey: number) {
   try {
-    const [laps, stints, positions, intervals] = await Promise.all([
+    const [laps, stints, positions, intervals, drivers] = await Promise.all([
       fetchOpenF1<OpenF1Lap[]>("/laps", { session_key: sessionKey }),
       fetchOpenF1<OpenF1Stint[]>("/stints", { session_key: sessionKey }).catch(() => []),
       fetchOpenF1<OpenF1Position[]>("/position", { session_key: sessionKey }).catch(() => []),
-      fetchOpenF1<OpenF1Interval[]>("/intervals", { session_key: sessionKey }).catch(() => [])
+      fetchOpenF1<OpenF1Interval[]>("/intervals", { session_key: sessionKey }).catch(() => []),
+      fetchOpenF1<OpenF1Driver[]>("/drivers", { session_key: sessionKey }).catch(() => [])
     ]);
 
     if (!laps.length) return { rows: [], source: "openf1-waiting" as const };
 
     const rows = new Map<number, LapAnalysisRow>();
+    const driverNames = buildDriverNameMap(drivers);
 
     for (const lap of laps) {
       const latestLap = formatLapTime(lap.lap_duration);
+      const driverName = getDriverName(lap.driver_number, driverNames);
       const existing = rows.get(lap.driver_number) ?? {
-        driver: String(lap.driver_number),
+        driverNumber: lap.driver_number,
+        driver: `${lap.driver_number} ${driverName}`,
+        driverName,
         bestLap: "--",
         latestLap: "--",
         laps: 0,
