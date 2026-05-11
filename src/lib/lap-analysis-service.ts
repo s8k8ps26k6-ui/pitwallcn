@@ -105,6 +105,21 @@ function compareLapTime(a: string, b: string) {
   return toSeconds(a) < toSeconds(b);
 }
 
+function getPositionNumber(position: string) {
+  const parsed = Number(position.replace("P", ""));
+  return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+}
+
+function sortLapAnalysisRows(a: LapAnalysisRow, b: LapAnalysisRow) {
+  const positionDiff = getPositionNumber(a.position) - getPositionNumber(b.position);
+  if (positionDiff !== 0) return positionDiff;
+
+  const lapDiff = b.laps - a.laps;
+  if (lapDiff !== 0) return lapDiff;
+
+  return Number(a.driver) - Number(b.driver);
+}
+
 export async function getLapAnalysisSelectionData() {
   const now = Date.now();
   const currentYear = new Date().getUTCFullYear();
@@ -232,7 +247,7 @@ export async function getLapAnalysisBySession(sessionKey: number) {
     }
 
     return {
-      rows: [...rows.values()].sort((a, b) => a.position.localeCompare(b.position)),
+      rows: [...rows.values()].sort(sortLapAnalysisRows),
       source: "openf1" as const
     };
   } catch {
