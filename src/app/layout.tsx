@@ -14,6 +14,7 @@ const navItems = [
   { label: "赛会控制", href: "/race-control" },
   { label: "车手", href: "/drivers" },
   { label: "积分榜", href: "/standings" },
+  { label: "比赛结果", href: "/results" },
   { label: "圈速分析", href: "/lap-analysis" }
 ] as const;
 
