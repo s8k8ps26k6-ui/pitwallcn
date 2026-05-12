@@ -78,6 +78,14 @@ function statusClass(status: string) {
   return "border-neonRed/40 bg-neonRed/10 text-neonRed";
 }
 
+function sessionButtonClass(isActive: boolean) {
+  return `rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+    isActive
+      ? "border-neonAmber bg-neonAmber/10 text-neonAmber"
+      : "border-zinc-800 bg-black/30 text-zinc-300 hover:border-neonAmber hover:text-neonAmber"
+  }`;
+}
+
 export default async function ResultsPage({ searchParams }: { searchParams?: ResultsSearchParams }) {
   const selection = await getResultsSelectionData();
   const requestedSession = parseSessionKey(searchParams?.session);
@@ -93,6 +101,10 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Res
   const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : null;
   const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : null;
   const podiumRows = result.rows.slice(0, 3);
+  const quickSessions = [...(selectedMeeting?.sessions ?? [])].sort((a, b) => {
+    const priority = { qualifying: 0, sprint: 1, race: 2 } as const;
+    return priority[a.category] - priority[b.category];
+  });
 
   return (
     <main className="space-y-4">
@@ -146,6 +158,21 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Res
             查看成绩
           </button>
         </form>
+
+        {quickSessions.length ? (
+          <div className="flex flex-wrap gap-2 border-t border-zinc-900 pt-3">
+            {quickSessions.map((session) => (
+              <Link
+                key={session.sessionKey}
+                className={sessionButtonClass(session.sessionKey === selectedSessionKey)}
+                href={`/results?session=${session.sessionKey}#results-session-selector`}
+              >
+                {translateSessionName(session.sessionName)}
+                <span className="ml-2 font-mono text-xs text-zinc-500">{formatSessionTime(session.sessionStart)}</span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {result.rows.length ? (
