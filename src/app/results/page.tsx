@@ -74,7 +74,7 @@ function sourceLabel(source: string) {
 
 function statusClass(status: string) {
   if (status === "完赛") return "border-pitGreen/40 bg-pitGreen/10 text-pitGreen";
-  if (status === "DNF") return "border-neonAmber/40 bg-neonAmber/10 text-neonAmber";
+  if (status === "退赛") return "border-neonAmber/40 bg-neonAmber/10 text-neonAmber";
   return "border-neonRed/40 bg-neonRed/10 text-neonRed";
 }
 
@@ -190,11 +190,11 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Res
                 <p className="mt-1 text-sm text-zinc-500">{item.team}</p>
                 <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
                   <div className="rounded-lg border border-zinc-800 bg-black/25 p-3">
-                    <p className="race-code">Time / Gap</p>
+                    <p className="race-code">时间 / 差距</p>
                     <p className="mt-1 font-mono text-lg font-bold text-neonAmber">{item.timeOrGap}</p>
                   </div>
                   <div className="rounded-lg border border-zinc-800 bg-black/25 p-3">
-                    <p className="race-code">Laps</p>
+                    <p className="race-code">完成圈数</p>
                     <p className="mt-1 font-mono text-lg font-bold text-white">{item.completedLaps}</p>
                   </div>
                 </div>
@@ -206,12 +206,13 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Res
             <div className="border-b border-zinc-800 bg-black/25 px-4 py-3">
               <p className="eyebrow">Classification</p>
               <h2 className="mt-1 text-lg font-semibold text-white">成绩表</h2>
+              <p className="mt-1 text-xs text-zinc-500">OpenF1 部分历史赛段可能缺少车队、圈数或完整成绩字段。</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-zinc-800 bg-zinc-950/60 text-xs uppercase tracking-[0.18em] text-zinc-500">
                   <tr>
-                    {['POS', 'Driver', 'Team', 'Time / Gap', 'Laps', 'Status'].map((title) => (
+                    {['名次', '车手', '车队', '时间 / 差距', '完成圈数', '状态'].map((title) => (
                       <th key={title} className="px-4 py-3">{title}</th>
                     ))}
                   </tr>

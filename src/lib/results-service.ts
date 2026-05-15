@@ -60,7 +60,7 @@ export type ResultsRow = {
   team: string;
   timeOrGap: string;
   completedLaps: string;
-  status: "完赛" | "DNF" | "DNS" | "DSQ";
+  status: "完赛" | "退赛" | "未起步" | "取消成绩";
 };
 
 const fallbackDriverNames: Record<number, string> = {
@@ -148,20 +148,33 @@ function formatSeconds(seconds?: number | null) {
 
 function formatGap(value?: number | string | null) {
   if (value === null || value === undefined) return "--";
-  if (typeof value === "string") return value.startsWith("+") ? value : `+${value}`;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "0") return "0";
+    if (trimmed.startsWith("+") || trimmed.toLowerCase().includes("lap")) return trimmed;
+    return `+${trimmed}`;
+  }
+
   if (!Number.isFinite(value)) return "--";
   if (value === 0) return "0";
   return `+${value.toFixed(3)}`;
+}
+
+function hasNonZeroGap(value?: number | string | null) {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim() !== "" && value.trim() !== "0";
+  return Number.isFinite(value) && value !== 0;
 }
 
 function formatTimeOrGap(result: OpenF1SessionResult) {
   const gap = pickLastValue(result.gap_to_leader);
   const duration = pickLastValue(result.duration);
 
-  if (gap !== undefined && gap !== null && gap !== 0) return formatGap(gap);
+  if (hasNonZeroGap(gap)) return formatGap(gap);
 
   if (typeof duration === "number") return formatSeconds(duration);
-  return "Leader";
+  return "领先者";
 }
 
 function buildDriverInfoMap(drivers: OpenF1Driver[]) {
@@ -171,7 +184,7 @@ function buildDriverInfoMap(drivers: OpenF1Driver[]) {
     const name = driver.name_acronym || driver.broadcast_name || driver.full_name || fallbackDriverNames[driver.driver_number] || "DRIVER";
     map.set(driver.driver_number, {
       name,
-      team: driver.team_name || "--"
+      team: driver.team_name || "车队暂无"
     });
   }
 
@@ -179,13 +192,13 @@ function buildDriverInfoMap(drivers: OpenF1Driver[]) {
 }
 
 function getDriverInfo(driverNumber: number, driverInfo: Map<number, { name: string; team: string }>) {
-  return driverInfo.get(driverNumber) ?? { name: fallbackDriverNames[driverNumber] ?? "DRIVER", team: "--" };
+  return driverInfo.get(driverNumber) ?? { name: fallbackDriverNames[driverNumber] ?? "DRIVER", team: "车队暂无" };
 }
 
 function getStatus(result: OpenF1SessionResult): ResultsRow["status"] {
-  if (result.dsq) return "DSQ";
-  if (result.dns) return "DNS";
-  if (result.dnf) return "DNF";
+  if (result.dsq) return "取消成绩";
+  if (result.dns) return "未起步";
+  if (result.dnf) return "退赛";
   return "完赛";
 }
 
