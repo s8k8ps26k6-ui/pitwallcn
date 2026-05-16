@@ -105,6 +105,15 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Res
     const priority = { qualifying: 0, sprint: 1, race: 2 } as const;
     return priority[a.category] - priority[b.category];
   });
+  const finishedCount = result.rows.filter((row) => row.status === "完赛").length;
+  const nonFinishedCount = result.rows.filter((row) => row.status !== "完赛").length;
+  const winner = podiumRows[0];
+  const summaryItems = [
+    { label: "参赛车手", value: result.rows.length ? `${result.rows.length}` : "--", hint: "当前成绩表记录数" },
+    { label: "完赛车手", value: result.rows.length ? `${finishedCount}` : "--", hint: "状态为完赛" },
+    { label: "异常状态", value: result.rows.length ? `${nonFinishedCount}` : "--", hint: "退赛 / 未起步 / 取消成绩" },
+    { label: "头名车手", value: winner?.driver ?? "--", hint: winner?.team ?? "等待成绩数据" }
+  ];
 
   return (
     <main className="space-y-4">
@@ -177,6 +186,16 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Res
 
       {result.rows.length ? (
         <>
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {summaryItems.map((item) => (
+              <article key={item.label} className="rounded-2xl border border-zinc-800 bg-black/25 p-4 shadow-lg shadow-black/10">
+                <p className="race-code">{item.label}</p>
+                <p className="mt-2 truncate font-mono text-2xl font-bold text-white">{item.value}</p>
+                <p className="mt-1 truncate text-xs text-zinc-500">{item.hint}</p>
+              </article>
+            ))}
+          </section>
+
           <section className="grid gap-4 lg:grid-cols-3">
             {podiumRows.map((item) => (
               <article key={item.driver} className="card motion-fade-up">
