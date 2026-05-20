@@ -1,6 +1,7 @@
 import type { RaceControlMessage } from "@/lib/types";
 
 const OPENF1_BASE_URL = "https://api.openf1.org/v1";
+const MAX_SELECTOR_MEETINGS = 4;
 
 type OpenF1Meeting = {
   meeting_key: number;
@@ -144,6 +145,32 @@ function normalizeRaceControl(rows: OpenF1RaceControl[]): RaceControlMessage[] {
     }));
 }
 
+async function buildMeetingSelection(meeting: OpenF1Meeting, now: number): Promise<RaceControlSelectorMeeting | null> {
+  try {
+    const sessions = await fetchOpenF1<OpenF1Session[]>("/sessions", { meeting_key: meeting.meeting_key });
+    const availableSessions = sessions
+      .filter((session) => session.session_key && session.session_name && session.date_start && new Date(session.date_start).getTime() <= now)
+      .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
+      .map((session) => ({
+        sessionKey: Number(session.session_key),
+        sessionName: session.session_name,
+        sessionStart: session.date_start
+      }));
+
+    if (!availableSessions.length) return null;
+
+    return {
+      meetingKey: meeting.meeting_key,
+      meetingName: meeting.meeting_name,
+      location: meeting.location,
+      country: meeting.country_name,
+      sessions: availableSessions
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getRaceControlSelectionData() {
   const now = Date.now();
   const currentYear = new Date().getUTCFullYear();
@@ -159,42 +186,20 @@ export async function getRaceControlSelectionData() {
       continue;
     }
 
+    const remainingSlots = Math.max(MAX_SELECTOR_MEETINGS - meetingsWithSessions.length, 0);
     const recentMeetings = meetings
       .filter((meeting) => new Date(meeting.date_start).getTime() <= now)
       .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
-      .slice(0, 4);
+      .slice(0, remainingSlots || MAX_SELECTOR_MEETINGS);
 
-    for (const meeting of recentMeetings) {
-      try {
-        const sessions = await fetchOpenF1<OpenF1Session[]>("/sessions", { meeting_key: meeting.meeting_key });
-        const availableSessions = sessions
-          .filter((session) => session.session_key && session.session_name && session.date_start && new Date(session.date_start).getTime() <= now)
-          .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
-          .map((session) => ({
-            sessionKey: Number(session.session_key),
-            sessionName: session.session_name,
-            sessionStart: session.date_start
-          }));
+    const meetingSelections = await Promise.all(recentMeetings.map((meeting) => buildMeetingSelection(meeting, now)));
+    meetingsWithSessions.push(...meetingSelections.filter((meeting): meeting is RaceControlSelectorMeeting => meeting !== null));
 
-        if (availableSessions.length) {
-          meetingsWithSessions.push({
-            meetingKey: meeting.meeting_key,
-            meetingName: meeting.meeting_name,
-            location: meeting.location,
-            country: meeting.country_name,
-            sessions: availableSessions
-          });
-        }
-      } catch {
-        continue;
-      }
-    }
-
-    if (meetingsWithSessions.length >= 4) break;
+    if (meetingsWithSessions.length >= MAX_SELECTOR_MEETINGS) break;
   }
 
   return {
-    meetings: meetingsWithSessions,
+    meetings: meetingsWithSessions.slice(0, MAX_SELECTOR_MEETINGS),
     defaultSessionKey: meetingsWithSessions[0]?.sessions[0]?.sessionKey ?? null,
     source: meetingsWithSessions.length ? "openf1" as const : "openf1-empty" as const
   };
