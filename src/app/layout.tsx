@@ -24,9 +24,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 sm:px-6">
           <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <Link className="text-2xl font-bold tracking-wide text-neonRed transition hover:text-red-400" href="/">
-              Pitwall CN
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link className="text-2xl font-bold tracking-wide text-neonRed transition hover:text-red-400" href="/">
+                Pitwall CN
+              </Link>
+              <Link
+                className="rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs font-bold tracking-[0.14em] text-cyan-200 transition hover:border-cyan-200 hover:bg-cyan-300/20"
+                href="/weather"
+              >
+                赛道天气
+              </Link>
+            </div>
             <nav className="grid w-full grid-cols-4 gap-1.5 rounded-2xl border border-zinc-800/80 bg-black/20 p-1 text-center text-sm shadow-lg shadow-black/10 backdrop-blur lg:flex lg:w-fit lg:flex-wrap lg:text-left">
               {navItems.map((item) => (
                 <Link
