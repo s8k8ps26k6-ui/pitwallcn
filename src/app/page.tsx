@@ -28,6 +28,14 @@ const primaryModules = [
     accent: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber"
   },
   {
+    code: "RESULTS",
+    title: "比赛结果",
+    description: "查看排位赛、冲刺赛与正赛成绩，聚焦名次、差距、圈数和完赛状态。",
+    href: "/results",
+    status: "CLASSIFICATION",
+    accent: "border-purple-400/40 bg-purple-400/10 text-purple-200"
+  },
+  {
     code: "DRIVER DATA",
     title: "车手数据",
     description: "进入车手选择页，选择不同车手查看资料卡与赛季表现。",
@@ -50,6 +58,37 @@ const primaryModules = [
     href: "/lap-analysis",
     status: "SESSION DATA",
     accent: "border-cyan-300/40 bg-cyan-300/10 text-cyan-200"
+  }
+] as const;
+
+const commandCenterModules = [
+  {
+    label: "比赛结果",
+    href: "/results",
+    title: "先看最终分类",
+    description: "排位、冲刺、正赛成绩独立展示，适合赛后快速复盘。",
+    meta: "SESSION_RESULT"
+  },
+  {
+    label: "赛会控制",
+    href: "/race-control",
+    title: "再看赛控记录",
+    description: "黄旗、安全车、DRS、赛道边界和圈速删除消息集中查看。",
+    meta: "RACE CONTROL"
+  },
+  {
+    label: "圈速分析",
+    href: "/lap-analysis",
+    title: "深入分析单圈",
+    description: "用最快圈、分段、stint 和差距变化看懂比赛过程。",
+    meta: "LAP DATA"
+  },
+  {
+    label: "赛程时间",
+    href: "/schedule",
+    title: "回到周末安排",
+    description: "确认下一站时间、赛段安排和大奖赛周末节奏。",
+    meta: "CALENDAR"
   }
 ] as const;
 
@@ -91,16 +130,16 @@ export default async function Home() {
           </div>
           <p className="text-sm tracking-wide text-zinc-300">图片由站长于上海大奖赛现场拍摄</p>
           <h1 className="text-4xl font-bold text-white sm:text-6xl">Pitwall CN</h1>
-          <h2 className="text-xl font-semibold text-neonAmber sm:text-2xl">非官方 F1 数据看板</h2>
+          <h2 className="text-xl font-semibold text-neonAmber sm:text-2xl">非官方 F1 数据主控台</h2>
           <p className="max-w-2xl text-base leading-7 text-zinc-100">
-            一个面向中文车迷的 F1 数据主控台。赛程、实时计时、赛会控制、车手数据、积分榜与圈速分析分别进入独立页面查看。
+            一个面向中文车迷的 F1 数据主控台。现在已形成赛程、赛控、比赛结果、实时计时、车手数据、积分榜与圈速分析的独立模块结构。
           </p>
           <div className="flex flex-wrap gap-3 pt-2 text-sm">
-            <Link className="rounded-full bg-neonRed px-4 py-2 font-semibold text-white transition hover:bg-red-500" href="/schedule">
-              查看下一站
+            <Link className="rounded-full bg-neonRed px-4 py-2 font-semibold text-white transition hover:bg-red-500" href="/results">
+              进入比赛结果
             </Link>
-            <Link className="rounded-full border border-zinc-600 px-4 py-2 text-zinc-100 transition hover:border-neonAmber hover:text-neonAmber" href="/live">
-              进入实时计时
+            <Link className="rounded-full border border-zinc-600 px-4 py-2 text-zinc-100 transition hover:border-neonAmber hover:text-neonAmber" href="/schedule">
+              查看下一站
             </Link>
           </div>
         </div>
@@ -123,6 +162,34 @@ export default async function Home() {
         <Link className="mt-5 flex items-center justify-center rounded-2xl border border-blue-400/40 bg-blue-500/20 px-4 py-3 text-sm font-semibold text-blue-100 transition hover:bg-blue-500/30" href="/schedule">
           查看完整赛事时间安排 →
         </Link>
+      </section>
+
+      <section className="motion-fade-up motion-delay-2 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-5 shadow-xl shadow-black/20">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow">Race Weekend Command Center</p>
+            <h2 className="mt-2 text-2xl font-bold text-white">比赛周末作战台</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+              把赛后最常用的入口集中在一起：先看结果，再查赛控，最后进入圈速分析。
+            </p>
+          </div>
+          <span className="w-fit rounded-full border border-neonAmber/40 bg-neonAmber/10 px-3 py-1 text-[0.65rem] font-bold tracking-[0.18em] text-neonAmber">
+            RESULTS · CONTROL · ANALYSIS
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {commandCenterModules.map((item) => (
+            <Link key={item.href} className="group rounded-2xl border border-zinc-800 bg-black/25 p-4 transition hover:border-neonAmber/60 hover:bg-black/40" href={item.href}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="race-code text-zinc-500">{item.meta}</p>
+                <span className="text-zinc-600 transition group-hover:translate-x-1 group-hover:text-neonAmber">→</span>
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-white">{item.label}</h3>
+              <p className="mt-2 text-sm font-medium text-neonAmber">{item.title}</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">{item.description}</p>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -161,7 +228,7 @@ export default async function Home() {
             <p className="eyebrow">Project Status</p>
             <h2 className="mt-2 text-xl font-semibold text-neonAmber">v1 数据主控台</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">
-              当前版本已经接入本地官方赛历，并尝试使用 OpenF1 补充可用 session 数据。实时计时、赛控、积分与圈速模块后续可继续逐步接入真实数据。
+              当前版本已经接入本地官方赛历，并使用 OpenF1 支撑赛控、圈速分析与比赛结果。后续可继续推进积分、车手详情与单站复盘页面。
             </p>
           </div>
         </div>
