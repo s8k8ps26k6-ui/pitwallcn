@@ -1,4 +1,5 @@
 const OPENF1_BASE_URL = "https://api.openf1.org/v1";
+const MAX_SELECTOR_MEETINGS = 4;
 
 type OpenF1Meeting = {
   meeting_key: number;
@@ -167,6 +168,32 @@ function getDriverName(driverNumber: number, driverNames: Map<number, string>) {
   return driverNames.get(driverNumber) ?? fallbackDriverNames[driverNumber] ?? "DRIVER";
 }
 
+async function buildMeetingSelection(meeting: OpenF1Meeting, now: number): Promise<LapAnalysisSelectorMeeting | null> {
+  try {
+    const sessions = await fetchOpenF1<OpenF1Session[]>("/sessions", { meeting_key: meeting.meeting_key });
+    const availableSessions = sessions
+      .filter((session) => session.session_key && session.session_name && session.date_start && new Date(session.date_start).getTime() <= now)
+      .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
+      .map((session) => ({
+        sessionKey: Number(session.session_key),
+        sessionName: session.session_name,
+        sessionStart: session.date_start
+      }));
+
+    if (!availableSessions.length) return null;
+
+    return {
+      meetingKey: meeting.meeting_key,
+      meetingName: meeting.meeting_name,
+      location: meeting.location,
+      country: meeting.country_name,
+      sessions: availableSessions
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getLapAnalysisSelectionData() {
   const now = Date.now();
   const currentYear = new Date().getUTCFullYear();
@@ -182,57 +209,23 @@ export async function getLapAnalysisSelectionData() {
       continue;
     }
 
+    const remainingSlots = Math.max(MAX_SELECTOR_MEETINGS - meetingsWithSessions.length, 0);
     const recentMeetings = meetings
       .filter((meeting) => new Date(meeting.date_start).getTime() <= now)
       .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
-      .slice(0, 4);
+      .slice(0, remainingSlots || MAX_SELECTOR_MEETINGS);
 
-    for (const meeting of recentMeetings) {
-      try {
-        const sessions = await fetchOpenF1<OpenF1Session[]>("/sessions", { meeting_key: meeting.meeting_key });
-        const availableSessions = sessions
-          .filter((session) => session.session_key && session.session_name && session.date_start && new Date(session.date_start).getTime() <= now)
-          .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())
-          .map((session) => ({
-            sessionKey: Number(session.session_key),
-            sessionName: session.session_name,
-            sessionStart: session.date_start
-          }));
+    const meetingSelections = await Promise.all(recentMeetings.map((meeting) => buildMeetingSelection(meeting, now)));
+    meetingsWithSessions.push(...meetingSelections.filter((meeting): meeting is LapAnalysisSelectorMeeting => meeting !== null));
 
-        if (availableSessions.length) {
-          meetingsWithSessions.push({
-            meetingKey: meeting.meeting_key,
-            meetingName: meeting.meeting_name,
-            location: meeting.location,
-            country: meeting.country_name,
-            sessions: availableSessions
-          });
-        }
-      } catch {
-        continue;
-      }
-    }
-
-    if (meetingsWithSessions.length >= 4) break;
+    if (meetingsWithSessions.length >= MAX_SELECTOR_MEETINGS) break;
   }
 
-  let defaultSessionKey = meetingsWithSessions[0]?.sessions[0]?.sessionKey ?? null;
-
-  for (const meeting of meetingsWithSessions) {
-    for (const session of meeting.sessions) {
-      try {
-        const laps = await fetchOpenF1<OpenF1Lap[]>("/laps", { session_key: session.sessionKey });
-        if (laps.length) {
-          defaultSessionKey = session.sessionKey;
-          return { meetings: meetingsWithSessions, defaultSessionKey, source: "openf1" as const };
-        }
-      } catch {
-        continue;
-      }
-    }
-  }
-
-  return { meetings: meetingsWithSessions, defaultSessionKey, source: "openf1" as const };
+  return {
+    meetings: meetingsWithSessions.slice(0, MAX_SELECTOR_MEETINGS),
+    defaultSessionKey: meetingsWithSessions[0]?.sessions[0]?.sessionKey ?? null,
+    source: "openf1" as const
+  };
 }
 
 export async function getLapAnalysisBySession(sessionKey: number) {
