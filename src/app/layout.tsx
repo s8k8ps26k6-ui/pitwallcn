@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 className="rounded-full border border-neonAmber/40 bg-neonAmber/10 px-3 py-1 text-xs font-bold tracking-[0.14em] text-neonAmber transition hover:border-neonAmber hover:bg-neonAmber/20"
                 href="/project"
               >
-                项目说明
+                更新日志
               </Link>
             </div>
             <nav className="grid w-full grid-cols-4 gap-1.5 rounded-2xl border border-zinc-800/80 bg-black/20 p-1 text-center text-sm shadow-lg shadow-black/10 backdrop-blur lg:flex lg:w-fit lg:flex-wrap lg:text-left">
