@@ -1,5 +1,5 @@
 const OPENF1_BASE_URL = "https://api.openf1.org/v1";
-const MAX_SELECTOR_MEETINGS = 4;
+const MAX_SELECTOR_MEETINGS = 8;
 
 type OpenF1Meeting = {
   meeting_key: number;
@@ -131,7 +131,7 @@ function normalizeWeather(rows: OpenF1Weather[]) {
   return rows
     .filter((row) => row.date)
     .sort((a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime())
-    .slice(-120)
+    .slice(-240)
     .map((row) => {
       const rainfall = isRainfall(row.rainfall);
 
