@@ -98,13 +98,14 @@ export default async function WeatherPage({ searchParams }: { searchParams?: Wea
   const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : null;
   const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : null;
   const latest = weather.summary.latest;
-  const recentPoints = weather.points.slice(-24).reverse();
-  const quickSessions = selectedMeeting?.sessions.slice(0, 6) ?? [];
+  const recentPoints = weather.points.slice(-72).reverse();
+  const trendPoints = weather.points.slice(-24);
+  const quickSessions = selectedMeeting?.sessions.slice(0, 8) ?? [];
 
   const summaryCards = [
+    { label: "采样数量", value: weather.summary.sampleCount ? `${weather.summary.sampleCount}` : "--", hint: "OpenF1 返回记录" },
     { label: "赛道温度", value: latest?.trackTemperature ?? "--", hint: `均值 ${weather.summary.averageTrackTemperature}` },
     { label: "空气温度", value: latest?.airTemperature ?? "--", hint: "最新记录" },
-    { label: "湿度", value: latest?.humidity ?? "--", hint: latest?.rainLabel ?? "等待数据" },
     { label: "最大风速", value: weather.summary.maxWindSpeed, hint: `雨量样本 ${weather.summary.rainySamples}` }
   ];
 
@@ -182,6 +183,10 @@ export default async function WeatherPage({ searchParams }: { searchParams?: Wea
 
       {weather.points.length ? (
         <>
+          <section className="rounded-2xl border border-cyan-300/20 bg-cyan-300/5 p-4 text-sm leading-6 text-cyan-100">
+            当前赛段共读取到 {weather.summary.sampleCount} 条天气采样；下方表格显示最近 {recentPoints.length} 条。部分历史赛段由 OpenF1 返回的天气样本可能不是完整官方逐分钟记录。
+          </section>
+
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {summaryCards.map((item) => (
               <article key={item.label} className="rounded-2xl border border-zinc-800 bg-black/25 p-4 shadow-lg shadow-black/10">
@@ -224,7 +229,7 @@ export default async function WeatherPage({ searchParams }: { searchParams?: Wea
                 <p className="mt-1 text-sm text-zinc-500">最高 {weather.summary.maxTrackTemperature} · 最低 {weather.summary.minTrackTemperature}</p>
               </div>
               <div className="space-y-2">
-                {weather.points.slice(-12).map((point) => (
+                {trendPoints.map((point) => (
                   <div key={point.date} className="grid grid-cols-[3.5rem_1fr_4rem] items-center gap-3 text-xs">
                     <span className="font-mono text-zinc-500">{point.time}</span>
                     <div className="h-2 overflow-hidden rounded-full bg-zinc-900">
@@ -241,7 +246,7 @@ export default async function WeatherPage({ searchParams }: { searchParams?: Wea
             <div className="border-b border-zinc-800 bg-black/25 px-4 py-3">
               <p className="eyebrow">Weather Table</p>
               <h2 className="mt-1 text-lg font-semibold text-white">天气采样记录</h2>
-              <p className="mt-1 text-xs text-zinc-500">OpenF1 天气数据通常按分钟更新；部分历史赛段可能缺少完整字段。</p>
+              <p className="mt-1 text-xs text-zinc-500">表格默认显示最近 {recentPoints.length} 条记录。OpenF1 历史赛段可能缺少完整字段或只返回部分采样。</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
