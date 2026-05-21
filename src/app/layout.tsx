@@ -7,29 +7,29 @@ const siteUrl = "https://pitwallcn-57ny.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Pitwall CN | F1 数据看板",
-    template: "%s | Pitwall CN"
+    default: "GridDelta CN | F1 数据看板",
+    template: "%s | GridDelta CN"
   },
-  description: "Pitwall CN 是一个面向中文 F1 车迷的非官方数据看板，提供赛程、赛控、比赛结果、圈速分析和赛道天气等比赛周末数据入口。",
-  keywords: ["F1", "Formula 1", "OpenF1", "Pitwall CN", "赛车数据", "赛会控制", "圈速分析", "比赛结果"],
-  authors: [{ name: "Pitwall CN" }],
-  creator: "Pitwall CN",
-  publisher: "Pitwall CN",
-  applicationName: "Pitwall CN",
+  description: "GridDelta CN 是一个面向中文 F1 车迷的非官方数据看板，提供赛程、赛控、比赛结果、圈速分析和赛道天气等比赛周末数据入口。",
+  keywords: ["F1", "Formula 1", "OpenF1", "GridDelta CN", "Grid Delta", "赛车数据", "赛会控制", "圈速分析", "比赛结果"],
+  authors: [{ name: "GridDelta CN" }],
+  creator: "GridDelta CN",
+  publisher: "GridDelta CN",
+  applicationName: "GridDelta CN",
   alternates: {
     canonical: siteUrl
   },
   openGraph: {
-    title: "Pitwall CN | F1 数据看板",
+    title: "GridDelta CN | F1 数据看板",
     description: "面向中文 F1 车迷的非官方比赛周末数据看板。",
     url: siteUrl,
-    siteName: "Pitwall CN",
+    siteName: "GridDelta CN",
     locale: "zh_CN",
     type: "website"
   },
   twitter: {
     card: "summary",
-    title: "Pitwall CN | F1 数据看板",
+    title: "GridDelta CN | F1 数据看板",
     description: "面向中文 F1 车迷的非官方比赛周末数据看板。"
   },
   robots: {
@@ -57,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <Link className="text-2xl font-bold tracking-wide text-neonRed transition hover:text-red-400" href="/">
-                Pitwall CN
+                GridDelta CN
               </Link>
               <Link
                 className="rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs font-bold tracking-[0.14em] text-cyan-200 transition hover:border-cyan-200 hover:bg-cyan-300/20"

@@ -129,7 +129,7 @@ export default async function Home() {
             主控台在线 · {sourceLabel}
           </div>
           <p className="text-sm tracking-wide text-zinc-300">图片由站长于上海大奖赛现场拍摄</p>
-          <h1 className="text-4xl font-bold text-white sm:text-6xl">Pitwall CN</h1>
+          <h1 className="text-4xl font-bold text-white sm:text-6xl">GridDelta CN</h1>
           <h2 className="text-xl font-semibold text-neonAmber sm:text-2xl">非官方 F1 数据主控台</h2>
           <p className="max-w-2xl text-base leading-7 text-zinc-100">
             一个面向中文车迷的 F1 数据主控台。现在已形成赛程、赛控、比赛结果、实时计时、车手数据、积分榜与圈速分析的独立模块结构。
@@ -236,7 +236,7 @@ export default async function Home() {
 
       <footer className="motion-fade-up rounded-2xl border border-zinc-900 bg-black/20 px-5 py-6 text-sm text-zinc-500">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-semibold text-zinc-300">Pitwall CN</p>
+          <p className="font-semibold text-zinc-300">GridDelta CN</p>
           <p>非官方项目 · 当前使用本地官方赛历 + OpenF1 辅助 · For Chinese F1 fans</p>
         </div>
       </footer>
