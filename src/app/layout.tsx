@@ -2,9 +2,40 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Link from "next/link";
 
+const siteUrl = "https://pitwallcn-57ny.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Pitwall CN",
-  description: "Formula 1 data dashboard"
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Pitwall CN | F1 数据看板",
+    template: "%s | Pitwall CN"
+  },
+  description: "Pitwall CN 是一个面向中文 F1 车迷的非官方数据看板，提供赛程、赛控、比赛结果、圈速分析和赛道天气等比赛周末数据入口。",
+  keywords: ["F1", "Formula 1", "OpenF1", "Pitwall CN", "赛车数据", "赛会控制", "圈速分析", "比赛结果"],
+  authors: [{ name: "Pitwall CN" }],
+  creator: "Pitwall CN",
+  publisher: "Pitwall CN",
+  applicationName: "Pitwall CN",
+  alternates: {
+    canonical: siteUrl
+  },
+  openGraph: {
+    title: "Pitwall CN | F1 数据看板",
+    description: "面向中文 F1 车迷的非官方比赛周末数据看板。",
+    url: siteUrl,
+    siteName: "Pitwall CN",
+    locale: "zh_CN",
+    type: "website"
+  },
+  twitter: {
+    card: "summary",
+    title: "Pitwall CN | F1 数据看板",
+    description: "面向中文 F1 车迷的非官方比赛周末数据看板。"
+  },
+  robots: {
+    index: true,
+    follow: true
+  }
 };
 
 const navItems = [
