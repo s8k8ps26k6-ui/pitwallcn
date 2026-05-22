@@ -1,6 +1,7 @@
 import { fetchOpenF1 } from "@/lib/openf1-client";
 
 const MAX_SELECTOR_MEETINGS = 5;
+const SELECTOR_FETCH_OPTIONS = { timeoutMs: 12000, revalidate: 300 } as const;
 
 type OpenF1Meeting = {
   meeting_key: number;
@@ -206,7 +207,7 @@ function sortResultsRows(a: ResultsRow, b: ResultsRow) {
 
 async function buildMeetingSelection(meeting: OpenF1Meeting, now: number): Promise<ResultsSelectorMeeting | null> {
   try {
-    const sessions = await fetchOpenF1<OpenF1Session[]>("/sessions", { meeting_key: meeting.meeting_key });
+    const sessions = await fetchOpenF1<OpenF1Session[]>("/sessions", { meeting_key: meeting.meeting_key }, SELECTOR_FETCH_OPTIONS);
     const availableSessions = sessions
       .map((session) => {
         const category = getSessionCategory(session.session_name);
@@ -246,7 +247,7 @@ export async function getResultsSelectionData() {
     let meetings: OpenF1Meeting[] = [];
 
     try {
-      meetings = await fetchOpenF1<OpenF1Meeting[]>("/meetings", { year });
+      meetings = await fetchOpenF1<OpenF1Meeting[]>("/meetings", { year }, SELECTOR_FETCH_OPTIONS);
     } catch {
       continue;
     }
@@ -266,7 +267,7 @@ export async function getResultsSelectionData() {
   return {
     meetings: meetingsWithSessions.slice(0, MAX_SELECTOR_MEETINGS),
     defaultSessionKey: meetingsWithSessions[0]?.sessions[0]?.sessionKey ?? null,
-    source: "openf1" as const
+    source: meetingsWithSessions.length ? "openf1" as const : "openf1-empty" as const
   };
 }
 
