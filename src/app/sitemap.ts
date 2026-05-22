@@ -7,6 +7,7 @@ const routes = [
   "/schedule",
   "/live",
   "/race-control",
+  "/race-weekend",
   "/weather",
   "/drivers",
   "/standings",
