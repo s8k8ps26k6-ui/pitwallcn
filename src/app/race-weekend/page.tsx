@@ -7,8 +7,27 @@ import { getWeatherBySession } from "@/lib/weather-service";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const RECAP_MODULE_TIMEOUT_MS = 6500;
+
 type RaceWeekendSearchParams = {
   session?: string;
+};
+
+const fallbackResults = { rows: [], source: "openf1-error" as const };
+const fallbackRaceControl = { data: [], source: "openf1-error" as const, sessionName: "OpenF1 timeout" };
+const fallbackLapAnalysis = { rows: [], source: "openf1-error" as const };
+const fallbackWeather = {
+  points: [],
+  summary: {
+    latest: null,
+    sampleCount: 0,
+    averageTrackTemperature: "--",
+    maxTrackTemperature: "--",
+    minTrackTemperature: "--",
+    maxWindSpeed: "--",
+    rainySamples: 0
+  },
+  source: "openf1-error" as const
 };
 
 function parseSessionKey(value?: string) {
@@ -89,6 +108,23 @@ function raceControlCategoryClass(category: string) {
   return "border-zinc-700 bg-zinc-900/60 text-zinc-300";
 }
 
+async function withRecapTimeout<T>(promise: Promise<T>, fallback: T) {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timeout = setTimeout(() => resolve(fallback), RECAP_MODULE_TIMEOUT_MS);
+      })
+    ]);
+  } catch {
+    return fallback;
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
 export default async function RaceWeekendPage({ searchParams }: { searchParams?: RaceWeekendSearchParams }) {
   const selection = await getResultsSelectionData();
   const requestedSession = parseSessionKey(searchParams?.session);
@@ -101,10 +137,10 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
 
   const [results, raceControl, lapAnalysis, weather] = selectedSessionKey
     ? await Promise.all([
-        getResultsBySession(selectedSessionKey),
-        getRaceControlFeedBySession(selectedSessionKey),
-        getLapAnalysisBySession(selectedSessionKey),
-        getWeatherBySession(selectedSessionKey)
+        withRecapTimeout(getResultsBySession(selectedSessionKey), fallbackResults),
+        withRecapTimeout(getRaceControlFeedBySession(selectedSessionKey), fallbackRaceControl),
+        withRecapTimeout(getLapAnalysisBySession(selectedSessionKey), fallbackLapAnalysis),
+        withRecapTimeout(getWeatherBySession(selectedSessionKey), fallbackWeather)
       ])
     : [
         { rows: [], source: "openf1-waiting" as const },
@@ -120,6 +156,7 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
   const fastestRows = lapAnalysis.rows.filter((row) => row.bestLap !== "--").slice(0, 5);
   const raceControlPreview = raceControl.data.slice(0, 6);
   const latestWeather = weather.summary.latest;
+  const hasModuleWarning = [results.source, raceControl.source, lapAnalysis.source, weather.source].some((source) => source.includes("error"));
 
   const summaryCards = [
     { label: "当前赛段", value: selectedSessionName, hint: selectedMeetingName },
@@ -148,6 +185,12 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
           </div>
         </div>
       </section>
+
+      {hasModuleWarning ? (
+        <section className="rounded-2xl border border-neonAmber/30 bg-neonAmber/10 p-4 text-sm leading-6 text-neonAmber">
+          部分模块暂时未能及时返回数据。页面已先显示可用内容，稍后刷新可能恢复。
+        </section>
+      ) : null}
 
       <section id="recap-session-selector" className="card scroll-mt-6 motion-fade-up motion-delay-1 space-y-3">
         <div>
