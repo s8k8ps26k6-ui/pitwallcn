@@ -4,6 +4,14 @@ import { getScheduleCalendar } from "@/lib/f1-service";
 
 const primaryModules = [
   {
+    code: "RACE WEEKEND",
+    title: "单站复盘",
+    description: "把比赛结果、赛控消息、圈速分析和赛道天气集中到一个复盘页面。",
+    href: "/race-weekend",
+    status: "RECAP",
+    accent: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber"
+  },
+  {
     code: "SCHEDULE",
     title: "赛程",
     description: "查看下一站大奖赛、倒计时与周末时间安排。",
@@ -63,6 +71,13 @@ const primaryModules = [
 
 const commandCenterModules = [
   {
+    label: "单站复盘",
+    href: "/race-weekend",
+    title: "一页看懂赛段",
+    description: "把结果、赛控、圈速和天气合在一起，适合赛后快速回看关键数据。",
+    meta: "RECAP"
+  },
+  {
     label: "比赛结果",
     href: "/results",
     title: "先看最终分类",
@@ -82,13 +97,6 @@ const commandCenterModules = [
     title: "深入分析单圈",
     description: "用最快圈、分段、stint 和差距变化看懂比赛过程。",
     meta: "LAP DATA"
-  },
-  {
-    label: "赛程时间",
-    href: "/schedule",
-    title: "回到周末安排",
-    description: "确认下一站时间、赛段安排和大奖赛周末节奏。",
-    meta: "CALENDAR"
   }
 ] as const;
 
@@ -132,14 +140,14 @@ export default async function Home() {
           <h1 className="text-4xl font-bold text-white sm:text-6xl">GridDelta CN</h1>
           <h2 className="text-xl font-semibold text-neonAmber sm:text-2xl">非官方 F1 数据主控台</h2>
           <p className="max-w-2xl text-base leading-7 text-zinc-100">
-            一个面向中文车迷的 F1 数据主控台。现在已形成赛程、赛控、比赛结果、实时计时、车手数据、积分榜与圈速分析的独立模块结构。
+            一个面向中文车迷的 F1 数据主控台。现在已形成赛程、赛控、比赛结果、实时计时、车手数据、积分榜、赛道天气与单站复盘的独立模块结构。
           </p>
           <div className="flex flex-wrap gap-3 pt-2 text-sm">
-            <Link className="rounded-full bg-neonRed px-4 py-2 font-semibold text-white transition hover:bg-red-500" href="/results">
-              进入比赛结果
+            <Link className="rounded-full bg-neonRed px-4 py-2 font-semibold text-white transition hover:bg-red-500" href="/race-weekend">
+              进入单站复盘
             </Link>
-            <Link className="rounded-full border border-zinc-600 px-4 py-2 text-zinc-100 transition hover:border-neonAmber hover:text-neonAmber" href="/schedule">
-              查看下一站
+            <Link className="rounded-full border border-zinc-600 px-4 py-2 text-zinc-100 transition hover:border-neonAmber hover:text-neonAmber" href="/results">
+              查看比赛结果
             </Link>
           </div>
         </div>
@@ -170,11 +178,11 @@ export default async function Home() {
             <p className="eyebrow">Race Weekend Command Center</p>
             <h2 className="mt-2 text-2xl font-bold text-white">比赛周末作战台</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              把赛后最常用的入口集中在一起：先看结果，再查赛控，最后进入圈速分析。
+              把赛后最常用的入口集中在一起：先看单站复盘，再进入结果、赛控和圈速详情。
             </p>
           </div>
           <span className="w-fit rounded-full border border-neonAmber/40 bg-neonAmber/10 px-3 py-1 text-[0.65rem] font-bold tracking-[0.18em] text-neonAmber">
-            RESULTS · CONTROL · ANALYSIS
+            RECAP · RESULTS · CONTROL · ANALYSIS
           </span>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -192,7 +200,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {primaryModules.map((item, index) => (
           <Link
             key={item.href}
@@ -228,7 +236,7 @@ export default async function Home() {
             <p className="eyebrow">Project Status</p>
             <h2 className="mt-2 text-xl font-semibold text-neonAmber">v1 数据主控台</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-300">
-              当前版本已经接入本地官方赛历，并使用 OpenF1 支撑赛控、圈速分析与比赛结果。后续可继续推进积分、车手详情与单站复盘页面。
+              当前版本已经接入本地官方赛历，并使用 OpenF1 支撑赛控、圈速分析、赛道天气、比赛结果与单站复盘。后续可继续推进车手详情、积分数据和单站复盘深度分析。
             </p>
           </div>
         </div>
