@@ -108,6 +108,24 @@ function raceControlCategoryClass(category: string) {
   return "border-zinc-700 bg-zinc-900/60 text-zinc-300";
 }
 
+function getRaceControlIntensity(messageCount: number) {
+  if (messageCount >= 24) return { value: "高压", hint: `${messageCount} 条赛控消息，赛段波动明显`, accent: "border-neonRed/40 bg-neonRed/10 text-neonRed" };
+  if (messageCount >= 10) return { value: "活跃", hint: `${messageCount} 条赛控消息，值得回看赛控`, accent: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" };
+  if (messageCount > 0) return { value: "平稳", hint: `${messageCount} 条赛控消息`, accent: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" };
+  return { value: "等待", hint: "暂无赛控消息", accent: "border-zinc-700 bg-zinc-900/60 text-zinc-300" };
+}
+
+function getTrackWindow(trackTemperature?: number | null) {
+  if (trackTemperature === null || trackTemperature === undefined || !Number.isFinite(trackTemperature)) {
+    return { value: "--", hint: "等待赛道温度", accent: "border-zinc-700 bg-zinc-900/60 text-zinc-300" };
+  }
+
+  if (trackTemperature >= 48) return { value: "高温", hint: "轮胎热管理压力偏高", accent: "border-neonRed/40 bg-neonRed/10 text-neonRed" };
+  if (trackTemperature >= 38) return { value: "偏热", hint: "轮胎窗口可能更敏感", accent: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" };
+  if (trackTemperature <= 22) return { value: "偏冷", hint: "暖胎和升温可能更关键", accent: "border-cyan-300/40 bg-cyan-300/10 text-cyan-200" };
+  return { value: "常规", hint: "赛道温度处于常规区间", accent: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" };
+}
+
 async function withRecapTimeout<T>(promise: Promise<T>, fallback: T) {
   let timeout: ReturnType<typeof setTimeout> | undefined;
 
@@ -157,6 +175,10 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
   const raceControlPreview = raceControl.data.slice(0, 6);
   const latestWeather = weather.summary.latest;
   const hasModuleWarning = [results.source, raceControl.source, lapAnalysis.source, weather.source].some((source) => source.includes("error"));
+  const availableModuleCount = [results.rows.length, raceControl.data.length, lapAnalysis.rows.length, weather.summary.sampleCount].filter((count) => count > 0).length;
+  const raceControlIntensity = getRaceControlIntensity(raceControl.data.length);
+  const trackWindow = getTrackWindow(latestWeather?.trackTemperatureValue);
+  const fastestReference = fastestRows[0];
 
   const summaryCards = [
     { label: "当前赛段", value: selectedSessionName, hint: selectedMeetingName },
@@ -164,6 +186,37 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
     { label: "赛控消息", value: `${raceControl.data.length}`, hint: sourceBadge(raceControl.source) },
     { label: "天气采样", value: `${weather.summary.sampleCount}`, hint: latestWeather ? `最新 ${latestWeather.time}` : sourceBadge(weather.source) }
   ];
+
+  const insightCards = [
+    {
+      label: "赛事节奏",
+      value: raceControlIntensity.value,
+      hint: raceControlIntensity.hint,
+      accent: raceControlIntensity.accent
+    },
+    {
+      label: "赛道窗口",
+      value: trackWindow.value,
+      hint: latestWeather ? `${latestWeather.trackTemperature} · ${trackWindow.hint}` : trackWindow.hint,
+      accent: trackWindow.accent
+    },
+    {
+      label: "速度参考",
+      value: fastestReference?.driver ?? "--",
+      hint: fastestReference ? `最快圈 ${fastestReference.bestLap}` : "等待圈速数据",
+      accent: fastestReference ? "border-purple-400/40 bg-purple-400/10 text-purple-200" : "border-zinc-700 bg-zinc-900/60 text-zinc-300"
+    },
+    {
+      label: "数据完整度",
+      value: `${availableModuleCount}/4`,
+      hint: "结果 / 赛控 / 圈速 / 天气",
+      accent: availableModuleCount >= 3 ? "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" : "border-neonAmber/40 bg-neonAmber/10 text-neonAmber"
+    }
+  ];
+
+  const insightSummary = winner
+    ? `${selectedSessionName} 当前摘要：${winner.driver} 位列成绩表首位，${raceControlIntensity.hint}，${latestWeather ? `最新赛道温度 ${latestWeather.trackTemperature}` : "天气数据等待中"}。`
+    : `${selectedSessionName} 当前暂无完整成绩，已展示可用的赛控、圈速和天气模块。`;
 
   return (
     <main className="space-y-4">
@@ -233,6 +286,28 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
             <p className="mt-1 truncate text-xs text-zinc-500">{item.hint}</p>
           </article>
         ))}
+      </section>
+
+      <section className="motion-fade-up motion-delay-2 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-5 shadow-xl shadow-black/20">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow">GridDelta Intelligence</p>
+            <h2 className="mt-2 text-2xl font-bold text-white">数据脉冲</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">{insightSummary}</p>
+          </div>
+          <span className="w-fit rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-[0.65rem] font-bold tracking-[0.18em] text-cyan-200">
+            RULE-BASED · NO MOCK
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {insightCards.map((item) => (
+            <article key={item.label} className={`rounded-2xl border p-4 ${item.accent}`}>
+              <p className="race-code opacity-80">{item.label}</p>
+              <p className="mt-2 font-mono text-2xl font-bold text-white">{item.value}</p>
+              <p className="mt-2 text-xs leading-5 opacity-80">{item.hint}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
