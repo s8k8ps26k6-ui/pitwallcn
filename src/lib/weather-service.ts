@@ -1,4 +1,5 @@
-const OPENF1_BASE_URL = "https://api.openf1.org/v1";
+import { fetchOpenF1 } from "@/lib/openf1-client";
+
 const MAX_SELECTOR_MEETINGS = 8;
 
 type OpenF1Meeting = {
@@ -70,15 +71,6 @@ export type WeatherSummary = {
   maxWindSpeed: string;
   rainySamples: number;
 };
-
-async function fetchOpenF1<T>(path: string, params: Record<string, string | number>) {
-  const url = new URL(`${OPENF1_BASE_URL}${path}`);
-  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));
-
-  const response = await fetch(url.toString(), { next: { revalidate: 120 } });
-  if (!response.ok) throw new Error(`OpenF1 request failed: ${response.status}`);
-  return (await response.json()) as T;
-}
 
 function formatTime(date?: string) {
   if (!date) return "--:--";
