@@ -1,6 +1,6 @@
+import { fetchOpenF1 } from "@/lib/openf1-client";
 import type { RaceControlMessage } from "@/lib/types";
 
-const OPENF1_BASE_URL = "https://api.openf1.org/v1";
 const MAX_SELECTOR_MEETINGS = 4;
 
 type OpenF1Meeting = {
@@ -41,18 +41,6 @@ export type RaceControlSelectorMeeting = {
   country: string;
   sessions: RaceControlSelectorSession[];
 };
-
-function buildOpenF1Url(path: string, params: Record<string, string | number>) {
-  const url = new URL(`${OPENF1_BASE_URL}${path}`);
-  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));
-  return url.toString();
-}
-
-async function fetchOpenF1<T>(path: string, params: Record<string, string | number>) {
-  const response = await fetch(buildOpenF1Url(path, params), { next: { revalidate: 120 } });
-  if (!response.ok) throw new Error(`OpenF1 request failed: ${response.status}`);
-  return (await response.json()) as T;
-}
 
 function formatRaceControlTimestamp(date?: string) {
   if (!date) return "--:--:--";
