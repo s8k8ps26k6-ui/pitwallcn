@@ -6,8 +6,14 @@
   color-scheme: dark;
 }
 
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
 body {
   @apply bg-asphalt text-zinc-100;
+  overflow-x: hidden;
   background-image: radial-gradient(circle at top, #1a1d2a 0%, #09090b 45%);
 }
 
