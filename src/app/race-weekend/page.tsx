@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { getLapAnalysisBySession } from "@/lib/lap-analysis-service";
 import { getRaceControlFeedBySession } from "@/lib/race-control-service";
 import { getResultsBySession, getResultsSelectionData } from "@/lib/results-service";
@@ -144,7 +143,7 @@ async function withRecapTimeout<T>(promise: Promise<T>, fallback: T) {
   }
 }
 
-function CompactDetail({ title, eyebrow, summary, href, children }: { title: string; eyebrow: string; summary: string; href: string; children: ReactNode }) {
+function CompactDetail({ title, eyebrow, summary, href, children }: { title: string; eyebrow: string; summary: string; href: string; children: JSX.Element }) {
   return (
     <details className="group overflow-hidden rounded-2xl border border-zinc-800 bg-black/20">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 transition hover:bg-white/[0.03]">
