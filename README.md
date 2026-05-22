@@ -19,6 +19,7 @@ https://github.com/s8k8ps26k6-ui/pitwallcn
 - `/` Home dashboard
 - `/schedule` Race calendar and next-race countdown
 - `/race-control` Race Control message feed
+- `/race-weekend` Race-weekend recap page
 - `/results` Session results and classification table
 - `/lap-analysis` Lap, stint, position and interval analysis
 - `/weather` Track-weather dashboard
@@ -43,6 +44,12 @@ https://github.com/s8k8ps26k6-ui/pitwallcn
 - Vercel deployment
 
 ## Public Changelog
+
+### v1.8 Race Weekend Recap
+
+- Added `/race-weekend` single-session recap page
+- Combined session results, race-control messages, lap-analysis summary and weather data into one overview
+- Added Race Weekend Recap entry to the home dashboard and sitemap
 
 ### v1.7 Brand Rename
 
@@ -91,7 +98,7 @@ https://github.com/s8k8ps26k6-ui/pitwallcn
 
 Near-term:
 
-- Add race-weekend recap pages
+- Improve race-weekend recap depth and cross-module linking
 - Connect driver pages with recent results
 - Improve standings data source or maintain a reliable local standings model
 - Add clearer error states for temporary OpenF1 downtime
