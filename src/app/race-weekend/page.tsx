@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RecapDrawerNav } from "@/components/recap-drawer-nav";
 import { getLapAnalysisBySession } from "@/lib/lap-analysis-service";
 import { getRaceControlFeedBySession } from "@/lib/race-control-service";
 import { getResultsBySession, getResultsSelectionData } from "@/lib/results-service";
@@ -12,6 +13,23 @@ const RECAP_MODULE_TIMEOUT_MS = 6500;
 type RaceWeekendSearchParams = {
   session?: string;
 };
+
+const manualFallbackMeetings = [
+  {
+    meetingKey: -11249,
+    meetingName: "OpenF1 历史可用赛段",
+    location: "Manual fallback",
+    country: "OpenF1",
+    sessions: [
+      {
+        sessionKey: 11249,
+        sessionName: "Race",
+        sessionStart: "2024-01-01T00:00:00Z",
+        category: "race" as const
+      }
+    ]
+  }
+];
 
 const fallbackResults = { rows: [], source: "openf1-error" as const };
 const fallbackRaceControl = { data: [], source: "openf1-error" as const, sessionName: "OpenF1 timeout" };
@@ -91,6 +109,7 @@ function sourceBadge(source: string) {
   if (source === "openf1") return "OPENF1";
   if (source.includes("waiting")) return "WAITING DATA";
   if (source.includes("error")) return "OPENF1 WAITING";
+  if (source.includes("empty")) return "MANUAL MODE";
   return "API READY";
 }
 
@@ -145,10 +164,11 @@ async function withRecapTimeout<T>(promise: Promise<T>, fallback: T) {
 
 export default async function RaceWeekendPage({ searchParams }: { searchParams?: RaceWeekendSearchParams }) {
   const selection = await getResultsSelectionData();
+  const selectorMeetings = selection.meetings.length ? selection.meetings : manualFallbackMeetings;
   const requestedSession = parseSessionKey(searchParams?.session);
-  const selectedSessionKey = requestedSession ?? selection.defaultSessionKey;
+  const selectedSessionKey = requestedSession ?? selectorMeetings[0]?.sessions[0]?.sessionKey ?? null;
 
-  const selectedMeeting = selection.meetings.find((meeting) =>
+  const selectedMeeting = selectorMeetings.find((meeting) =>
     meeting.sessions.some((session) => session.sessionKey === selectedSessionKey)
   );
   const selectedSession = selectedMeeting?.sessions.find((session) => session.sessionKey === selectedSessionKey);
@@ -168,7 +188,7 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
       ];
 
   const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : "等待可用大奖赛";
-  const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : "自动选择";
+  const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : "手动选择";
   const winner = results.rows[0];
   const podium = results.rows.slice(0, 3);
   const fastestRows = lapAnalysis.rows.filter((row) => row.bestLap !== "--").slice(0, 5);
@@ -188,30 +208,10 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
   ];
 
   const insightCards = [
-    {
-      label: "赛事节奏",
-      value: raceControlIntensity.value,
-      hint: raceControlIntensity.hint,
-      accent: raceControlIntensity.accent
-    },
-    {
-      label: "赛道窗口",
-      value: trackWindow.value,
-      hint: latestWeather ? `${latestWeather.trackTemperature} · ${trackWindow.hint}` : trackWindow.hint,
-      accent: trackWindow.accent
-    },
-    {
-      label: "速度参考",
-      value: fastestReference?.driver ?? "--",
-      hint: fastestReference ? `最快圈 ${fastestReference.bestLap}` : "等待圈速数据",
-      accent: fastestReference ? "border-purple-400/40 bg-purple-400/10 text-purple-200" : "border-zinc-700 bg-zinc-900/60 text-zinc-300"
-    },
-    {
-      label: "数据完整度",
-      value: `${availableModuleCount}/4`,
-      hint: "结果 / 赛控 / 圈速 / 天气",
-      accent: availableModuleCount >= 3 ? "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" : "border-neonAmber/40 bg-neonAmber/10 text-neonAmber"
-    }
+    { label: "赛事节奏", value: raceControlIntensity.value, hint: raceControlIntensity.hint, accent: raceControlIntensity.accent },
+    { label: "赛道窗口", value: trackWindow.value, hint: latestWeather ? `${latestWeather.trackTemperature} · ${trackWindow.hint}` : trackWindow.hint, accent: trackWindow.accent },
+    { label: "速度参考", value: fastestReference?.driver ?? "--", hint: fastestReference ? `最快圈 ${fastestReference.bestLap}` : "等待圈速数据", accent: fastestReference ? "border-purple-400/40 bg-purple-400/10 text-purple-200" : "border-zinc-700 bg-zinc-900/60 text-zinc-300" },
+    { label: "数据完整度", value: `${availableModuleCount}/4`, hint: "结果 / 赛控 / 圈速 / 天气", accent: availableModuleCount >= 3 ? "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" : "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" }
   ];
 
   const insightSummary = winner
@@ -220,6 +220,7 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
 
   const sectionLinks = [
     { href: "#overview", label: "总览", hint: `${availableModuleCount}/4 模块可用` },
+    { href: "#recap-session-selector", label: "选择赛段", hint: selectedSessionKey ? `Session ${selectedSessionKey}` : "手动输入" },
     { href: "#intelligence", label: "数据脉冲", hint: raceControlIntensity.value },
     { href: "#classification", label: "成绩", hint: winner?.driver ?? "等待" },
     { href: "#race-control", label: "赛控", hint: `${raceControl.data.length} 条` },
@@ -239,7 +240,7 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
             <p className="eyebrow">Race Weekend Recap</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">单站复盘</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              用左侧导航把复盘拆成几个清晰区域：先看结论，需要细节时再跳到对应模块，减少一直往下翻的感觉。
+              点击下方菜单按钮打开侧边导航。复盘页面保留完整内容，但不再用横向长条挤压屏幕。
             </p>
           </div>
           <div className="w-fit rounded-full border border-pitGreen/50 bg-black/60 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.14)]">
@@ -248,238 +249,214 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
         </div>
       </section>
 
+      <RecapDrawerNav items={sectionLinks} currentLabel={selectedSessionName} currentHint={selectedMeetingName} />
+
       {hasModuleWarning ? (
         <section className="rounded-2xl border border-neonAmber/30 bg-neonAmber/10 p-4 text-sm leading-6 text-neonAmber">
           部分模块暂时未能及时返回数据。页面已先显示可用内容，稍后刷新可能恢复。
         </section>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[16rem_1fr] xl:items-start">
-        <aside className="rounded-[1.75rem] border border-zinc-800 bg-zinc-950/85 p-3 shadow-xl shadow-black/20 backdrop-blur xl:sticky xl:top-4">
-          <div className="mb-3 hidden px-2 xl:block">
-            <p className="race-code text-zinc-500">Navigator</p>
-            <p className="mt-1 text-sm font-semibold text-white">复盘导航</p>
-          </div>
-          <nav className="flex gap-2 overflow-x-auto pb-1 xl:flex-col xl:overflow-visible xl:pb-0">
-            {sectionLinks.map((item) => (
-              <a
-                key={item.href}
-                className="min-w-32 rounded-2xl border border-zinc-800 bg-black/25 px-3 py-2 transition hover:border-neonAmber/60 hover:bg-white/[0.04] xl:min-w-0"
-                href={item.href}
-              >
-                <span className="block text-sm font-semibold text-zinc-100">{item.label}</span>
-                <span className="mt-1 block truncate text-xs text-zinc-500">{item.hint}</span>
-              </a>
-            ))}
-          </nav>
-          <div className="mt-3 hidden rounded-2xl border border-zinc-800 bg-black/25 p-3 xl:block">
-            <p className="text-xs leading-5 text-zinc-500">当前赛段</p>
-            <p className="mt-1 text-sm font-semibold text-white">{selectedSessionName}</p>
-            <p className="mt-1 text-xs leading-5 text-zinc-500">{selectedMeetingName}</p>
-          </div>
-        </aside>
+      <section id="recap-session-selector" className="card scroll-mt-24 motion-fade-up motion-delay-1 space-y-3">
+        <div>
+          <p className="eyebrow">Weekend / Session</p>
+          <h2 className="mt-1 text-lg font-semibold text-white">选择复盘赛段</h2>
+          <p className="mt-1 text-sm text-zinc-400">当前：{selectedMeetingName} · {selectedSessionName}</p>
+          <p className="mt-1 text-xs text-zinc-600">数据标识：{selectedSessionKey ?? "暂无"}</p>
+        </div>
 
-        <div className="space-y-4">
-          <section id="recap-session-selector" className="card scroll-mt-6 motion-fade-up motion-delay-1 space-y-3">
-            <div>
-              <p className="eyebrow">Weekend / Session</p>
-              <h2 className="mt-1 text-lg font-semibold text-white">选择复盘赛段</h2>
-              <p className="mt-1 text-sm text-zinc-400">
-                当前：{selectedMeetingName} · {selectedSessionName}
-              </p>
-              <p className="mt-1 text-xs text-zinc-600">数据标识：{selectedSessionKey ?? "暂无"}</p>
-            </div>
-
-            <form action="/race-weekend#recap-session-selector" className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
-              <select
-                className="rounded-xl border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-neonAmber"
-                defaultValue={selectedSessionKey ?? ""}
-                name="session"
-              >
-                {!selectedSessionKey ? <option value="">自动选择最新可用赛段</option> : null}
-                {selection.meetings.map((meeting) => (
-                  <optgroup key={meeting.meetingKey} label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}>
-                    {meeting.sessions.map((session) => (
-                      <option key={session.sessionKey} value={session.sessionKey}>
-                        {translateSessionName(session.sessionName)} · {formatSessionTime(session.sessionStart)}
-                      </option>
-                    ))}
-                  </optgroup>
+        <form action="/race-weekend#recap-session-selector" className="grid gap-3" method="get">
+          <select className="w-full rounded-xl border border-zinc-800 bg-black/30 px-3 py-3 text-sm text-zinc-100 outline-none transition focus:border-neonAmber" defaultValue={selectedSessionKey ?? ""} name="session">
+            {selectorMeetings.map((meeting) => (
+              <optgroup key={meeting.meetingKey} label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}>
+                {meeting.sessions.map((session) => (
+                  <option key={session.sessionKey} value={session.sessionKey}>
+                    {translateSessionName(session.sessionName)} · Session {session.sessionKey} · {formatSessionTime(session.sessionStart)}
+                  </option>
                 ))}
-              </select>
-              <button className="rounded-xl border border-zinc-800 bg-black/40 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-neonAmber hover:text-neonAmber" type="submit">
-                查看复盘
-              </button>
-            </form>
-          </section>
-
-          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {summaryCards.map((item) => (
-              <article key={item.label} className="rounded-2xl border border-zinc-800 bg-black/25 p-4 shadow-lg shadow-black/10">
-                <p className="race-code">{item.label}</p>
-                <p className="mt-2 truncate font-mono text-2xl font-bold text-white">{item.value}</p>
-                <p className="mt-1 truncate text-xs text-zinc-500">{item.hint}</p>
-              </article>
+              </optgroup>
             ))}
-          </section>
+          </select>
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <input
+              className="rounded-xl border border-zinc-800 bg-black/30 px-3 py-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-neonAmber"
+              inputMode="numeric"
+              name="session"
+              placeholder="也可以手动输入 OpenF1 session_key"
+              type="number"
+            />
+            <button className="rounded-xl border border-zinc-800 bg-black/40 px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-neonAmber hover:text-neonAmber" type="submit">
+              查看复盘
+            </button>
+          </div>
+        </form>
+      </section>
 
-          <section id="intelligence" className="scroll-mt-6 motion-fade-up motion-delay-2 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-5 shadow-xl shadow-black/20">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="eyebrow">GridDelta Intelligence</p>
-                <h2 className="mt-2 text-2xl font-bold text-white">数据脉冲</h2>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">{insightSummary}</p>
-              </div>
-              <span className="w-fit rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-[0.65rem] font-bold tracking-[0.18em] text-cyan-200">
-                RULE-BASED · NO MOCK
-              </span>
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {summaryCards.map((item) => (
+          <article key={item.label} className="rounded-2xl border border-zinc-800 bg-black/25 p-4 shadow-lg shadow-black/10">
+            <p className="race-code">{item.label}</p>
+            <p className="mt-2 truncate font-mono text-2xl font-bold text-white">{item.value}</p>
+            <p className="mt-1 truncate text-xs text-zinc-500">{item.hint}</p>
+          </article>
+        ))}
+      </section>
+
+      <section id="intelligence" className="scroll-mt-24 motion-fade-up motion-delay-2 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-5 shadow-xl shadow-black/20">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow">GridDelta Intelligence</p>
+            <h2 className="mt-2 text-2xl font-bold text-white">数据脉冲</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">{insightSummary}</p>
+          </div>
+          <span className="w-fit rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-[0.65rem] font-bold tracking-[0.18em] text-cyan-200">
+            RULE-BASED · NO MOCK
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {insightCards.map((item) => (
+            <article key={item.label} className={`rounded-2xl border p-4 ${item.accent}`}>
+              <p className="race-code opacity-80">{item.label}</p>
+              <p className="mt-2 font-mono text-2xl font-bold text-white">{item.value}</p>
+              <p className="mt-2 text-xs leading-5 opacity-80">{item.hint}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid gap-4 2xl:grid-cols-[0.9fr_1.1fr]">
+        <article id="classification" className="card scroll-mt-24 motion-fade-up space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow">Classification</p>
+              <h2 className="mt-1 text-xl font-bold text-white">成绩摘要</h2>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {insightCards.map((item) => (
-                <article key={item.label} className={`rounded-2xl border p-4 ${item.accent}`}>
-                  <p className="race-code opacity-80">{item.label}</p>
-                  <p className="mt-2 font-mono text-2xl font-bold text-white">{item.value}</p>
-                  <p className="mt-2 text-xs leading-5 opacity-80">{item.hint}</p>
-                </article>
+            <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/results?session=${selectedSessionKey}` : "/results"}>
+              详细结果 →
+            </Link>
+          </div>
+
+          {podium.length ? (
+            <div className="space-y-3">
+              {podium.map((row) => (
+                <div key={row.driver} className="grid grid-cols-[3rem_1fr_auto] items-center gap-3 rounded-xl border border-zinc-800 bg-black/25 p-3">
+                  <span className="font-mono text-lg font-bold text-white">{row.position}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-mono font-semibold text-white">{row.driver}</span>
+                    <span className="mt-0.5 block truncate text-xs text-zinc-500">{row.team}</span>
+                  </span>
+                  <span className="font-mono text-sm font-semibold text-neonAmber">{row.timeOrGap}</span>
+                </div>
               ))}
             </div>
-          </section>
+          ) : (
+            <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无成绩数据。</p>
+          )}
+        </article>
 
-          <section className="grid gap-4 2xl:grid-cols-[0.9fr_1.1fr]">
-            <article id="classification" className="card scroll-mt-6 motion-fade-up space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="eyebrow">Classification</p>
-                  <h2 className="mt-1 text-xl font-bold text-white">成绩摘要</h2>
+        <article id="race-control" className="card scroll-mt-24 motion-fade-up space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow">Race Control</p>
+              <h2 className="mt-1 text-xl font-bold text-white">赛控重点</h2>
+            </div>
+            <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/race-control?session=${selectedSessionKey}` : "/race-control"}>
+              完整赛控 →
+            </Link>
+          </div>
+
+          {raceControlPreview.length ? (
+            <div className="space-y-3">
+              {raceControlPreview.map((item) => (
+                <div key={item.id} className="rounded-xl border border-zinc-800 bg-black/25 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono text-xs text-zinc-500">{item.timestamp}</span>
+                    <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.14em] ${raceControlCategoryClass(item.category)}`}>
+                      {raceControlCategoryLabel(item.category)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-zinc-300">{item.message}</p>
                 </div>
-                <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/results?session=${selectedSessionKey}` : "/results"}>
-                  详细结果 →
-                </Link>
-              </div>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无赛控消息。</p>
+          )}
+        </article>
+      </section>
 
-              {podium.length ? (
-                <div className="space-y-3">
-                  {podium.map((row) => (
-                    <div key={row.driver} className="grid grid-cols-[3rem_1fr_auto] items-center gap-3 rounded-xl border border-zinc-800 bg-black/25 p-3">
-                      <span className="font-mono text-lg font-bold text-white">{row.position}</span>
-                      <span>
-                        <span className="block font-mono font-semibold text-white">{row.driver}</span>
-                        <span className="mt-0.5 block text-xs text-zinc-500">{row.team}</span>
-                      </span>
-                      <span className="font-mono text-sm font-semibold text-neonAmber">{row.timeOrGap}</span>
-                    </div>
+      <section className="grid gap-4 2xl:grid-cols-[1.1fr_0.9fr]">
+        <article id="lap-analysis" className="card scroll-mt-24 motion-fade-up space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow">Lap Analysis</p>
+              <h2 className="mt-1 text-xl font-bold text-white">圈速前五</h2>
+            </div>
+            <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/lap-analysis?session=${selectedSessionKey}` : "/lap-analysis"}>
+              圈速分析 →
+            </Link>
+          </div>
+
+          {fastestRows.length ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-zinc-800 text-xs uppercase tracking-[0.18em] text-zinc-500">
+                  <tr>
+                    {['车手', '最快圈', '位置', '差距', 'stint'].map((title) => (
+                      <th key={title} className="px-3 py-2">{title}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {fastestRows.map((row) => (
+                    <tr key={row.driver} className="border-b border-zinc-900">
+                      <td className="px-3 py-3 font-mono text-white">{row.driver}</td>
+                      <td className="px-3 py-3 font-mono text-neonAmber">{row.bestLap}</td>
+                      <td className="px-3 py-3 font-mono text-zinc-400">{row.position}</td>
+                      <td className="px-3 py-3 font-mono text-zinc-400">{row.gap}</td>
+                      <td className="px-3 py-3 text-zinc-400">{row.stint}</td>
+                    </tr>
                   ))}
-                </div>
-              ) : (
-                <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无成绩数据。</p>
-              )}
-            </article>
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无圈速数据。</p>
+          )}
+        </article>
 
-            <article id="race-control" className="card scroll-mt-6 motion-fade-up space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="eyebrow">Race Control</p>
-                  <h2 className="mt-1 text-xl font-bold text-white">赛控重点</h2>
-                </div>
-                <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/race-control?session=${selectedSessionKey}` : "/race-control"}>
-                  完整赛控 →
-                </Link>
-              </div>
+        <article id="weather" className="card scroll-mt-24 motion-fade-up space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow">Weather</p>
+              <h2 className="mt-1 text-xl font-bold text-white">赛道天气</h2>
+            </div>
+            <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/weather?session=${selectedSessionKey}` : "/weather"}>
+              天气详情 →
+            </Link>
+          </div>
 
-              {raceControlPreview.length ? (
-                <div className="space-y-3">
-                  {raceControlPreview.map((item) => (
-                    <div key={item.id} className="rounded-xl border border-zinc-800 bg-black/25 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-mono text-xs text-zinc-500">{item.timestamp}</span>
-                        <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.14em] ${raceControlCategoryClass(item.category)}`}>
-                          {raceControlCategoryLabel(item.category)}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm leading-6 text-zinc-300">{item.message}</p>
-                    </div>
-                  ))}
+          {latestWeather ? (
+            <div className="grid gap-3 text-sm">
+              {[
+                ["赛道温度", latestWeather.trackTemperature],
+                ["空气温度", latestWeather.airTemperature],
+                ["湿度", latestWeather.humidity],
+                ["降雨", latestWeather.rainLabel],
+                ["风向", latestWeather.windDirection],
+                ["风速", latestWeather.windSpeed]
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-black/25 px-3 py-2">
+                  <span className="text-zinc-500">{label}</span>
+                  <span className="font-mono font-semibold text-white">{value}</span>
                 </div>
-              ) : (
-                <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无赛控消息。</p>
-              )}
-            </article>
-          </section>
-
-          <section className="grid gap-4 2xl:grid-cols-[1.1fr_0.9fr]">
-            <article id="lap-analysis" className="card scroll-mt-6 motion-fade-up space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="eyebrow">Lap Analysis</p>
-                  <h2 className="mt-1 text-xl font-bold text-white">圈速前五</h2>
-                </div>
-                <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/lap-analysis?session=${selectedSessionKey}` : "/lap-analysis"}>
-                  圈速分析 →
-                </Link>
-              </div>
-
-              {fastestRows.length ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-left text-sm">
-                    <thead className="border-b border-zinc-800 text-xs uppercase tracking-[0.18em] text-zinc-500">
-                      <tr>
-                        {['车手', '最快圈', '位置', '差距', 'stint'].map((title) => (
-                          <th key={title} className="px-3 py-2">{title}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {fastestRows.map((row) => (
-                        <tr key={row.driver} className="border-b border-zinc-900">
-                          <td className="px-3 py-3 font-mono text-white">{row.driver}</td>
-                          <td className="px-3 py-3 font-mono text-neonAmber">{row.bestLap}</td>
-                          <td className="px-3 py-3 font-mono text-zinc-400">{row.position}</td>
-                          <td className="px-3 py-3 font-mono text-zinc-400">{row.gap}</td>
-                          <td className="px-3 py-3 text-zinc-400">{row.stint}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无圈速数据。</p>
-              )}
-            </article>
-
-            <article id="weather" className="card scroll-mt-6 motion-fade-up space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="eyebrow">Weather</p>
-                  <h2 className="mt-1 text-xl font-bold text-white">赛道天气</h2>
-                </div>
-                <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/weather?session=${selectedSessionKey}` : "/weather"}>
-                  天气详情 →
-                </Link>
-              </div>
-
-              {latestWeather ? (
-                <div className="grid gap-3 text-sm">
-                  {[
-                    ["赛道温度", latestWeather.trackTemperature],
-                    ["空气温度", latestWeather.airTemperature],
-                    ["湿度", latestWeather.humidity],
-                    ["降雨", latestWeather.rainLabel],
-                    ["风向", latestWeather.windDirection],
-                    ["风速", latestWeather.windSpeed]
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-black/25 px-3 py-2">
-                      <span className="text-zinc-500">{label}</span>
-                      <span className="font-mono font-semibold text-white">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无天气数据。</p>
-              )}
-            </article>
-          </section>
-        </div>
-      </div>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无天气数据。</p>
+          )}
+        </article>
+      </section>
     </main>
   );
 }
