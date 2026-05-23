@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getOpenF1LiveTiming } from "@/lib/live-timing-service";
+import { getLiveTiming } from "@/lib/f1-service";
 
 export async function GET() {
-  return NextResponse.json(await getOpenF1LiveTiming());
+  return NextResponse.json(await getLiveTiming());
 }
