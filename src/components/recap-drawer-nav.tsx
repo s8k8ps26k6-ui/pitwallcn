@@ -30,7 +30,7 @@ export function RecapDrawerNav({ items, currentLabel, currentHint }: RecapDrawer
             ☰
           </button>
           <div className="min-w-0 flex-1 px-1">
-            <p className="race-code truncate text-zinc-500">Recap Navigation</p>
+            <p className="race-code truncate text-zinc-500">Navigation</p>
             <p className="truncate text-sm font-semibold text-white">{currentLabel}</p>
             <p className="truncate text-xs text-zinc-500">{currentHint}</p>
           </div>
@@ -41,11 +41,11 @@ export function RecapDrawerNav({ items, currentLabel, currentHint }: RecapDrawer
         <div className="fixed inset-0 z-50">
           <button
             aria-label="关闭复盘导航遮罩"
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="drawer-backdrop absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setOpen(false)}
             type="button"
           />
-          <aside className="absolute left-0 top-0 flex h-full w-[84vw] max-w-sm flex-col border-r border-zinc-800 bg-zinc-950/95 p-4 shadow-2xl shadow-black/60">
+          <aside className="drawer-panel absolute left-0 top-0 flex h-full w-[84vw] max-w-sm flex-col border-r border-zinc-800 bg-zinc-950/95 p-4 shadow-2xl shadow-black/60">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <p className="race-code text-zinc-500">Navigator</p>
@@ -62,7 +62,7 @@ export function RecapDrawerNav({ items, currentLabel, currentHint }: RecapDrawer
             </div>
 
             <div className="mb-4 rounded-2xl border border-zinc-800 bg-black/25 p-3">
-              <p className="text-xs leading-5 text-zinc-500">当前赛段</p>
+              <p className="text-xs leading-5 text-zinc-500">当前视图</p>
               <p className="mt-1 text-sm font-semibold text-white">{currentLabel}</p>
               <p className="mt-1 text-xs leading-5 text-zinc-500">{currentHint}</p>
             </div>
