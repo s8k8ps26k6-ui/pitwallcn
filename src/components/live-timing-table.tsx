@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { LiveTimingRow } from "@/lib/types";
-import type { LiveTimingSource } from "@/lib/live-timing-service";
+import type { LiveTimingRow } from "@/lib/types";
+
+type LiveTimingSource = "openf1" | "openf1-waiting" | "openf1-error";
 
 const statusStyles: Record<LiveTimingRow["pitStatus"], string> = {
   OUT: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen",
