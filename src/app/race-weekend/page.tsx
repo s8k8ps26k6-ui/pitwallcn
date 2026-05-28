@@ -1,52 +1,15 @@
 import Link from "next/link";
 import { RecapDrawerNav } from "@/components/recap-drawer-nav";
-import { getLapAnalysisBySession } from "@/lib/lap-analysis-service";
-import { getRaceControlFeedBySession } from "@/lib/race-control-service";
-import { getResultsBySession, getResultsSelectionData } from "@/lib/results-service";
-import { getWeatherBySession } from "@/lib/weather-service";
+import { getResultsSelectionData } from "@/lib/results-service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-const RECAP_MODULE_TIMEOUT_MS = 6500;
 
 type RaceWeekendSearchParams = {
   session?: string;
 };
 
-const manualFallbackMeetings = [
-  {
-    meetingKey: -11249,
-    meetingName: "OpenF1 历史可用赛段",
-    location: "Manual fallback",
-    country: "OpenF1",
-    sessions: [
-      {
-        sessionKey: 11249,
-        sessionName: "Race",
-        sessionStart: "2024-01-01T00:00:00Z",
-        category: "race" as const
-      }
-    ]
-  }
-];
-
-const fallbackResults = { rows: [], source: "openf1-error" as const };
-const fallbackRaceControl = { data: [], source: "openf1-error" as const, sessionName: "OpenF1 timeout" };
-const fallbackLapAnalysis = { rows: [], source: "openf1-error" as const };
-const fallbackWeather = {
-  points: [],
-  summary: {
-    latest: null,
-    sampleCount: 0,
-    averageTrackTemperature: "--",
-    maxTrackTemperature: "--",
-    minTrackTemperature: "--",
-    maxWindSpeed: "--",
-    rainySamples: 0
-  },
-  source: "openf1-error" as const
-};
+const fallbackSessionKey = 11249;
 
 function parseSessionKey(value?: string) {
   if (!value) return null;
@@ -105,119 +68,51 @@ function translateMeetingName(name: string) {
   return replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), name);
 }
 
-function sourceBadge(source: string) {
-  if (source === "openf1") return "OPENF1";
-  if (source.includes("waiting")) return "WAITING DATA";
-  if (source.includes("error")) return "OPENF1 WAITING";
-  if (source.includes("empty")) return "MANUAL MODE";
-  return "API READY";
-}
-
-function getRaceControlIntensity(messageCount: number) {
-  if (messageCount >= 24) return { value: "高压", hint: `${messageCount} 条赛控消息，赛段波动明显`, accent: "border-neonRed/40 bg-neonRed/10 text-neonRed" };
-  if (messageCount >= 10) return { value: "活跃", hint: `${messageCount} 条赛控消息，值得回看赛控`, accent: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" };
-  if (messageCount > 0) return { value: "平稳", hint: `${messageCount} 条赛控消息`, accent: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" };
-  return { value: "等待", hint: "暂无赛控消息", accent: "border-zinc-700 bg-zinc-900/60 text-zinc-300" };
-}
-
-function getTrackWindow(trackTemperature?: number | null) {
-  if (trackTemperature === null || trackTemperature === undefined || !Number.isFinite(trackTemperature)) {
-    return { value: "--", hint: "等待赛道温度", accent: "border-zinc-700 bg-zinc-900/60 text-zinc-300" };
-  }
-
-  if (trackTemperature >= 48) return { value: "高温", hint: "轮胎热管理压力偏高", accent: "border-neonRed/40 bg-neonRed/10 text-neonRed" };
-  if (trackTemperature >= 38) return { value: "偏热", hint: "轮胎窗口可能更敏感", accent: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" };
-  if (trackTemperature <= 22) return { value: "偏冷", hint: "暖胎和升温可能更关键", accent: "border-cyan-300/40 bg-cyan-300/10 text-cyan-200" };
-  return { value: "常规", hint: "赛道温度处于常规区间", accent: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" };
-}
-
-async function withRecapTimeout<T>(promise: Promise<T>, fallback: T) {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-
+async function safeGetSelectionData() {
   try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((resolve) => {
-        timeout = setTimeout(() => resolve(fallback), RECAP_MODULE_TIMEOUT_MS);
-      })
-    ]);
+    return await getResultsSelectionData();
   } catch {
-    return fallback;
-  } finally {
-    if (timeout) clearTimeout(timeout);
+    return {
+      meetings: [],
+      defaultSessionKey: null,
+      source: "openf1-empty" as const
+    };
   }
 }
 
 export default async function RaceWeekendPage({ searchParams }: { searchParams?: RaceWeekendSearchParams }) {
-  const selection = await getResultsSelectionData();
-  const selectorMeetings = selection.meetings.length ? selection.meetings : manualFallbackMeetings;
+  const selection = await safeGetSelectionData();
   const requestedSession = parseSessionKey(searchParams?.session);
-  const selectedSessionKey = requestedSession ?? selectorMeetings[0]?.sessions[0]?.sessionKey ?? null;
-
-  const selectedMeeting = selectorMeetings.find((meeting) =>
-    meeting.sessions.some((session) => session.sessionKey === selectedSessionKey)
-  );
+  const selectedSessionKey = requestedSession ?? selection.defaultSessionKey ?? fallbackSessionKey;
+  const selectedMeeting = selection.meetings.find((meeting) => meeting.sessions.some((session) => session.sessionKey === selectedSessionKey));
   const selectedSession = selectedMeeting?.sessions.find((session) => session.sessionKey === selectedSessionKey);
-
-  const [results, raceControl, lapAnalysis, weather] = selectedSessionKey
-    ? await Promise.all([
-        withRecapTimeout(getResultsBySession(selectedSessionKey), fallbackResults),
-        withRecapTimeout(getRaceControlFeedBySession(selectedSessionKey), fallbackRaceControl),
-        withRecapTimeout(getLapAnalysisBySession(selectedSessionKey), fallbackLapAnalysis),
-        withRecapTimeout(getWeatherBySession(selectedSessionKey), fallbackWeather)
-      ])
-    : [
-        { rows: [], source: "openf1-waiting" as const },
-        { data: [], source: "openf1-waiting" as const, sessionName: "Waiting session" },
-        { rows: [], source: "openf1-waiting" as const },
-        { points: [], summary: { latest: null, sampleCount: 0, averageTrackTemperature: "--", maxTrackTemperature: "--", minTrackTemperature: "--", maxWindSpeed: "--", rainySamples: 0 }, source: "openf1-waiting" as const }
-      ];
-
-  const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : "等待可用大奖赛";
-  const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : "手动选择";
-  const winner = results.rows[0];
-  const fastestRows = lapAnalysis.rows.filter((row) => row.bestLap !== "--").slice(0, 5);
-  const latestWeather = weather.summary.latest;
-  const hasModuleWarning = [results.source, raceControl.source, lapAnalysis.source, weather.source].some((source) => source.includes("error"));
-  const availableModuleCount = [results.rows.length, raceControl.data.length, lapAnalysis.rows.length, weather.summary.sampleCount].filter((count) => count > 0).length;
-  const raceControlIntensity = getRaceControlIntensity(raceControl.data.length);
-  const trackWindow = getTrackWindow(latestWeather?.trackTemperatureValue);
-  const fastestReference = fastestRows[0];
-  const moduleHref = (path: string) => (selectedSessionKey ? `${path}?session=${selectedSessionKey}` : path);
+  const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : "手动模式";
+  const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : "手动赛段";
+  const sourceLabel = selection.meetings.length ? "OPENF1" : "MANUAL MODE";
+  const moduleHref = (path: string) => `${path}?session=${selectedSessionKey}`;
 
   const sectionLinks = [
-    { href: "#overview", label: "总览", hint: `${availableModuleCount}/4 模块可用` },
-    { href: "#session", label: "选择赛段", hint: selectedSessionKey ? `Session ${selectedSessionKey}` : "手动输入" },
-    { href: moduleHref("/results"), label: "比赛结果", hint: winner?.driver ?? "查看成绩" },
-    { href: moduleHref("/race-control"), label: "赛控消息", hint: `${raceControl.data.length} 条` },
-    { href: moduleHref("/lap-analysis"), label: "圈速分析", hint: fastestReference?.bestLap ?? "查看圈速" },
-    { href: moduleHref("/weather"), label: "赛道天气", hint: latestWeather?.trackTemperature ?? "查看天气" }
+    { href: "#overview", label: "总览", hint: "复盘入口" },
+    { href: "#session", label: "选择赛段", hint: `Session ${selectedSessionKey}` },
+    { href: moduleHref("/results"), label: "比赛结果", hint: "查看成绩详情" },
+    { href: moduleHref("/race-control"), label: "赛控消息", hint: "查看赛会控制" },
+    { href: moduleHref("/lap-analysis"), label: "圈速分析", hint: "查看圈速详情" },
+    { href: moduleHref("/weather"), label: "赛道天气", hint: "查看天气详情" }
   ];
 
   const summaryCards = [
     { label: "当前赛段", value: selectedSessionName, hint: selectedMeetingName },
-    { label: "头名车手", value: winner?.driver ?? "--", hint: winner?.team ?? "等待成绩数据" },
-    { label: "赛控消息", value: `${raceControl.data.length}`, hint: sourceBadge(raceControl.source) },
-    { label: "天气采样", value: `${weather.summary.sampleCount}`, hint: latestWeather ? `最新 ${latestWeather.time}` : sourceBadge(weather.source) }
-  ];
-
-  const insightCards = [
-    { label: "赛事节奏", value: raceControlIntensity.value, hint: raceControlIntensity.hint, accent: raceControlIntensity.accent },
-    { label: "赛道窗口", value: trackWindow.value, hint: latestWeather ? `${latestWeather.trackTemperature} · ${trackWindow.hint}` : trackWindow.hint, accent: trackWindow.accent },
-    { label: "速度参考", value: fastestReference?.driver ?? "--", hint: fastestReference ? `最快圈 ${fastestReference.bestLap}` : "等待圈速数据", accent: fastestReference ? "border-purple-400/40 bg-purple-400/10 text-purple-200" : "border-zinc-700 bg-zinc-900/60 text-zinc-300" },
-    { label: "数据完整度", value: `${availableModuleCount}/4`, hint: "结果 / 赛控 / 圈速 / 天气", accent: availableModuleCount >= 3 ? "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" : "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" }
+    { label: "数据模式", value: sourceLabel, hint: selection.meetings.length ? "赛段列表来自 OpenF1" : "可手动输入 session_key" },
+    { label: "入口结构", value: "HUB", hint: "详情页独立进入" },
+    { label: "当前 Session", value: `${selectedSessionKey}`, hint: "会传递给结果/赛控/圈速/天气页面" }
   ];
 
   const moduleCards = [
-    { title: "比赛结果", code: "CLASSIFICATION", href: moduleHref("/results"), description: "完整成绩表、名次、差距、圈数和完赛状态。", meta: winner?.driver ? `当前首位 ${winner.driver}` : "等待成绩数据" },
-    { title: "赛控消息", code: "RACE CONTROL", href: moduleHref("/race-control"), description: "旗语、安全车、赛道边界、调查和删除圈速等消息。", meta: `${raceControl.data.length} 条消息` },
-    { title: "圈速分析", code: "LAP ANALYSIS", href: moduleHref("/lap-analysis"), description: "最快圈、分段、位置、差距和 stint 信息。", meta: fastestReference ? `${fastestReference.driver} · ${fastestReference.bestLap}` : "等待圈速数据" },
-    { title: "赛道天气", code: "WEATHER", href: moduleHref("/weather"), description: "赛道温度、空气温度、湿度、风速和降雨记录。", meta: latestWeather ? `${latestWeather.trackTemperature} · ${latestWeather.rainLabel}` : "等待天气数据" }
+    { title: "比赛结果", code: "CLASSIFICATION", href: moduleHref("/results"), description: "查看完整成绩表、名次、差距、圈数和完赛状态。" },
+    { title: "赛控消息", code: "RACE CONTROL", href: moduleHref("/race-control"), description: "查看旗语、安全车、赛道边界、调查和删除圈速等消息。" },
+    { title: "圈速分析", code: "LAP ANALYSIS", href: moduleHref("/lap-analysis"), description: "查看最快圈、分段、位置、差距和 stint 信息。" },
+    { title: "赛道天气", code: "WEATHER", href: moduleHref("/weather"), description: "查看赛道温度、空气温度、湿度、风速和降雨记录。" }
   ];
-
-  const insightSummary = winner
-    ? `${selectedSessionName} 当前摘要：${winner.driver} 位列成绩表首位，${raceControlIntensity.hint}，${latestWeather ? `最新赛道温度 ${latestWeather.trackTemperature}` : "天气数据等待中"}。`
-    : `${selectedSessionName} 当前暂无完整成绩，已展示可用的数据入口。`;
 
   return (
     <main className="space-y-4">
@@ -231,51 +126,48 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
             <p className="eyebrow">Race Weekend Recap</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">单站复盘</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              这个页面只做总览和入口，不再把结果、赛控、圈速、天气全部堆在一条长页面里。点导航或模块卡片进入对应详情页。
+              这个页面改成复盘入口页：只保留总览、赛段选择和模块入口。结果、赛控、圈速、天气不再堆在一条长页面里。
             </p>
           </div>
           <div className="w-fit rounded-full border border-pitGreen/50 bg-black/60 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.14)]">
-            RECAP · {sourceBadge(results.source)}
+            RECAP · {sourceLabel}
           </div>
         </div>
       </section>
 
       <RecapDrawerNav items={sectionLinks} currentLabel={selectedSessionName} currentHint={selectedMeetingName} />
 
-      {hasModuleWarning ? (
-        <section className="rounded-2xl border border-neonAmber/30 bg-neonAmber/10 p-4 text-sm leading-6 text-neonAmber">
-          部分模块暂时未能及时返回数据。页面已先显示可用入口，稍后刷新可能恢复。
-        </section>
-      ) : null}
-
       <section id="session" className="card scroll-mt-24 motion-fade-up motion-delay-1 space-y-3">
         <div>
           <p className="eyebrow">Weekend / Session</p>
           <h2 className="mt-1 text-lg font-semibold text-white">选择复盘赛段</h2>
           <p className="mt-1 text-sm text-zinc-400">当前：{selectedMeetingName} · {selectedSessionName}</p>
-          <p className="mt-1 text-xs text-zinc-600">数据标识：{selectedSessionKey ?? "暂无"}</p>
+          <p className="mt-1 text-xs text-zinc-600">数据标识：{selectedSessionKey}</p>
         </div>
 
-        <form action="/race-weekend#session" className="grid gap-3" method="get">
-          <select className="w-full rounded-xl border border-zinc-800 bg-black/30 px-3 py-3 text-sm text-zinc-100 outline-none transition focus:border-neonAmber" defaultValue={selectedSessionKey ?? ""} name="session">
-            {selectorMeetings.map((meeting) => (
-              <optgroup key={meeting.meetingKey} label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}>
-                {meeting.sessions.map((session) => (
-                  <option key={session.sessionKey} value={session.sessionKey}>
-                    {translateSessionName(session.sessionName)} · Session {session.sessionKey} · {formatSessionTime(session.sessionStart)}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <button className="rounded-xl border border-zinc-800 bg-black/40 px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-neonAmber hover:text-neonAmber" type="submit">
-            查看复盘
-          </button>
-        </form>
+        {selection.meetings.length ? (
+          <form action="/race-weekend#session" className="grid gap-3" method="get">
+            <select className="w-full rounded-xl border border-zinc-800 bg-black/30 px-3 py-3 text-sm text-zinc-100 outline-none transition focus:border-neonAmber" defaultValue={selectedSessionKey} name="session">
+              {selection.meetings.map((meeting) => (
+                <optgroup key={meeting.meetingKey} label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}>
+                  {meeting.sessions.map((session) => (
+                    <option key={session.sessionKey} value={session.sessionKey}>
+                      {translateSessionName(session.sessionName)} · Session {session.sessionKey} · {formatSessionTime(session.sessionStart)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <button className="rounded-xl border border-zinc-800 bg-black/40 px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-neonAmber hover:text-neonAmber" type="submit">
+              查看复盘
+            </button>
+          </form>
+        ) : null}
 
         <form action="/race-weekend#session" className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
           <input
             className="rounded-xl border border-zinc-800 bg-black/30 px-3 py-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-neonAmber"
+            defaultValue={selectedSessionKey}
             inputMode="numeric"
             name="session"
             placeholder="手动输入 OpenF1 session_key"
@@ -297,28 +189,6 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
         ))}
       </section>
 
-      <section className="motion-fade-up motion-delay-2 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-5 shadow-xl shadow-black/20">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="eyebrow">GridDelta Intelligence</p>
-            <h2 className="mt-2 text-2xl font-bold text-white">数据脉冲</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">{insightSummary}</p>
-          </div>
-          <span className="w-fit rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-[0.65rem] font-bold tracking-[0.18em] text-cyan-200">
-            RULE-BASED · NO MOCK
-          </span>
-        </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {insightCards.map((item) => (
-            <article key={item.label} className={`rounded-2xl border p-4 ${item.accent}`}>
-              <p className="race-code opacity-80">{item.label}</p>
-              <p className="mt-2 font-mono text-2xl font-bold text-white">{item.value}</p>
-              <p className="mt-2 text-xs leading-5 opacity-80">{item.hint}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {moduleCards.map((item) => (
           <Link key={item.href} className="group rounded-2xl border border-zinc-800 bg-black/25 p-4 transition hover:border-neonAmber/60 hover:bg-white/[0.03]" href={item.href}>
@@ -328,7 +198,7 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
             </div>
             <h3 className="mt-4 text-lg font-bold text-white">{item.title}</h3>
             <p className="mt-2 text-sm leading-6 text-zinc-400">{item.description}</p>
-            <p className="mt-4 truncate font-mono text-xs text-neonAmber">{item.meta}</p>
+            <p className="mt-4 truncate font-mono text-xs text-neonAmber">打开详情 →</p>
           </Link>
         ))}
       </section>
