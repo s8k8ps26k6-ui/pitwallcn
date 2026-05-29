@@ -47,11 +47,9 @@ const navItems = [
   { label: "首页", href: "/" },
   { label: "赛程", href: "/schedule" },
   { label: "实时计时", href: "/live" },
-  { label: "赛会控制", href: "/race-control" },
   { label: "车手", href: "/drivers" },
   { label: "积分榜", href: "/standings" },
-  { label: "比赛结果", href: "/results" },
-  { label: "圈速分析", href: "/lap-analysis" }
+  { label: "单站复盘", href: "/race-weekend" }
 ] as const;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -63,12 +61,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex flex-wrap items-center gap-2">
               <Link className="text-2xl font-bold tracking-wide text-neonRed transition hover:text-red-400" href="/">
                 GridDelta CN
-              </Link>
-              <Link
-                className="rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-xs font-bold tracking-[0.14em] text-cyan-200 transition hover:border-cyan-200 hover:bg-cyan-300/20"
-                href="/weather"
-              >
-                赛道天气
               </Link>
               <Link
                 className="rounded-full border border-neonAmber/40 bg-neonAmber/10 px-3 py-1 text-xs font-bold tracking-[0.14em] text-neonAmber transition hover:border-neonAmber hover:bg-neonAmber/20"

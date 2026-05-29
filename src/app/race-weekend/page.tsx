@@ -113,36 +113,8 @@ function sourceBadge(source: string) {
   return "API READY";
 }
 
-function raceControlCategoryLabel(category: string) {
-  if (category === "FLAG") return "旗语";
-  if (category === "SAFETY_CAR") return "安全车";
-  if (category === "INCIDENT") return "事件";
-  return "通知";
-}
-
-function raceControlCategoryClass(category: string) {
-  if (category === "FLAG") return "border-neonAmber/40 bg-neonAmber/10 text-neonAmber";
-  if (category === "SAFETY_CAR") return "border-blue-400/40 bg-blue-400/10 text-blue-200";
-  if (category === "INCIDENT") return "border-neonRed/40 bg-neonRed/10 text-neonRed";
-  return "border-zinc-700 bg-zinc-900/60 text-zinc-300";
-}
-
-function getRaceControlIntensity(messageCount: number) {
-  if (messageCount >= 24) return { value: "高压", hint: `${messageCount} 条赛控消息，赛段波动明显`, accent: "border-neonRed/40 bg-neonRed/10 text-neonRed" };
-  if (messageCount >= 10) return { value: "活跃", hint: `${messageCount} 条赛控消息，值得回看赛控`, accent: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" };
-  if (messageCount > 0) return { value: "平稳", hint: `${messageCount} 条赛控消息`, accent: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" };
-  return { value: "等待", hint: "暂无赛控消息", accent: "border-zinc-700 bg-zinc-900/60 text-zinc-300" };
-}
-
-function getTrackWindow(trackTemperature?: number | null) {
-  if (trackTemperature === null || trackTemperature === undefined || !Number.isFinite(trackTemperature)) {
-    return { value: "--", hint: "等待赛道温度", accent: "border-zinc-700 bg-zinc-900/60 text-zinc-300" };
-  }
-
-  if (trackTemperature >= 48) return { value: "高温", hint: "轮胎热管理压力偏高", accent: "border-neonRed/40 bg-neonRed/10 text-neonRed" };
-  if (trackTemperature >= 38) return { value: "偏热", hint: "轮胎窗口可能更敏感", accent: "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" };
-  if (trackTemperature <= 22) return { value: "偏冷", hint: "暖胎和升温可能更关键", accent: "border-cyan-300/40 bg-cyan-300/10 text-cyan-200" };
-  return { value: "常规", hint: "赛道温度处于常规区间", accent: "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" };
+function moduleHref(path: string, sessionKey: number | null) {
+  return sessionKey ? `${path}?session=${sessionKey}` : path;
 }
 
 async function withRecapTimeout<T>(promise: Promise<T>, fallback: T) {
@@ -190,42 +162,56 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
   const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : "等待可用大奖赛";
   const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : "手动选择";
   const winner = results.rows[0];
-  const podium = results.rows.slice(0, 3);
-  const fastestRows = lapAnalysis.rows.filter((row) => row.bestLap !== "--").slice(0, 5);
-  const raceControlPreview = raceControl.data.slice(0, 6);
+  const fastestLap = lapAnalysis.rows.find((row) => row.bestLap !== "--");
   const latestWeather = weather.summary.latest;
   const hasModuleWarning = [results.source, raceControl.source, lapAnalysis.source, weather.source].some((source) => source.includes("error"));
   const availableModuleCount = [results.rows.length, raceControl.data.length, lapAnalysis.rows.length, weather.summary.sampleCount].filter((count) => count > 0).length;
-  const raceControlIntensity = getRaceControlIntensity(raceControl.data.length);
-  const trackWindow = getTrackWindow(latestWeather?.trackTemperatureValue);
-  const fastestReference = fastestRows[0];
 
   const summaryCards = [
     { label: "当前赛段", value: selectedSessionName, hint: selectedMeetingName },
-    { label: "头名车手", value: winner?.driver ?? "--", hint: winner?.team ?? "等待成绩数据" },
-    { label: "赛控消息", value: `${raceControl.data.length}`, hint: sourceBadge(raceControl.source) },
-    { label: "天气采样", value: `${weather.summary.sampleCount}`, hint: latestWeather ? `最新 ${latestWeather.time}` : sourceBadge(weather.source) }
+    { label: "数据完整度", value: `${availableModuleCount}/4`, hint: "结果 / 赛控 / 圈速 / 天气" },
+    { label: "头名车手", value: winner?.driver ?? "--", hint: winner?.team ?? sourceBadge(results.source) },
+    { label: "最新天气", value: latestWeather?.trackTemperature ?? "--", hint: latestWeather ? `采样 ${latestWeather.time}` : sourceBadge(weather.source) }
   ];
 
-  const insightCards = [
-    { label: "赛事节奏", value: raceControlIntensity.value, hint: raceControlIntensity.hint, accent: raceControlIntensity.accent },
-    { label: "赛道窗口", value: trackWindow.value, hint: latestWeather ? `${latestWeather.trackTemperature} · ${trackWindow.hint}` : trackWindow.hint, accent: trackWindow.accent },
-    { label: "速度参考", value: fastestReference?.driver ?? "--", hint: fastestReference ? `最快圈 ${fastestReference.bestLap}` : "等待圈速数据", accent: fastestReference ? "border-purple-400/40 bg-purple-400/10 text-purple-200" : "border-zinc-700 bg-zinc-900/60 text-zinc-300" },
-    { label: "数据完整度", value: `${availableModuleCount}/4`, hint: "结果 / 赛控 / 圈速 / 天气", accent: availableModuleCount >= 3 ? "border-pitGreen/40 bg-pitGreen/10 text-pitGreen" : "border-neonAmber/40 bg-neonAmber/10 text-neonAmber" }
+  const moduleCards = [
+    {
+      label: "比赛结果",
+      eyebrow: "Results",
+      href: moduleHref("/results", selectedSessionKey),
+      stat: `${results.rows.length} 条记录`,
+      description: winner ? `${winner.driver} 当前位列成绩表首位。打开完整页面查看所有车手、车队和时间差。` : "打开完整成绩页面查看当前赛段的分类结果。"
+    },
+    {
+      label: "赛会控制",
+      eyebrow: "Race Control",
+      href: moduleHref("/race-control", selectedSessionKey),
+      stat: `${raceControl.data.length} 条消息`,
+      description: raceControl.data[0]?.message ?? "打开完整赛控页面查看旗语、安全车、事故和官方通知。"
+    },
+    {
+      label: "圈速分析",
+      eyebrow: "Lap Analysis",
+      href: moduleHref("/lap-analysis", selectedSessionKey),
+      stat: fastestLap?.bestLap ?? "等待圈速",
+      description: fastestLap ? `${fastestLap.driver} 当前最快圈 ${fastestLap.bestLap}。打开完整页面比较所有车手。` : "打开完整圈速页面查看最快圈、stint 和差距。"
+    },
+    {
+      label: "赛道天气",
+      eyebrow: "Weather",
+      href: moduleHref("/weather", selectedSessionKey),
+      stat: `${weather.summary.sampleCount} 个采样`,
+      description: latestWeather ? `最新赛道温度 ${latestWeather.trackTemperature}。打开完整页面查看温度、风速和降雨趋势。` : "打开完整天气页面查看赛道温度、空气温度、湿度和风速。"
+    }
   ];
 
-  const insightSummary = winner
-    ? `${selectedSessionName} 当前摘要：${winner.driver} 位列成绩表首位，${raceControlIntensity.hint}，${latestWeather ? `最新赛道温度 ${latestWeather.trackTemperature}` : "天气数据等待中"}。`
-    : `${selectedSessionName} 当前暂无完整成绩，已展示可用的赛控、圈速和天气模块。`;
-
-  const sectionLinks = [
+  const navLinks = [
     { href: "#overview", label: "总览", hint: `${availableModuleCount}/4 模块可用` },
     { href: "#recap-session-selector", label: "选择赛段", hint: selectedSessionKey ? `Session ${selectedSessionKey}` : "手动输入" },
-    { href: "#intelligence", label: "数据脉冲", hint: raceControlIntensity.value },
-    { href: "#classification", label: "成绩", hint: winner?.driver ?? "等待" },
-    { href: "#race-control", label: "赛控", hint: `${raceControl.data.length} 条` },
-    { href: "#lap-analysis", label: "圈速", hint: fastestReference?.bestLap ?? "等待" },
-    { href: "#weather", label: "天气", hint: latestWeather?.trackTemperature ?? "等待" }
+    { href: moduleHref("/results", selectedSessionKey), label: "比赛结果", hint: `${results.rows.length} 条记录` },
+    { href: moduleHref("/race-control", selectedSessionKey), label: "赛会控制", hint: `${raceControl.data.length} 条消息` },
+    { href: moduleHref("/lap-analysis", selectedSessionKey), label: "圈速分析", hint: fastestLap?.bestLap ?? "等待圈速" },
+    { href: moduleHref("/weather", selectedSessionKey), label: "赛道天气", hint: latestWeather?.trackTemperature ?? "等待天气" }
   ];
 
   return (
@@ -237,23 +223,23 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
       <section id="overview" className="scroll-mt-6 motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="eyebrow">Race Weekend Recap</p>
-            <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">单站复盘</h1>
+            <p className="eyebrow">Race Weekend Hub</p>
+            <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">单站复盘菜单</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              点击下方菜单按钮打开侧边导航。复盘页面保留完整内容，但不再用横向长条挤压屏幕。
+              先选择比赛周末与赛段，再进入独立的结果、赛控、圈速或天气页面。这里保留简短摘要和模块入口，不再堆叠完整详情表格。
             </p>
           </div>
           <div className="w-fit rounded-full border border-pitGreen/50 bg-black/60 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.14)]">
-            RECAP · {sourceBadge(results.source)}
+            HUB · {sourceBadge(results.source)}
           </div>
         </div>
       </section>
 
-      <RecapDrawerNav items={sectionLinks} currentLabel={selectedSessionName} currentHint={selectedMeetingName} />
+      <RecapDrawerNav items={navLinks} currentLabel={selectedSessionName} currentHint={selectedMeetingName} />
 
       {hasModuleWarning ? (
         <section className="rounded-2xl border border-neonAmber/30 bg-neonAmber/10 p-4 text-sm leading-6 text-neonAmber">
-          部分模块暂时未能及时返回数据。页面已先显示可用内容，稍后刷新可能恢复。
+          部分模块暂时未能及时返回数据。你仍可进入各模块独立页面查看可用内容。
         </section>
       ) : null}
 
@@ -286,7 +272,7 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
               type="number"
             />
             <button className="rounded-xl border border-zinc-800 bg-black/40 px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-neonAmber hover:text-neonAmber" type="submit">
-              查看复盘
+              更新菜单
             </button>
           </div>
         </form>
@@ -302,160 +288,32 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams?:
         ))}
       </section>
 
-      <section id="intelligence" className="scroll-mt-24 motion-fade-up motion-delay-2 rounded-3xl border border-zinc-800 bg-gradient-to-br from-zinc-950 via-black to-zinc-950 p-5 shadow-xl shadow-black/20">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="eyebrow">GridDelta Intelligence</p>
-            <h2 className="mt-2 text-2xl font-bold text-white">数据脉冲</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-400">{insightSummary}</p>
-          </div>
-          <span className="w-fit rounded-full border border-cyan-300/40 bg-cyan-300/10 px-3 py-1 text-[0.65rem] font-bold tracking-[0.18em] text-cyan-200">
-            RULE-BASED · NO MOCK
-          </span>
+      <section className="card motion-fade-up motion-delay-2 space-y-4">
+        <div>
+          <p className="eyebrow">Race Weekend Modules</p>
+          <h2 className="mt-1 text-xl font-bold text-white">打开独立模块页面</h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-400">每个模块都是完整页面，当前 session 会随链接传递，方便查看后返回本菜单。</p>
         </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {insightCards.map((item) => (
-            <article key={item.label} className={`rounded-2xl border p-4 ${item.accent}`}>
-              <p className="race-code opacity-80">{item.label}</p>
-              <p className="mt-2 font-mono text-2xl font-bold text-white">{item.value}</p>
-              <p className="mt-2 text-xs leading-5 opacity-80">{item.hint}</p>
-            </article>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          {moduleCards.map((module) => (
+            <a
+              key={module.href}
+              className="group rounded-2xl border border-zinc-800 bg-black/25 p-4 transition hover:-translate-y-0.5 hover:border-neonAmber/70 hover:bg-white/[0.04]"
+              href={module.href}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="eyebrow">{module.eyebrow}</p>
+                  <h3 className="mt-2 text-xl font-bold text-white transition group-hover:text-neonAmber">{module.label}</h3>
+                </div>
+                <span className="race-code rounded-full border border-zinc-800 px-3 py-1 text-zinc-500">{module.stat}</span>
+              </div>
+              <p className="mt-4 min-h-12 text-sm leading-6 text-zinc-400">{module.description}</p>
+              <span className="race-code mt-4 inline-flex text-neonAmber">进入完整页面 →</span>
+            </a>
           ))}
         </div>
-      </section>
-
-      <section className="grid gap-4 2xl:grid-cols-[0.9fr_1.1fr]">
-        <article id="classification" className="card scroll-mt-24 motion-fade-up space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="eyebrow">Classification</p>
-              <h2 className="mt-1 text-xl font-bold text-white">成绩摘要</h2>
-            </div>
-            <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/results?session=${selectedSessionKey}` : "/results"}>
-              详细结果 →
-            </Link>
-          </div>
-
-          {podium.length ? (
-            <div className="space-y-3">
-              {podium.map((row) => (
-                <div key={row.driver} className="grid grid-cols-[3rem_1fr_auto] items-center gap-3 rounded-xl border border-zinc-800 bg-black/25 p-3">
-                  <span className="font-mono text-lg font-bold text-white">{row.position}</span>
-                  <span className="min-w-0">
-                    <span className="block truncate font-mono font-semibold text-white">{row.driver}</span>
-                    <span className="mt-0.5 block truncate text-xs text-zinc-500">{row.team}</span>
-                  </span>
-                  <span className="font-mono text-sm font-semibold text-neonAmber">{row.timeOrGap}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无成绩数据。</p>
-          )}
-        </article>
-
-        <article id="race-control" className="card scroll-mt-24 motion-fade-up space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="eyebrow">Race Control</p>
-              <h2 className="mt-1 text-xl font-bold text-white">赛控重点</h2>
-            </div>
-            <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/race-control?session=${selectedSessionKey}` : "/race-control"}>
-              完整赛控 →
-            </Link>
-          </div>
-
-          {raceControlPreview.length ? (
-            <div className="space-y-3">
-              {raceControlPreview.map((item) => (
-                <div key={item.id} className="rounded-xl border border-zinc-800 bg-black/25 p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-mono text-xs text-zinc-500">{item.timestamp}</span>
-                    <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.14em] ${raceControlCategoryClass(item.category)}`}>
-                      {raceControlCategoryLabel(item.category)}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-zinc-300">{item.message}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无赛控消息。</p>
-          )}
-        </article>
-      </section>
-
-      <section className="grid gap-4 2xl:grid-cols-[1.1fr_0.9fr]">
-        <article id="lap-analysis" className="card scroll-mt-24 motion-fade-up space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="eyebrow">Lap Analysis</p>
-              <h2 className="mt-1 text-xl font-bold text-white">圈速前五</h2>
-            </div>
-            <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/lap-analysis?session=${selectedSessionKey}` : "/lap-analysis"}>
-              圈速分析 →
-            </Link>
-          </div>
-
-          {fastestRows.length ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-zinc-800 text-xs uppercase tracking-[0.18em] text-zinc-500">
-                  <tr>
-                    {['车手', '最快圈', '位置', '差距', 'stint'].map((title) => (
-                      <th key={title} className="px-3 py-2">{title}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {fastestRows.map((row) => (
-                    <tr key={row.driver} className="border-b border-zinc-900">
-                      <td className="px-3 py-3 font-mono text-white">{row.driver}</td>
-                      <td className="px-3 py-3 font-mono text-neonAmber">{row.bestLap}</td>
-                      <td className="px-3 py-3 font-mono text-zinc-400">{row.position}</td>
-                      <td className="px-3 py-3 font-mono text-zinc-400">{row.gap}</td>
-                      <td className="px-3 py-3 text-zinc-400">{row.stint}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无圈速数据。</p>
-          )}
-        </article>
-
-        <article id="weather" className="card scroll-mt-24 motion-fade-up space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="eyebrow">Weather</p>
-              <h2 className="mt-1 text-xl font-bold text-white">赛道天气</h2>
-            </div>
-            <Link className="race-code text-zinc-500 transition hover:text-neonAmber" href={selectedSessionKey ? `/weather?session=${selectedSessionKey}` : "/weather"}>
-              天气详情 →
-            </Link>
-          </div>
-
-          {latestWeather ? (
-            <div className="grid gap-3 text-sm">
-              {[
-                ["赛道温度", latestWeather.trackTemperature],
-                ["空气温度", latestWeather.airTemperature],
-                ["湿度", latestWeather.humidity],
-                ["降雨", latestWeather.rainLabel],
-                ["风向", latestWeather.windDirection],
-                ["风速", latestWeather.windSpeed]
-              ].map(([label, value]) => (
-                <div key={label} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-black/25 px-3 py-2">
-                  <span className="text-zinc-500">{label}</span>
-                  <span className="font-mono font-semibold text-white">{value}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl border border-zinc-800 bg-black/25 p-4 text-sm leading-6 text-zinc-400">该赛段暂无天气数据。</p>
-          )}
-        </article>
       </section>
     </main>
   );
