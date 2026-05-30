@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RaceWeekendReturnLink } from "@/components/race-weekend-return-link";
 import {
   getRaceControlFeed,
   getRaceControlFeedBySession,
@@ -132,9 +133,12 @@ export default async function RaceControlPage({ searchParams }: { searchParams?:
 
   return (
     <main className="space-y-4">
-      <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
-        ← BACK TO HOME
-      </Link>
+      <div className="flex flex-wrap gap-2">
+        <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
+          ← BACK TO HOME
+        </Link>
+        <RaceWeekendReturnLink session={searchParams?.session} />
+      </div>
 
       <section className="motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
