@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HomeIntroSequence } from "@/components/home-intro-sequence";
+import { LivePulsePanel } from "@/components/live-pulse-panel";
 import { RaceCountdown } from "@/components/race-countdown";
 import { getScheduleCalendar } from "@/lib/f1-service";
 
@@ -132,7 +133,9 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="motion-fade-up motion-delay-1 overflow-hidden rounded-[2rem] border border-zinc-800/80 bg-zinc-950/80 shadow-xl shadow-black/20">
+      <LivePulsePanel />
+
+      <section className="motion-fade-up motion-delay-2 overflow-hidden rounded-[2rem] border border-zinc-800/80 bg-zinc-950/80 shadow-xl shadow-black/20">
         <div className="border-b border-zinc-800/80 bg-gradient-to-r from-neonRed/10 via-white/[0.03] to-transparent px-5 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -186,7 +189,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="motion-fade-up motion-delay-2 rounded-[2rem] border border-zinc-800/80 bg-black/20 p-5 shadow-xl shadow-black/10 sm:p-6 lg:p-8">
+      <section className="motion-fade-up motion-delay-3 rounded-[2rem] border border-zinc-800/80 bg-black/20 p-5 shadow-xl shadow-black/10 sm:p-6 lg:p-8">
         <div className="max-w-2xl">
           <p className="eyebrow text-zinc-500">核心模块</p>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
@@ -234,7 +237,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="motion-fade-up motion-delay-3 rounded-[2rem] border border-zinc-800/80 bg-zinc-950/55 p-5 sm:p-6 lg:p-8">
+      <section className="motion-fade-up motion-delay-4 rounded-[2rem] border border-zinc-800/80 bg-zinc-950/55 p-5 sm:p-6 lg:p-8">
         <div className="max-w-2xl">
           <p className="eyebrow text-zinc-500">更多数据</p>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">
