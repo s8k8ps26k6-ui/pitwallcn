@@ -69,9 +69,9 @@ export default async function Home() {
   const sourceLabel = getScheduleSourceLabel(source);
 
   return (
-    <main className="space-y-6">
+    <main className="space-y-5 sm:space-y-6">
       <section
-        className="motion-fade-up relative overflow-hidden rounded-[2rem] border border-zinc-800/80 bg-cover bg-[center_42%] px-5 py-7 shadow-2xl shadow-black/30 sm:px-8 sm:py-10 lg:min-h-[560px] lg:px-12 lg:py-12"
+        className="motion-fade-up relative overflow-hidden rounded-[1.5rem] border border-zinc-800/80 bg-cover bg-[center_42%] px-4 py-5 shadow-2xl shadow-black/30 sm:rounded-[2rem] sm:px-8 sm:py-10 lg:min-h-[560px] lg:px-12 lg:py-12"
         style={{ backgroundImage: "url('/images/hero.jpg')" }}
       >
         <div
@@ -83,46 +83,46 @@ export default async function Home() {
           aria-hidden="true"
         />
         <div
-          className="absolute inset-y-8 left-0 w-1 bg-neonRed/85"
+          className="absolute inset-y-6 left-0 w-px bg-neonRed/70 sm:inset-y-8 sm:w-1 sm:bg-neonRed/85"
           aria-hidden="true"
         />
-        <div className="relative flex min-h-[430px] flex-col justify-between gap-10 lg:min-h-[470px]">
-          <div className="max-w-2xl space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs font-semibold text-zinc-300 backdrop-blur">
+        <div className="relative flex min-h-[340px] flex-col justify-between gap-6 sm:min-h-[430px] sm:gap-10 lg:min-h-[470px]">
+          <div className="max-w-2xl space-y-4 sm:space-y-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-2.5 py-1 text-[0.68rem] font-semibold text-zinc-300 backdrop-blur sm:px-3 sm:py-1.5 sm:text-xs">
               <span
                 className="h-1.5 w-1.5 rounded-full bg-neonRed"
                 aria-hidden="true"
               />
               图片由站长于上海大奖赛现场拍摄
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <p className="eyebrow text-zinc-400">Premium F1 Data Product</p>
-              <h1 className="max-w-3xl text-5xl font-semibold tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl">
+              <h1 className="max-w-3xl text-4xl font-semibold tracking-[-0.055em] text-white sm:text-7xl sm:tracking-[-0.06em] lg:text-8xl">
                 GridDelta CN
               </h1>
-              <p className="max-w-xl text-lg leading-8 text-zinc-200 sm:text-xl">
+              <p className="max-w-xl text-base leading-7 text-zinc-200 sm:text-xl sm:leading-8">
                 面向中文车迷的非官方 F1 数据中枢。
               </p>
             </div>
-            <p className="max-w-xl text-sm leading-7 text-zinc-400 sm:text-base">
+            <p className="max-w-xl text-sm leading-6 text-zinc-400 sm:text-base sm:leading-7">
               聚合赛程、实时计时、单站复盘与赛季积分，保留关键上下文，让比赛周末更清晰。
             </p>
-            <div className="flex flex-col gap-3 pt-1 text-sm sm:flex-row">
+            <div className="flex flex-col gap-2.5 pt-0.5 text-sm sm:flex-row sm:gap-3 sm:pt-1">
               <Link
-                className="inline-flex items-center justify-center rounded-full bg-neonRed px-5 py-3 font-bold text-white shadow-lg shadow-red-950/25 transition hover:bg-red-600"
+                className="inline-flex items-center justify-center rounded-full bg-neonRed px-4 py-2.5 font-bold text-white shadow-lg shadow-red-950/25 transition hover:bg-red-600 sm:px-5 sm:py-3"
                 href="/live"
               >
                 查看实时计时
               </Link>
               <Link
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 font-semibold text-zinc-100 backdrop-blur transition hover:border-white/25 hover:bg-white/[0.09]"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-4 py-2.5 font-semibold text-zinc-100 backdrop-blur transition hover:border-white/25 hover:bg-white/[0.09] sm:px-5 sm:py-3"
                 href="/race-weekend"
               >
                 进入单站复盘
               </Link>
             </div>
           </div>
-          <div className="grid max-w-2xl gap-2 border-t border-white/10 pt-4 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 sm:grid-cols-3">
+          <div className="hidden max-w-2xl gap-2 border-t border-white/10 pt-4 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400 sm:grid sm:grid-cols-3">
             <span>Live Timing</span>
             <span>Race Weekend</span>
             <span>Season Context</span>
