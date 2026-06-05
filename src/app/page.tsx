@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HomeIntroSequence } from "@/components/home-intro-sequence";
 import { RaceCountdown } from "@/components/race-countdown";
 import { getScheduleCalendar } from "@/lib/f1-service";
 
@@ -70,6 +71,7 @@ export default async function Home() {
 
   return (
     <main className="space-y-5 sm:space-y-6">
+      <HomeIntroSequence />
       <section
         className="motion-fade-up relative overflow-hidden rounded-[1.5rem] border border-zinc-800/80 bg-cover bg-[center_42%] px-4 py-5 shadow-2xl shadow-black/30 sm:rounded-[2rem] sm:px-8 sm:py-10 lg:min-h-[560px] lg:px-12 lg:py-12"
         style={{ backgroundImage: "url('/images/hero.jpg')" }}
