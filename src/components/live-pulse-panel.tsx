@@ -1,149 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
 
 const signalLabels = ["LIVE TIMING", "RACE WEEKEND", "SESSION DATA", "OPENF1"];
 const telemetryBlocks = ["Timing", "Calendar", "Race Control"];
 const pulseDots = Array.from({ length: 5 }, (_, index) => index);
 
 export function LivePulsePanel() {
-  const panelRef = useRef<HTMLAnchorElement>(null);
-  const sweepRef = useRef<HTMLDivElement>(null);
-  const lineRef = useRef<HTMLDivElement>(null);
-  const dotRefs = useRef<Array<HTMLSpanElement | null>>([]);
-  const blockRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const accentRef = useRef<HTMLSpanElement>(null);
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const reducedMotionRef = useRef(false);
-
-  useEffect(() => {
-    const panel = panelRef.current;
-    if (!panel) {
-      return;
-    }
-
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedMotionRef.current = motionQuery.matches;
-
-    const ctx = gsap.context(() => {
-      gsap.set([sweepRef.current, lineRef.current], { willChange: "transform" });
-      gsap.set(dotRefs.current, { willChange: "transform, opacity" });
-      gsap.set(blockRefs.current, { willChange: "transform, opacity" });
-
-      if (motionQuery.matches) {
-        gsap.set(sweepRef.current, { xPercent: 8, opacity: 0.24 });
-        gsap.set(lineRef.current, { scaleX: 0.72, transformOrigin: "left center" });
-        gsap.set(dotRefs.current, { opacity: 0.62 });
-        gsap.set(blockRefs.current, { opacity: 0.78 });
-        return;
-      }
-
-      const timeline = gsap.timeline({ repeat: -1, defaults: { ease: "sine.inOut" } });
-
-      timeline
-        .fromTo(
-          sweepRef.current,
-          { xPercent: -120, opacity: 0.08 },
-          { xPercent: 128, opacity: 0.42, duration: 4.2, ease: "power1.inOut" },
-          0,
-        )
-        .fromTo(
-          lineRef.current,
-          { scaleX: 0.28, xPercent: -4 },
-          { scaleX: 1, xPercent: 5, duration: 2.1, yoyo: true, repeat: 1 },
-          0.2,
-        )
-        .to(
-          dotRefs.current,
-          {
-            x: 16,
-            opacity: 1,
-            duration: 1.25,
-            stagger: 0.16,
-            yoyo: true,
-            repeat: 3,
-          },
-          0.35,
-        )
-        .to(
-          blockRefs.current,
-          {
-            y: -6,
-            opacity: 1,
-            duration: 1.4,
-            stagger: 0.22,
-            yoyo: true,
-            repeat: 2,
-          },
-          0.65,
-        )
-        .to(
-          accentRef.current,
-          { opacity: 1, scaleX: 1, duration: 1.6, yoyo: true, repeat: 1 },
-          0.9,
-        );
-
-      timelineRef.current = timeline;
-    }, panel);
-
-    const updateMotionPreference = (event: MediaQueryListEvent) => {
-      reducedMotionRef.current = event.matches;
-      timelineRef.current?.timeScale(event.matches ? 0 : 1);
-    };
-
-    motionQuery.addEventListener("change", updateMotionPreference);
-
-    return () => {
-      motionQuery.removeEventListener("change", updateMotionPreference);
-      timelineRef.current = null;
-      ctx.revert();
-    };
-  }, []);
-
-  const intensify = () => {
-    if (reducedMotionRef.current) {
-      return;
-    }
-
-    timelineRef.current?.timeScale(1.55);
-    gsap.to(panelRef.current, {
-      borderColor: "rgba(239, 68, 68, 0.48)",
-      boxShadow: "0 20px 70px rgba(127, 29, 29, 0.18)",
-      duration: 0.3,
-      ease: "power2.out",
-    });
-  };
-
-  const settle = () => {
-    if (reducedMotionRef.current) {
-      return;
-    }
-
-    timelineRef.current?.timeScale(1);
-    gsap.to(panelRef.current, {
-      borderColor: "rgba(39, 39, 42, 0.9)",
-      boxShadow: "0 16px 50px rgba(0, 0, 0, 0.18)",
-      duration: 0.45,
-      ease: "power2.out",
-    });
-  };
-
   return (
     <section className="motion-fade-up motion-delay-1" aria-labelledby="live-pulse-title">
       <Link
-        ref={panelRef}
         href="/live"
         aria-label="打开实时计时模块，查看可用的 F1 数据入口"
-        className="group relative block overflow-hidden rounded-[1.75rem] border border-zinc-800/90 bg-[#070708] p-4 shadow-xl shadow-black/20 transition-colors hover:border-red-500/40 sm:rounded-[2rem] sm:p-5 lg:p-6"
-        onPointerEnter={intensify}
-        onPointerLeave={settle}
-        onPointerDown={intensify}
-        onPointerUp={settle}
-        onPointerCancel={settle}
-        onFocus={intensify}
-        onBlur={settle}
+        className="group relative block overflow-hidden rounded-[1.75rem] border border-zinc-800/90 bg-[#070708] p-4 shadow-xl shadow-black/20 transition-[border-color,box-shadow] duration-300 hover:border-red-500/40 hover:shadow-red-950/20 sm:rounded-[2rem] sm:p-5 lg:p-6"
       >
         <div
           className="absolute inset-0 bg-[radial-gradient(circle_at_15%_0%,rgba(220,38,38,0.14),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_38%)]"
@@ -154,13 +23,11 @@ export function LivePulsePanel() {
           aria-hidden="true"
         />
         <div
-          ref={sweepRef}
-          className="absolute inset-y-0 left-1/2 w-24 -skew-x-12 bg-gradient-to-r from-transparent via-red-400/18 to-transparent opacity-20"
+          className="live-pulse-sweep absolute inset-y-0 left-1/2 w-24 -skew-x-12 bg-gradient-to-r from-transparent via-red-400/18 to-transparent opacity-20"
           aria-hidden="true"
         />
         <span
-          ref={accentRef}
-          className="absolute left-5 right-5 top-0 h-px origin-left scale-x-50 bg-gradient-to-r from-neonRed via-red-300/50 to-transparent opacity-70"
+          className="live-pulse-accent absolute left-5 right-5 top-0 h-px origin-left scale-x-50 bg-gradient-to-r from-neonRed via-red-300/50 to-transparent opacity-70"
           aria-hidden="true"
         />
 
@@ -208,18 +75,14 @@ export function LivePulsePanel() {
             <div className="relative h-28 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/70 px-4 py-5">
               <div className="absolute inset-x-4 top-1/2 h-px bg-zinc-800" aria-hidden="true" />
               <div
-                ref={lineRef}
-                className="absolute left-4 right-4 top-1/2 h-px origin-left bg-gradient-to-r from-neonRed via-red-200/80 to-transparent"
+                className="live-pulse-line absolute left-4 right-4 top-1/2 h-px origin-left bg-gradient-to-r from-neonRed via-red-200/80 to-transparent"
                 aria-hidden="true"
               />
               <div className="relative flex h-full items-center justify-between">
                 {pulseDots.map((dot) => (
                   <span
                     key={dot}
-                    ref={(node) => {
-                      dotRefs.current[dot] = node;
-                    }}
-                    className="h-2 w-2 rounded-full border border-red-200/50 bg-neonRed/70 shadow-[0_0_18px_rgba(220,38,38,0.35)]"
+                    className="live-pulse-dot h-2 w-2 rounded-full border border-red-200/50 bg-neonRed/70 shadow-[0_0_18px_rgba(220,38,38,0.35)]"
                     aria-hidden="true"
                   />
                 ))}
@@ -227,13 +90,10 @@ export function LivePulsePanel() {
             </div>
 
             <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              {telemetryBlocks.map((label, index) => (
+              {telemetryBlocks.map((label) => (
                 <div
                   key={label}
-                  ref={(node) => {
-                    blockRefs.current[index] = node;
-                  }}
-                  className="rounded-2xl border border-zinc-800/85 bg-white/[0.035] px-3 py-3"
+                  className="live-pulse-block rounded-2xl border border-zinc-800/85 bg-white/[0.035] px-3 py-3"
                 >
                   <div className="mb-2 h-1 w-10 rounded-full bg-gradient-to-r from-neonRed/80 to-transparent" />
                   <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-zinc-400">
@@ -247,11 +107,158 @@ export function LivePulsePanel() {
 
         <div className="relative mt-5 flex items-center justify-between border-t border-white/10 pt-4 text-sm font-semibold text-zinc-300">
           <span>打开实时计时模块</span>
-          <span className="translate-x-0 text-neonRed opacity-70 transition group-hover:translate-x-1 group-hover:opacity-100" aria-hidden="true">
+          <span
+            className="translate-x-0 text-neonRed opacity-70 transition group-hover:translate-x-1 group-hover:opacity-100"
+            aria-hidden="true"
+          >
             →
           </span>
         </div>
       </Link>
+
+      <style jsx>{`
+        .live-pulse-sweep {
+          animation: liveSweep 4.2s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+
+        .live-pulse-accent {
+          animation: liveAccent 4.2s ease-in-out infinite;
+        }
+
+        .live-pulse-line {
+          animation: liveLine 4.2s ease-in-out infinite;
+          will-change: transform;
+        }
+
+        .live-pulse-dot {
+          animation: liveDot 4.2s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+
+        .live-pulse-dot:nth-child(2) {
+          animation-delay: 160ms;
+        }
+
+        .live-pulse-dot:nth-child(3) {
+          animation-delay: 320ms;
+        }
+
+        .live-pulse-dot:nth-child(4) {
+          animation-delay: 480ms;
+        }
+
+        .live-pulse-dot:nth-child(5) {
+          animation-delay: 640ms;
+        }
+
+        .live-pulse-block {
+          animation: liveBlock 4.2s ease-in-out infinite;
+          will-change: transform, opacity;
+        }
+
+        .live-pulse-block:nth-child(2) {
+          animation-delay: 220ms;
+        }
+
+        .live-pulse-block:nth-child(3) {
+          animation-delay: 440ms;
+        }
+
+        @keyframes liveSweep {
+          0% {
+            opacity: 0.08;
+            transform: translateX(-120%) skewX(-12deg);
+          }
+          52% {
+            opacity: 0.42;
+            transform: translateX(128%) skewX(-12deg);
+          }
+          100% {
+            opacity: 0.08;
+            transform: translateX(128%) skewX(-12deg);
+          }
+        }
+
+        @keyframes liveAccent {
+          0%,
+          100% {
+            opacity: 0.42;
+            transform: scaleX(0.5);
+          }
+          50% {
+            opacity: 1;
+            transform: scaleX(1);
+          }
+        }
+
+        @keyframes liveLine {
+          0%,
+          100% {
+            transform: scaleX(0.28) translateX(-4%);
+          }
+          50% {
+            transform: scaleX(1) translateX(5%);
+          }
+        }
+
+        @keyframes liveDot {
+          0%,
+          100% {
+            opacity: 0.62;
+            transform: translateX(0);
+          }
+          50% {
+            opacity: 1;
+            transform: translateX(16px);
+          }
+        }
+
+        @keyframes liveBlock {
+          0%,
+          100% {
+            opacity: 0.78;
+            transform: translateY(0);
+          }
+          50% {
+            opacity: 1;
+            transform: translateY(-6px);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .live-pulse-sweep,
+          .live-pulse-accent,
+          .live-pulse-line,
+          .live-pulse-dot,
+          .live-pulse-block {
+            animation: none;
+          }
+
+          .live-pulse-sweep {
+            opacity: 0.24;
+            transform: translateX(8%) skewX(-12deg);
+          }
+
+          .live-pulse-accent {
+            opacity: 0.7;
+            transform: scaleX(0.72);
+          }
+
+          .live-pulse-line {
+            transform: scaleX(0.72);
+            transform-origin: left center;
+          }
+
+          .live-pulse-dot {
+            opacity: 0.62;
+          }
+
+          .live-pulse-block {
+            opacity: 0.78;
+          }
+        }
+      `}</style>
     </section>
   );
 }
