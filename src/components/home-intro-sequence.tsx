@@ -10,6 +10,9 @@ const SAFETY_REMOVE_AFTER_MS = 7000;
 const REDUCED_EXIT_AFTER_MS = 560;
 const REDUCED_REMOVE_AFTER_MS = 900;
 const SKIP_REMOVE_AFTER_MS = 260;
+const FAST_EXIT_REMOVE_AFTER_MS = 260;
+
+type IntroStage = "checking" | "playing" | "exiting" | "hidden";
 
 let inMemoryLastPlayed = 0;
 
@@ -54,32 +57,43 @@ function shouldPlayIntro() {
 }
 
 export function HomeIntroSequence() {
-  const [shouldRender, setShouldRender] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
+  const [stage, setStage] = useState<IntroStage>("checking");
+  const [hasStartedIntro, setHasStartedIntro] = useState(false);
+  const [isQuickExit, setIsQuickExit] = useState(false);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const timersRef = useRef<number[]>([]);
 
   useEffect(() => {
-    if (!shouldPlayIntro()) {
-      return;
-    }
-
     const prefersReducedMotion = canUseReducedMotion();
 
     setIsReducedMotion(prefersReducedMotion);
+
+    if (!shouldPlayIntro()) {
+      setIsQuickExit(true);
+      setStage("exiting");
+      timersRef.current = [window.setTimeout(() => setStage("hidden"), FAST_EXIT_REMOVE_AFTER_MS)];
+
+      return () => {
+        timersRef.current.forEach((timer) => window.clearTimeout(timer));
+        timersRef.current = [];
+      };
+    }
+
     markIntroPlayed();
-    setShouldRender(true);
+    setHasStartedIntro(true);
+    setIsQuickExit(false);
+    setStage("playing");
 
     timersRef.current = prefersReducedMotion
       ? [
-          window.setTimeout(() => setIsExiting(true), REDUCED_EXIT_AFTER_MS),
-          window.setTimeout(() => setShouldRender(false), REDUCED_REMOVE_AFTER_MS),
-          window.setTimeout(() => setShouldRender(false), SAFETY_REMOVE_AFTER_MS),
+          window.setTimeout(() => setStage("exiting"), REDUCED_EXIT_AFTER_MS),
+          window.setTimeout(() => setStage("hidden"), REDUCED_REMOVE_AFTER_MS),
+          window.setTimeout(() => setStage("hidden"), SAFETY_REMOVE_AFTER_MS),
         ]
       : [
-          window.setTimeout(() => setIsExiting(true), EXIT_AFTER_MS),
-          window.setTimeout(() => setShouldRender(false), REMOVE_AFTER_MS),
-          window.setTimeout(() => setShouldRender(false), SAFETY_REMOVE_AFTER_MS),
+          window.setTimeout(() => setStage("exiting"), EXIT_AFTER_MS),
+          window.setTimeout(() => setStage("hidden"), REMOVE_AFTER_MS),
+          window.setTimeout(() => setStage("hidden"), SAFETY_REMOVE_AFTER_MS),
         ];
 
     return () => {
@@ -90,17 +104,23 @@ export function HomeIntroSequence() {
 
   function handleSkip() {
     markIntroPlayed();
-    setIsExiting(true);
-    window.setTimeout(() => setShouldRender(false), SKIP_REMOVE_AFTER_MS);
+    timersRef.current.forEach((timer) => window.clearTimeout(timer));
+    timersRef.current = [window.setTimeout(() => setStage("hidden"), SKIP_REMOVE_AFTER_MS)];
+    setIsQuickExit(true);
+    setStage("exiting");
   }
 
-  if (!shouldRender) {
+  if (stage === "hidden") {
     return null;
   }
 
+  const isExiting = stage === "exiting";
+  const showIntroContent = stage === "playing" || (isExiting && hasStartedIntro);
+  const fadeDurationClass = isQuickExit ? "duration-200" : "duration-500";
+
   return (
     <div
-      className={`fixed inset-0 z-[1000] flex min-h-screen min-h-[100dvh] touch-none items-center justify-center overflow-hidden bg-black text-white transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] [box-sizing:border-box] [padding-bottom:env(safe-area-inset-bottom)] [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)] [padding-top:env(safe-area-inset-top)] ${
+      className={`fixed inset-0 z-[1000] flex min-h-screen min-h-[100svh] min-h-[100dvh] touch-none items-center justify-center overflow-hidden bg-black text-white transition-opacity ${fadeDurationClass} ease-[cubic-bezier(0.22,1,0.36,1)] [box-sizing:border-box] [padding-bottom:env(safe-area-inset-bottom)] [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)] [padding-top:env(safe-area-inset-top)] ${
         isExiting ? "opacity-0" : "opacity-100"
       } ${isReducedMotion ? "intro-reduced" : ""}`}
       role="dialog"
@@ -108,10 +128,13 @@ export function HomeIntroSequence() {
       aria-modal="true"
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(255,46,46,0.12),transparent_30%),radial-gradient(circle_at_50%_0%,rgba(113,113,122,0.11),transparent_42%),linear-gradient(135deg,rgba(9,9,11,1),rgba(0,0,0,1)_58%,rgba(24,24,27,0.94))]" />
-      <div
-        className="intro-grid absolute inset-0 opacity-[0.055] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:42px_42px]"
-        aria-hidden="true"
-      />
+
+      {showIntroContent ? (
+        <>
+          <div
+            className="intro-grid absolute inset-0 opacity-[0.055] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:42px_42px]"
+            aria-hidden="true"
+          />
       <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-zinc-900/70 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black to-transparent" />
       <div className="intro-red-halo absolute left-1/2 top-1/2 h-56 w-[min(86vw,48rem)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-neonRed/20 blur-3xl" />
@@ -194,6 +217,8 @@ export function HomeIntroSequence() {
           </span>
         </div>
       </div>
+        </>
+      ) : null}
 
       <style jsx>{`
         .intro-grid {
