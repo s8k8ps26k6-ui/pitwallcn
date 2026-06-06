@@ -100,8 +100,8 @@ export function HomeIntroSequence() {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex min-h-[100dvh] items-center justify-center overflow-hidden bg-black text-white transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] [height:100dvh] [min-height:100dvh] supports-[height:100svh]:[height:100svh] supports-[min-height:100svh]:[min-height:100svh] ${
-        isExiting ? "pointer-events-none opacity-0" : "opacity-100"
+      className={`fixed inset-0 z-[1000] flex min-h-screen min-h-[100dvh] touch-none items-center justify-center overflow-hidden bg-black text-white transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] [box-sizing:border-box] [padding-bottom:env(safe-area-inset-bottom)] [padding-left:env(safe-area-inset-left)] [padding-right:env(safe-area-inset-right)] [padding-top:env(safe-area-inset-top)] ${
+        isExiting ? "opacity-0" : "opacity-100"
       } ${isReducedMotion ? "intro-reduced" : ""}`}
       role="dialog"
       aria-label="GridDelta CN homepage intro"
