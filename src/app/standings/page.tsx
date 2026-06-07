@@ -1,20 +1,12 @@
 import Link from "next/link";
-import { drivers } from "@/lib/drivers";
+import { getDriverStandings } from "@/lib/standings-service";
 
-const teamTotals = Array.from(
-  drivers.reduce((map, driver) => {
-    const current = map.get(driver.team) ?? { team: driver.team, points: 0, drivers: [] as string[], accent: driver.accent };
-    current.points += Number(driver.points);
-    current.drivers.push(driver.code);
-    map.set(driver.team, current);
-    return map;
-  }, new Map<string, { team: string; points: number; drivers: string[]; accent: string }>())
-).map(([, value]) => value).sort((a, b) => b.points - a.points);
+export default async function StandingsPage() {
+  const standings = await getDriverStandings();
+  const leaderPoints = Math.max(standings.drivers[0]?.points ?? 1, 1);
+  const constructorLeaderPoints = Math.max(standings.constructors[0]?.points ?? 1, 1);
+  const statusBadge = standings.source === "static-fallback" ? "STATIC FALLBACK" : "API READY";
 
-const leaderPoints = Number(drivers[0]?.points ?? 1);
-const constructorLeaderPoints = teamTotals[0]?.points ?? 1;
-
-export default function StandingsPage() {
   return (
     <main className="space-y-4">
       <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
@@ -27,11 +19,11 @@ export default function StandingsPage() {
             <p className="eyebrow">Standings</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">积分榜</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              展示当前 Mock 赛季的车手积分榜与车队积分榜。这里负责赛季排名，不承载单场圈速分析。
+              展示当前静态回退数据的车手积分榜与车队积分榜。这里负责赛季排名，不承载单场圈速分析。
             </p>
           </div>
           <div className="w-fit rounded-full border border-neonAmber/50 bg-black/60 px-3 py-1 text-xs font-semibold text-neonAmber shadow-[0_0_24px_rgba(255,176,32,0.14)]">
-            SEASON TABLE · MOCK
+            SEASON TABLE · {statusBadge}
           </div>
         </div>
       </section>
@@ -43,13 +35,13 @@ export default function StandingsPage() {
             <h2 className="mt-1 text-lg font-semibold text-white">车手积分榜</h2>
           </div>
           <div className="divide-y divide-zinc-900">
-            {drivers.map((driver, index) => {
-              const percentage = Math.max(8, (Number(driver.points) / leaderPoints) * 100);
+            {standings.drivers.map((driver) => {
+              const percentage = Math.max(8, (driver.points / leaderPoints) * 100);
 
               return (
                 <Link key={driver.code} className="group block px-4 py-3 transition hover:bg-white/[0.03]" href={driver.href}>
                   <div className="flex items-center gap-3">
-                    <span className="w-8 font-mono text-sm text-zinc-500">P{index + 1}</span>
+                    <span className="w-8 font-mono text-sm text-zinc-500">P{driver.position}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
@@ -75,14 +67,14 @@ export default function StandingsPage() {
             <h2 className="mt-1 text-lg font-semibold text-white">车队积分榜</h2>
           </div>
           <div className="divide-y divide-zinc-900">
-            {teamTotals.map((team, index) => {
+            {standings.constructors.map((team) => {
               const percentage = Math.max(8, (team.points / constructorLeaderPoints) * 100);
 
               return (
                 <article key={team.team} className="px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="race-code">P{index + 1}</p>
+                      <p className="race-code">P{team.position}</p>
                       <h3 className="mt-1 text-base font-semibold text-white">{team.team}</h3>
                       <p className="mt-1 text-xs text-zinc-500">{team.drivers.join(" / ")}</p>
                     </div>
