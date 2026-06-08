@@ -31,9 +31,17 @@ function getTimeLeft(targetDate: Date) {
 
 export function RaceCountdown({ targetIso }: { targetIso: string }) {
   const targetDate = useMemo(() => new Date(targetIso), [targetIso]);
-  const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(targetDate));
+  const [isMounted, setIsMounted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({
+    days: "--",
+    hours: "--",
+    minutes: "--",
+    seconds: "--",
+    isStarted: false
+  });
 
   useEffect(() => {
+    setIsMounted(true);
     setTimeLeft(getTimeLeft(targetDate));
     const id = setInterval(() => setTimeLeft(getTimeLeft(targetDate)), 1000);
     return () => clearInterval(id);
@@ -47,7 +55,10 @@ export function RaceCountdown({ targetIso }: { targetIso: string }) {
   ];
 
   return (
-    <div className="grid min-w-0 grid-cols-4 gap-2 rounded-2xl border border-zinc-800/80 bg-black/25 p-3 text-center lg:min-w-[22rem]">
+    <div
+      className="grid min-w-0 grid-cols-4 gap-2 rounded-lg border border-zinc-800/80 bg-black/25 p-3 text-center lg:min-w-[22rem]"
+      aria-live={isMounted ? "polite" : "off"}
+    >
       {items.map((item) => (
         <div key={item.label}>
           <p className="font-mono text-3xl font-bold text-blue-400 sm:text-4xl">{item.value}</p>
