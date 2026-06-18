@@ -11,6 +11,8 @@ type OpenF1Params = Record<string, string | number>;
 
 type OpenF1FetchOptions = {
   timeoutMs?: number;
+  /** Retained for backwards compatibility. OpenF1 responses always revalidate after 30 seconds. */
+  revalidate?: number;
 };
 
 export class OpenF1RequestError extends Error {
