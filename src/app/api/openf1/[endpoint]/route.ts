@@ -9,7 +9,7 @@ import {
   validateOpenF1SearchParams
 } from "@/lib/openf1-validation";
 
-export const revalidate = OPENF1_REVALIDATE_SECONDS;
+export const revalidate = 30;
 
 type RouteContext = {
   params: {
