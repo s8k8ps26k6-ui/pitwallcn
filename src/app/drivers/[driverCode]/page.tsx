@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { getDriverProfile } from "@/lib/drivers";
 
-export default function DriverDetailPage({ params }: { params: { driverCode: string } }) {
-  const driver = getDriverProfile(params.driverCode);
+export default async function DriverDetailPage({ params }: { params: Promise<{ driverCode: string }> }) {
+  const { driverCode } = await params;
+  const driver = getDriverProfile(driverCode);
 
   const driverStats = [
     { label: "Number", value: driver.number, hint: "车号" },

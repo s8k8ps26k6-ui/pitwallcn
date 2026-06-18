@@ -12,13 +12,13 @@ import {
 export const revalidate = 30;
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     endpoint: string;
-  };
+  }>;
 };
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
-  const { endpoint } = params;
+  const { endpoint } = await params;
 
   if (!isOpenF1Endpoint(endpoint)) {
     return NextResponse.json(

@@ -140,10 +140,11 @@ async function withRecapTimeout<T>(promise: Promise<T>, fallback: T) {
   }
 }
 
-export default async function RaceWeekendPage({ searchParams }: { searchParams?: RaceWeekendSearchParams }) {
+export default async function RaceWeekendPage({ searchParams }: { searchParams: Promise<RaceWeekendSearchParams> }) {
+  const resolvedSearchParams = await searchParams;
   const selection = await getResultsSelectionData();
   const selectorMeetings = selection.meetings.length ? selection.meetings : manualFallbackMeetings;
-  const requestedSession = parseSessionKey(searchParams?.session);
+  const requestedSession = parseSessionKey(resolvedSearchParams.session);
   const selectedSessionKey = requestedSession ?? selectorMeetings[0]?.sessions[0]?.sessionKey ?? null;
 
   const selectedMeeting = selectorMeetings.find((meeting) =>
