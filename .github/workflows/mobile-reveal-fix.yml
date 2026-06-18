@@ -1,0 +1,86 @@
+name: Apply mobile reveal fix
+
+on:
+  push:
+    branches:
+      - fix/mobile-scroll-reveal
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/mobile-scroll-reveal
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Patch mobile ScrollTrigger behavior
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/components/cinematic-homepage.tsx")
+          text = path.read_text(encoding="utf-8")
+
+          text = text.replace(
+              '''      const prefersReducedMotion = window.matchMedia(\n        "(prefers-reduced-motion: reduce)",\n      ).matches;''',
+              '''      const prefersReducedMotion = window.matchMedia(\n        "(prefers-reduced-motion: reduce)",\n      ).matches;\n      const usesDesktopPinning = window.matchMedia("(min-width: 768px)").matches;''',
+              1,
+          )
+
+          old_modules = '''        if (moduleSection && moduleCards.length) {\n          gsap\n            .timeline({\n              scrollTrigger: {\n                trigger: moduleSection,\n                start: "top top+=24",\n                end: "+=1100",\n                scrub: 0.7,\n                pin: true,\n                pinSpacing: true,\n                anticipatePin: 1,\n              },\n            })\n            .fromTo(\n              "[data-module-heading]",\n              { autoAlpha: 0, y: 28 },\n              { autoAlpha: 1, y: 0, duration: 0.45, ease: "power3.out" },\n            )\n            .fromTo(\n              moduleCards,\n              { autoAlpha: 0, x: -60 },\n              {\n                autoAlpha: 1,\n                x: 0,\n                duration: 0.78,\n                stagger: 0.12,\n                ease: "power3.out",\n              },\n              0.12,\n            );\n        }'''
+
+          new_modules = '''        if (moduleSection && moduleCards.length) {\n          if (usesDesktopPinning) {\n            gsap\n              .timeline({\n                scrollTrigger: {\n                  trigger: moduleSection,\n                  start: "top top+=72",\n                  end: "+=780",\n                  scrub: 0.45,\n                  pin: true,\n                  pinSpacing: true,\n                  anticipatePin: 1,\n                  invalidateOnRefresh: true,\n                },\n              })\n              .fromTo(\n                "[data-module-heading]",\n                { autoAlpha: 0, y: 24 },\n                { autoAlpha: 1, y: 0, duration: 0.34, ease: "power3.out" },\n              )\n              .fromTo(\n                moduleCards,\n                { autoAlpha: 0, x: -48 },\n                {\n                  autoAlpha: 1,\n                  x: 0,\n                  duration: 0.58,\n                  stagger: 0.1,\n                  ease: "power3.out",\n                },\n                0.08,\n              );\n          } else {\n            gsap\n              .timeline({\n                scrollTrigger: {\n                  trigger: moduleSection,\n                  start: "top 94%",\n                  once: true,\n                  toggleActions: "play none none none",\n                  invalidateOnRefresh: true,\n                },\n              })\n              .fromTo(\n                "[data-module-heading]",\n                { autoAlpha: 0, y: 16 },\n                { autoAlpha: 1, y: 0, duration: 0.24, ease: "power2.out" },\n              )\n              .fromTo(\n                moduleCards,\n                { autoAlpha: 0, x: -28 },\n                {\n                  autoAlpha: 1,\n                  x: 0,\n                  duration: 0.38,\n                  stagger: 0.055,\n                  ease: "power2.out",\n                },\n                0.04,\n              );\n          }\n        }'''
+
+          if old_modules not in text:
+              raise RuntimeError("Command Modules animation block not found")
+          text = text.replace(old_modules, new_modules, 1)
+
+          text = text.replace(
+              '            start: "top 72%",',
+              '            start: usesDesktopPinning ? "top 86%" : "top 94%",',
+              1,
+          )
+
+          old_season = '''        gsap.fromTo(\n          "[data-season-panel]",\n          { autoAlpha: 0, y: 54 },\n          {\n            autoAlpha: 1,\n            y: 0,\n            duration: 0.8,\n            stagger: 0.12,\n            ease: "power3.out",\n            scrollTrigger: {\n              trigger: seasonSection,\n              start: "top 78%",\n            },\n          },\n        );'''
+
+          new_season = '''        if (seasonSection) {\n          gsap.fromTo(\n            "[data-season-panel]",\n            { autoAlpha: 0, y: usesDesktopPinning ? 42 : 18 },\n            {\n              autoAlpha: 1,\n              y: 0,\n              duration: usesDesktopPinning ? 0.64 : 0.4,\n              stagger: usesDesktopPinning ? 0.1 : 0.055,\n              ease: "power3.out",\n              scrollTrigger: {\n                trigger: seasonSection,\n                start: usesDesktopPinning ? "top 86%" : "top 94%",\n                once: true,\n                toggleActions: "play none none none",\n                invalidateOnRefresh: true,\n              },\n            },\n          );\n        }'''
+
+          if old_season not in text:
+              raise RuntimeError("Season Context animation block not found")
+          text = text.replace(old_season, new_season, 1)
+
+          text = text.replace(
+              '        ScrollTrigger?.refresh();',
+              '        ScrollTrigger?.refresh();\n        ScrollTrigger?.update();',
+              1,
+          )
+
+          text = text.replace(
+              'className="relative isolate flex min-h-screen items-center overflow-hidden border-b border-white/10 bg-[#050506] py-16 sm:py-20"',
+              'className="relative isolate flex min-h-0 items-center overflow-hidden border-b border-white/10 bg-[#050506] py-16 sm:min-h-screen sm:py-20"',
+              1,
+          )
+
+          path.write_text(text, encoding="utf-8")
+          PY
+      - name: Validate
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+      - name: Commit source fix and remove temporary workflow
+        run: |
+          rm -f .github/workflows/mobile-reveal-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: reveal mobile homepage sections promptly"
+          git push origin HEAD:fix/mobile-scroll-reveal
