@@ -1,41 +1,6 @@
 {
   "request_apis": [],
-  "sync_page_props": [
-    {
-      "file": "src/app/api/openf1/[endpoint]/route.ts",
-      "line": 15,
-      "text": "params: Promise<{"
-    },
-    {
-      "file": "src/app/drivers/[driverCode]/page.tsx",
-      "line": 4,
-      "text": "export default async function DriverDetailPage({ params }: { params: Promise<{ driverCode: string }> }) {"
-    },
-    {
-      "file": "src/app/lap-analysis/page.tsx",
-      "line": 82,
-      "text": "export default async function LapAnalysisPage({ searchParams }: { searchParams: Promise<LapAnalysisSearchParams> }) {"
-    },
-    {
-      "file": "src/app/race-control/page.tsx",
-      "line": 108,
-      "text": "export default async function RaceControlPage({ searchParams }: { searchParams: Promise<RaceControlSearchParams> }) {"
-    },
-    {
-      "file": "src/app/race-weekend/page.tsx",
-      "line": 143,
-      "text": "export default async function RaceWeekendPage({ searchParams }: { searchParams: Promise<RaceWeekendSearchParams> }) {"
-    },
-    {
-      "file": "src/app/results/page.tsx",
-      "line": 90,
-      "text": "export default async function ResultsPage({ searchParams }: { searchParams: Promise<ResultsSearchParams> }) {"
-    },
-    {
-      "file": "src/app/weather/page.tsx",
-      "line": 88,
-      "text": "export default async function WeatherPage({ searchParams }: { searchParams: Promise<WeatherSearchParams> }) {"
-    },
+  "synchronous_page_or_route_props": [
     {
       "file": "src/lib/openf1-client.ts",
       "line": 25,
@@ -45,16 +10,6 @@
       "file": "src/lib/openf1-client.ts",
       "line": 35,
       "text": "export async function fetchOpenF1<T>(path: string, params: OpenF1Params, options: OpenF1FetchOptions = {}) {"
-    },
-    {
-      "file": "src/lib/openf1-validation.ts",
-      "line": 18,
-      "text": "params: Record<string, string>;"
-    },
-    {
-      "file": "src/lib/openf1-validation.ts",
-      "line": 83,
-      "text": "export function validateOpenF1SearchParams(endpoint: OpenF1Endpoint, searchParams: URLSearchParams): ValidationResult {"
     },
     {
       "file": "src/lib/openf1-validation.ts",

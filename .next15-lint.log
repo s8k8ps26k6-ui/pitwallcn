@@ -2,12 +2,3 @@
 > grid-delta-cn@0.1.0 lint
 > eslint .
 
-
-/home/runner/work/pitwallcn/pitwallcn/postcss.config.mjs
-  1:1  warning  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
-
-/home/runner/work/pitwallcn/pitwallcn/src/components/route-error-state.tsx
-  46:11  error  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
-
-✖ 2 problems (1 error, 1 warning)
-
