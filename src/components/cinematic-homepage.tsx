@@ -385,7 +385,7 @@ export function CinematicHomepage({
           },
         );
 
-        ScrollTrigger.refresh();
+        ScrollTrigger?.refresh();
       }, root);
     })();
 
