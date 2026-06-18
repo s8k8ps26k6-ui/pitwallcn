@@ -1,110 +1,40 @@
 {
   "request_apis": [],
-  "params_or_search_params": [
+  "sync_page_props": [
     {
       "file": "src/app/api/openf1/[endpoint]/route.ts",
       "line": 15,
-      "text": "params: {"
-    },
-    {
-      "file": "src/app/api/openf1/[endpoint]/route.ts",
-      "line": 20,
-      "text": "export async function GET(request: NextRequest, { params }: RouteContext) {"
-    },
-    {
-      "file": "src/app/api/openf1/[endpoint]/route.ts",
-      "line": 21,
-      "text": "const { endpoint } = params;"
-    },
-    {
-      "file": "src/app/api/openf1/[endpoint]/route.ts",
-      "line": 30,
-      "text": "const validation = validateOpenF1SearchParams(endpoint, request.nextUrl.searchParams);"
-    },
-    {
-      "file": "src/app/api/openf1/[endpoint]/route.ts",
-      "line": 39,
-      "text": "const data = await fetchOpenF1<unknown>(`/${endpoint}`, validation.params);"
+      "text": "params: Promise<{"
     },
     {
       "file": "src/app/drivers/[driverCode]/page.tsx",
       "line": 4,
-      "text": "export default function DriverDetailPage({ params }: { params: { driverCode: string } }) {"
-    },
-    {
-      "file": "src/app/drivers/[driverCode]/page.tsx",
-      "line": 5,
-      "text": "const driver = getDriverProfile(params.driverCode);"
+      "text": "export default async function DriverDetailPage({ params }: { params: Promise<{ driverCode: string }> }) {"
     },
     {
       "file": "src/app/lap-analysis/page.tsx",
       "line": 82,
-      "text": "export default async function LapAnalysisPage({ searchParams }: { searchParams?: LapAnalysisSearchParams }) {"
-    },
-    {
-      "file": "src/app/lap-analysis/page.tsx",
-      "line": 84,
-      "text": "const requestedSession = parseSessionKey(searchParams?.session);"
-    },
-    {
-      "file": "src/app/lap-analysis/page.tsx",
-      "line": 104,
-      "text": "<RaceWeekendReturnLink session={searchParams?.session} />"
+      "text": "export default async function LapAnalysisPage({ searchParams }: { searchParams: Promise<LapAnalysisSearchParams> }) {"
     },
     {
       "file": "src/app/race-control/page.tsx",
       "line": 108,
-      "text": "export default async function RaceControlPage({ searchParams }: { searchParams?: RaceControlSearchParams }) {"
-    },
-    {
-      "file": "src/app/race-control/page.tsx",
-      "line": 110,
-      "text": "const requestedSession = parseSessionKey(searchParams?.session);"
-    },
-    {
-      "file": "src/app/race-control/page.tsx",
-      "line": 140,
-      "text": "<RaceWeekendReturnLink session={searchParams?.session} />"
+      "text": "export default async function RaceControlPage({ searchParams }: { searchParams: Promise<RaceControlSearchParams> }) {"
     },
     {
       "file": "src/app/race-weekend/page.tsx",
       "line": 143,
-      "text": "export default async function RaceWeekendPage({ searchParams }: { searchParams?: RaceWeekendSearchParams }) {"
-    },
-    {
-      "file": "src/app/race-weekend/page.tsx",
-      "line": 146,
-      "text": "const requestedSession = parseSessionKey(searchParams?.session);"
+      "text": "export default async function RaceWeekendPage({ searchParams }: { searchParams: Promise<RaceWeekendSearchParams> }) {"
     },
     {
       "file": "src/app/results/page.tsx",
       "line": 90,
-      "text": "export default async function ResultsPage({ searchParams }: { searchParams?: ResultsSearchParams }) {"
-    },
-    {
-      "file": "src/app/results/page.tsx",
-      "line": 92,
-      "text": "const requestedSession = parseSessionKey(searchParams?.session);"
-    },
-    {
-      "file": "src/app/results/page.tsx",
-      "line": 125,
-      "text": "<RaceWeekendReturnLink session={searchParams?.session} />"
+      "text": "export default async function ResultsPage({ searchParams }: { searchParams: Promise<ResultsSearchParams> }) {"
     },
     {
       "file": "src/app/weather/page.tsx",
       "line": 88,
-      "text": "export default async function WeatherPage({ searchParams }: { searchParams?: WeatherSearchParams }) {"
-    },
-    {
-      "file": "src/app/weather/page.tsx",
-      "line": 90,
-      "text": "const requestedSession = parseSessionKey(searchParams?.session);"
-    },
-    {
-      "file": "src/app/weather/page.tsx",
-      "line": 119,
-      "text": "<RaceWeekendReturnLink session={searchParams?.session} />"
+      "text": "export default async function WeatherPage({ searchParams }: { searchParams: Promise<WeatherSearchParams> }) {"
     },
     {
       "file": "src/lib/openf1-client.ts",
@@ -113,18 +43,8 @@
     },
     {
       "file": "src/lib/openf1-client.ts",
-      "line": 31,
-      "text": "Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));"
-    },
-    {
-      "file": "src/lib/openf1-client.ts",
       "line": 35,
       "text": "export async function fetchOpenF1<T>(path: string, params: OpenF1Params, options: OpenF1FetchOptions = {}) {"
-    },
-    {
-      "file": "src/lib/openf1-client.ts",
-      "line": 41,
-      "text": "const response = await fetch(buildOpenF1Url(path, params), {"
     },
     {
       "file": "src/lib/openf1-validation.ts",
@@ -135,16 +55,6 @@
       "file": "src/lib/openf1-validation.ts",
       "line": 83,
       "text": "export function validateOpenF1SearchParams(endpoint: OpenF1Endpoint, searchParams: URLSearchParams): ValidationResult {"
-    },
-    {
-      "file": "src/lib/openf1-validation.ts",
-      "line": 84,
-      "text": "const entries = Array.from(searchParams.entries());"
-    },
-    {
-      "file": "src/lib/openf1-validation.ts",
-      "line": 103,
-      "text": "if (searchParams.getAll(key).length !== 1) {"
     },
     {
       "file": "src/lib/openf1-validation.ts",
@@ -162,323 +72,6 @@
       "file": "src/lib/openf1-client.ts",
       "line": 41,
       "text": "const response = await fetch(buildOpenF1Url(path, params), {"
-    }
-  ],
-  "route_exports": [
-    {
-      "file": "src/app/api/f1/live/route.ts",
-      "line": 4,
-      "text": "export async function GET() {"
-    },
-    {
-      "file": "src/app/api/f1/race-control/route.ts",
-      "line": 4,
-      "text": "export async function GET() {"
-    },
-    {
-      "file": "src/app/api/f1/standings/route.ts",
-      "line": 4,
-      "text": "export async function GET() {"
-    },
-    {
-      "file": "src/app/api/openf1/[endpoint]/route.ts",
-      "line": 20,
-      "text": "export async function GET(request: NextRequest, { params }: RouteContext) {"
-    },
-    {
-      "file": "src/app/drivers/[driverCode]/error.tsx",
-      "line": 5,
-      "text": "export default function DriverDetailError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/drivers/[driverCode]/page.tsx",
-      "line": 4,
-      "text": "export default function DriverDetailPage({ params }: { params: { driverCode: string } }) {"
-    },
-    {
-      "file": "src/app/drivers/error.tsx",
-      "line": 5,
-      "text": "export default function DriversError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/drivers/page.tsx",
-      "line": 5,
-      "text": "export default function DriversPage() {"
-    },
-    {
-      "file": "src/app/error.tsx",
-      "line": 5,
-      "text": "export default function AppError({"
-    },
-    {
-      "file": "src/app/lap-analysis/error.tsx",
-      "line": 5,
-      "text": "export default function LapAnalysisError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/lap-analysis/page.tsx",
-      "line": 82,
-      "text": "export default async function LapAnalysisPage({ searchParams }: { searchParams?: LapAnalysisSearchParams }) {"
-    },
-    {
-      "file": "src/app/layout.tsx",
-      "line": 66,
-      "text": "export default function RootLayout({"
-    },
-    {
-      "file": "src/app/live/error.tsx",
-      "line": 5,
-      "text": "export default function LiveError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/live/page.tsx",
-      "line": 5,
-      "text": "export default function LivePage() {"
-    },
-    {
-      "file": "src/app/loading.tsx",
-      "line": 1,
-      "text": "export default function Loading() {"
-    },
-    {
-      "file": "src/app/page.tsx",
-      "line": 21,
-      "text": "export default async function Home() {"
-    },
-    {
-      "file": "src/app/project/error.tsx",
-      "line": 5,
-      "text": "export default function ProjectError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/project/page.tsx",
-      "line": 110,
-      "text": "export default function ProjectPage() {"
-    },
-    {
-      "file": "src/app/race-control/error.tsx",
-      "line": 5,
-      "text": "export default function RaceControlError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/race-control/page.tsx",
-      "line": 108,
-      "text": "export default async function RaceControlPage({ searchParams }: { searchParams?: RaceControlSearchParams }) {"
-    },
-    {
-      "file": "src/app/race-weekend/error.tsx",
-      "line": 5,
-      "text": "export default function RaceWeekendError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/race-weekend/page.tsx",
-      "line": 143,
-      "text": "export default async function RaceWeekendPage({ searchParams }: { searchParams?: RaceWeekendSearchParams }) {"
-    },
-    {
-      "file": "src/app/results/error.tsx",
-      "line": 5,
-      "text": "export default function ResultsError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/results/page.tsx",
-      "line": 90,
-      "text": "export default async function ResultsPage({ searchParams }: { searchParams?: ResultsSearchParams }) {"
-    },
-    {
-      "file": "src/app/robots.ts",
-      "line": 5,
-      "text": "export default function robots(): MetadataRoute.Robots {"
-    },
-    {
-      "file": "src/app/schedule/error.tsx",
-      "line": 5,
-      "text": "export default function ScheduleError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/schedule/page.tsx",
-      "line": 20,
-      "text": "export default async function SchedulePage() {"
-    },
-    {
-      "file": "src/app/sitemap.ts",
-      "line": 19,
-      "text": "export default function sitemap(): MetadataRoute.Sitemap {"
-    },
-    {
-      "file": "src/app/standings/error.tsx",
-      "line": 5,
-      "text": "export default function StandingsError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/standings/page.tsx",
-      "line": 4,
-      "text": "export default async function StandingsPage() {"
-    },
-    {
-      "file": "src/app/weather/error.tsx",
-      "line": 5,
-      "text": "export default function WeatherError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {"
-    },
-    {
-      "file": "src/app/weather/page.tsx",
-      "line": 88,
-      "text": "export default async function WeatherPage({ searchParams }: { searchParams?: WeatherSearchParams }) {"
-    },
-    {
-      "file": "src/components/cinematic-homepage.tsx",
-      "line": 87,
-      "text": "export function CinematicHomepage({"
-    },
-    {
-      "file": "src/components/driver-charts.tsx",
-      "line": 28,
-      "text": "export function DriverCharts() {"
-    },
-    {
-      "file": "src/components/driver-index.tsx",
-      "line": 7,
-      "text": "export function DriverIndex({ drivers }: { drivers: DriverProfile[] }) {"
-    },
-    {
-      "file": "src/components/home-intro-sequence.tsx",
-      "line": 55,
-      "text": "export function HomeIntroSequence() {"
-    },
-    {
-      "file": "src/components/live-pulse-panel.tsx",
-      "line": 9,
-      "text": "export function LivePulsePanel() {"
-    },
-    {
-      "file": "src/components/live-timing-table.tsx",
-      "line": 18,
-      "text": "export function LiveTimingTable({ initialData }: { initialData: LiveTimingRow[] }) {"
-    },
-    {
-      "file": "src/components/race-countdown.tsx",
-      "line": 32,
-      "text": "export function RaceCountdown({ targetIso }: { targetIso: string }) {"
-    },
-    {
-      "file": "src/components/race-weekend-return-link.tsx",
-      "line": 18,
-      "text": "export function RaceWeekendReturnLink({ session }: RaceWeekendReturnLinkProps) {"
-    },
-    {
-      "file": "src/components/recap-drawer-nav.tsx",
-      "line": 19,
-      "text": "export function RecapDrawerNav({ items, currentLabel, currentHint }: RecapDrawerNavProps) {"
-    },
-    {
-      "file": "src/components/route-error-state.tsx",
-      "line": 12,
-      "text": "export function RouteErrorState({"
-    },
-    {
-      "file": "src/components/schedule-view.tsx",
-      "line": 32,
-      "text": "export function ScheduleView({ race }: { race: RaceWeekend }) {"
-    },
-    {
-      "file": "src/lib/drivers.ts",
-      "line": 327,
-      "text": "export function getDriverProfile(code: string) {"
-    },
-    {
-      "file": "src/lib/f1-service.ts",
-      "line": 75,
-      "text": "export async function getScheduleCalendar() {"
-    },
-    {
-      "file": "src/lib/f1-service.ts",
-      "line": 101,
-      "text": "export async function getStandings() {"
-    },
-    {
-      "file": "src/lib/f1-service.ts",
-      "line": 105,
-      "text": "export async function getLiveTiming() {"
-    },
-    {
-      "file": "src/lib/f1-service.ts",
-      "line": 112,
-      "text": "export async function getRaceControl() {"
-    },
-    {
-      "file": "src/lib/lap-analysis-service.ts",
-      "line": 189,
-      "text": "export async function getLapAnalysisSelectionData() {"
-    },
-    {
-      "file": "src/lib/lap-analysis-service.ts",
-      "line": 223,
-      "text": "export async function getLapAnalysisBySession(sessionKey: number) {"
-    },
-    {
-      "file": "src/lib/openf1-client.ts",
-      "line": 25,
-      "text": "export function buildOpenF1Url(path: string, params: OpenF1Params) {"
-    },
-    {
-      "file": "src/lib/openf1-client.ts",
-      "line": 35,
-      "text": "export async function fetchOpenF1<T>(path: string, params: OpenF1Params, options: OpenF1FetchOptions = {}) {"
-    },
-    {
-      "file": "src/lib/openf1-validation.ts",
-      "line": 79,
-      "text": "export function isOpenF1Endpoint(value: string): value is OpenF1Endpoint {"
-    },
-    {
-      "file": "src/lib/openf1-validation.ts",
-      "line": 83,
-      "text": "export function validateOpenF1SearchParams(endpoint: OpenF1Endpoint, searchParams: URLSearchParams): ValidationResult {"
-    },
-    {
-      "file": "src/lib/race-calendar.ts",
-      "line": 320,
-      "text": "export function findNextRaceFromCalendar(now = new Date(), calendar = officialRaceCalendar2026) {"
-    },
-    {
-      "file": "src/lib/race-control-service.ts",
-      "line": 162,
-      "text": "export async function getRaceControlSelectionData() {"
-    },
-    {
-      "file": "src/lib/race-control-service.ts",
-      "line": 196,
-      "text": "export async function getRaceControlFeedBySession(sessionKey: number) {"
-    },
-    {
-      "file": "src/lib/race-control-service.ts",
-      "line": 213,
-      "text": "export async function getRaceControlFeed() {"
-    },
-    {
-      "file": "src/lib/results-service.ts",
-      "line": 240,
-      "text": "export async function getResultsSelectionData() {"
-    },
-    {
-      "file": "src/lib/results-service.ts",
-      "line": 274,
-      "text": "export async function getResultsBySession(sessionKey: number) {"
-    },
-    {
-      "file": "src/lib/standings-service.ts",
-      "line": 90,
-      "text": "export async function getDriverStandings() {"
-    },
-    {
-      "file": "src/lib/weather-service.ts",
-      "line": 200,
-      "text": "export async function getWeatherSelectionData() {"
-    },
-    {
-      "file": "src/lib/weather-service.ts",
-      "line": 234,
-      "text": "export async function getWeatherBySession(sessionKey: number) {"
     }
   ]
 }

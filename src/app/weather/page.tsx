@@ -85,9 +85,10 @@ function getBarWidth(value: number | null, max: number) {
   return `${Math.min(Math.max((value / max) * 100, 4), 100)}%`;
 }
 
-export default async function WeatherPage({ searchParams }: { searchParams?: WeatherSearchParams }) {
+export default async function WeatherPage({ searchParams }: { searchParams: Promise<WeatherSearchParams> }) {
+  const resolvedSearchParams = await searchParams;
   const selection = await getWeatherSelectionData();
-  const requestedSession = parseSessionKey(searchParams?.session);
+  const requestedSession = parseSessionKey(resolvedSearchParams.session);
   const selectedSessionKey = requestedSession ?? selection.defaultSessionKey;
 
   const selectedMeeting = selection.meetings.find((meeting) =>
@@ -116,7 +117,7 @@ export default async function WeatherPage({ searchParams }: { searchParams?: Wea
         <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
           ← BACK TO HOME
         </Link>
-        <RaceWeekendReturnLink session={searchParams?.session} />
+        <RaceWeekendReturnLink session={resolvedSearchParams.session} />
       </div>
 
       <section className="motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">

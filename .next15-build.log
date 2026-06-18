@@ -2,7 +2,6 @@
 > grid-delta-cn@0.1.0 build
 > next build
 
- ⚠ `experimental.typedRoutes` has been moved to `typedRoutes`. Please update your next.config.mjs file accordingly.
 ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
 Attention: Next.js now collects completely anonymous telemetry regarding usage.
 This information is used to shape Next.js' roadmap and prioritize features.
@@ -10,16 +9,14 @@ You can learn more, including how to opt-out if you'd not like to participate in
 https://nextjs.org/telemetry
 
    ▲ Next.js 15.5.19
-   - Experiments (use with caution):
-     ✓ typedRoutes
 
    Creating an optimized production build ...
  ✓ Compiled successfully in 7.4s
    Linting and checking validity of types ...
+
 Failed to compile.
 
-src/app/api/openf1/[endpoint]/route.ts
-Type error: Route "src/app/api/openf1/[endpoint]/route.ts" has an invalid "GET" export:
-  Type "RouteContext" is not a valid type for the function's second argument.
+./src/components/route-error-state.tsx
+46:11  Error: Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  @next/next/no-html-link-for-pages
 
-Next.js build worker exited with code: 1 and signal: null
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
