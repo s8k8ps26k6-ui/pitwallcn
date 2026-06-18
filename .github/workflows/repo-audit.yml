@@ -1,0 +1,24 @@
+name: Repository audit
+
+on:
+  push:
+    branches:
+      - chore/security-openf1-hardening
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: List source files
+        run: find src -type f | sort
+      - name: Find OpenF1 and public env references
+        run: |
+          echo '--- OpenF1 references ---'
+          grep -RInE 'api\.openf1\.org|fetchOpenF1|OPENF1_BASE_URL' src next.config.mjs .env.example || true
+          echo '--- NEXT_PUBLIC references ---'
+          grep -RIn 'NEXT_PUBLIC_' . --exclude-dir=.git --exclude-dir=node_modules || true
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
