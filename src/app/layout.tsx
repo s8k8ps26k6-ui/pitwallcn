@@ -72,7 +72,10 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body>
         <div className="mx-auto min-h-screen max-w-6xl px-4 py-4 sm:px-6 sm:py-6">
-          <header className="mb-5 rounded-[1.25rem] border border-zinc-800/80 bg-zinc-950/55 px-3 py-2.5 shadow-2xl shadow-black/20 backdrop-blur sm:mb-6 sm:rounded-[1.75rem] sm:py-3 md:px-4">
+          <header
+            data-site-header
+            className="mb-5 rounded-[1.25rem] border border-zinc-800/80 bg-zinc-950/55 px-3 py-2.5 shadow-2xl shadow-black/20 backdrop-blur sm:mb-6 sm:rounded-[1.75rem] sm:py-3 md:px-4"
+          >
             <div className="flex items-center justify-between gap-3">
               <Link
                 className="group inline-flex items-center gap-2.5 py-0.5 sm:gap-3 sm:py-1"
