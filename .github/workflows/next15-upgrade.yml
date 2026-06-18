@@ -1,4 +1,4 @@
-name: Next 15 upgrade verification
+name: Clean Next 15 migration diagnostics
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  verify:
+  cleanup:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -17,99 +17,22 @@ jobs:
         with:
           ref: upgrade-next15
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Fix remaining ESLint findings
+      - name: Remove temporary migration files
         shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          route_error = Path("src/components/route-error-state.tsx")
-          text = route_error.read_text(encoding="utf-8")
-          if 'import Link from "next/link";' not in text:
-              text = text.replace(
-                  'import { useEffect } from "react";',
-                  'import Link from "next/link";\nimport { useEffect } from "react";',
-              )
-          text = text.replace(
-              '''          <a\n            className="rounded-full border border-zinc-700 bg-black/30 px-5 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-zinc-500 hover:text-white"\n            href="/"\n          >\n            返回首页\n          </a>''',
-              '''          <Link\n            className="rounded-full border border-zinc-700 bg-black/30 px-5 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-zinc-500 hover:text-white"\n            href="/"\n          >\n            返回首页\n          </Link>''',
-          )
-          route_error.write_text(text, encoding="utf-8")
-
-          postcss = Path("postcss.config.mjs")
-          postcss.write_text(
-              '''const postcssConfig = {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {}\n  }\n};\n\nexport default postcssConfig;\n''',
-              encoding="utf-8",
-          )
-          PY
-
-      - name: Install locked dependencies
-        run: npm ci
-
-      - name: Audit Next 15 migration surfaces
-        shell: bash
-        run: |
-          python - <<'PY'
-          import json, re
-          from pathlib import Path
-
-          request_api_pattern = re.compile(r"\b(cookies|headers|draftMode)\s*\(")
-          synchronous_props = []
-          request_apis = []
-          fetch_calls = []
-          files = sorted(path for path in Path("src").rglob("*") if path.suffix in {".ts", ".tsx", ".js", ".jsx"})
-
-          for path in files:
-              lines = path.read_text(encoding="utf-8").splitlines()
-              for line_number, line in enumerate(lines, 1):
-                  if request_api_pattern.search(line):
-                      request_apis.append({"file": str(path), "line": line_number, "text": line.strip()})
-                  if "fetch(" in line:
-                      fetch_calls.append({"file": str(path), "line": line_number, "text": line.strip()})
-                  if ("params:" in line or "searchParams:" in line) and "Promise<" not in line and "URLSearchParams" not in line and "Record<" not in line:
-                      synchronous_props.append({"file": str(path), "line": line_number, "text": line.strip()})
-
-          report = {
-              "request_apis": request_apis,
-              "synchronous_page_or_route_props": synchronous_props,
-              "fetch_calls": fetch_calls,
-          }
-          Path(".next15-audit.json").write_text(
-              json.dumps(report, ensure_ascii=False, indent=2) + "\n",
-              encoding="utf-8",
-          )
-          PY
-
-      - name: Run ESLint and production build
-        id: verify
-        shell: bash
-        run: |
-          set +e
-          npm run lint > .next15-lint.log 2>&1
-          LINT_EXIT=$?
-          npm run build > .next15-build.log 2>&1
-          BUILD_EXIT=$?
-          printf '{"install":0,"lint":%s,"build":%s}\n' "$LINT_EXIT" "$BUILD_EXIT" > .next15-status.json
-          echo "lint_exit=$LINT_EXIT" >> "$GITHUB_OUTPUT"
-          echo "build_exit=$BUILD_EXIT" >> "$GITHUB_OUTPUT"
-
-      - name: Commit fixes and diagnostics
+          rm -f .next15-audit.json
+          rm -f .next15-install.log
+          rm -f .next15-lint.log
+          rm -f .next15-build.log
+          rm -f .next15-status.json
+          rm -f .next15-pr-trigger*
+          rm -f .github/workflows/next15-upgrade.yml
+      - name: Commit cleanup
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --quiet && exit 0
-          git commit -m "fix: resolve Next 15 lint and build findings"
+          git commit -m "chore: remove temporary Next 15 migration diagnostics"
           git push origin HEAD:upgrade-next15
-
-      - name: Enforce verification result
-        shell: bash
-        run: |
-          test '${{ steps.verify.outputs.lint_exit }}' = '0'
-          test '${{ steps.verify.outputs.build_exit }}' = '0'
