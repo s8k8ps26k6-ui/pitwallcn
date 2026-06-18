@@ -1,0 +1,37 @@
+name: Promote mobile reveal fix
+
+on:
+  push:
+    branches:
+      - fix/mobile-scroll-reveal
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/mobile-scroll-reveal
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Verify release candidate
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+      - name: Remove temporary workflow and promote to main
+        run: |
+          rm -f .github/workflows/promote-mobile-reveal.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: remove temporary promotion workflow"
+          git push origin HEAD:fix/mobile-scroll-reveal
+          git push origin HEAD:main
