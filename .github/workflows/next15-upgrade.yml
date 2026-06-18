@@ -19,19 +19,112 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: upgrade-next15
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
-      - name: Resolve Next 15, React 19 and ESLint 9
+
+      - name: Apply Next 15 migration
+        shell: bash
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          def replace_required(path_string: str, old: str, new: str) -> None:
+              path = Path(path_string)
+              text = path.read_text(encoding="utf-8")
+              if old not in text:
+                  raise RuntimeError(f"Expected migration pattern not found in {path_string}: {old!r}")
+              path.write_text(text.replace(old, new), encoding="utf-8")
+
+          replace_required(
+              "next.config.mjs",
+              '  experimental: {\n    typedRoutes: true\n  },',
+              '  typedRoutes: true,'
+          )
+
+          replace_required(
+              "src/app/api/openf1/[endpoint]/route.ts",
+              'type RouteContext = {\n  params: {\n    endpoint: string;\n  };\n};',
+              'type RouteContext = {\n  params: Promise<{\n    endpoint: string;\n  }>;\n};',
+          )
+          replace_required(
+              "src/app/api/openf1/[endpoint]/route.ts",
+              '  const { endpoint } = params;',
+              '  const { endpoint } = await params;',
+          )
+
+          driver_page = Path("src/app/drivers/[driverCode]/page.tsx")
+          driver_text = driver_page.read_text(encoding="utf-8")
+          old_driver = 'export default function DriverDetailPage({ params }: { params: { driverCode: string } }) {\n  const driver = getDriverProfile(params.driverCode);'
+          new_driver = 'export default async function DriverDetailPage({ params }: { params: Promise<{ driverCode: string }> }) {\n  const { driverCode } = await params;\n  const driver = getDriverProfile(driverCode);'
+          if old_driver not in driver_text:
+              raise RuntimeError("Driver page params migration pattern not found")
+          driver_page.write_text(driver_text.replace(old_driver, new_driver), encoding="utf-8")
+
+          search_param_pages = [
+              "src/app/lap-analysis/page.tsx",
+              "src/app/race-control/page.tsx",
+              "src/app/race-weekend/page.tsx",
+              "src/app/results/page.tsx",
+              "src/app/weather/page.tsx",
+          ]
+          signature_pattern = re.compile(
+              r'export default async function (\w+)\(\{ searchParams \}: \{ searchParams\?: (\w+) \}\) \{'
+          )
+          for page_string in search_param_pages:
+              page = Path(page_string)
+              text = page.read_text(encoding="utf-8")
+              migrated, count = signature_pattern.subn(
+                  lambda match: (
+                      f"export default async function {match.group(1)}({{ searchParams }}: "
+                      f"{{ searchParams: Promise<{match.group(2)}> }}) {{\n"
+                      "  const resolvedSearchParams = await searchParams;"
+                  ),
+                  text,
+                  count=1,
+              )
+              if count != 1:
+                  raise RuntimeError(f"searchParams migration pattern not found in {page_string}")
+              migrated = migrated.replace("searchParams?.session", "resolvedSearchParams.session")
+              page.write_text(migrated, encoding="utf-8")
+
+          Path("eslint.config.mjs").write_text(
+              '''import { FlatCompat } from "@eslint/eslintrc";\n\n'''
+              '''const compat = new FlatCompat({\n  baseDirectory: import.meta.dirname\n});\n\n'''
+              '''const eslintConfig = [\n'''
+              '''  {\n    ignores: [".next/**", "node_modules/**", "out/**", "build/**", "next-env.d.ts"]\n  },\n'''
+              '''  ...compat.config({\n    extends: ["next/core-web-vitals", "next/typescript"]\n  })\n'''
+              '''];\n\nexport default eslintConfig;\n''',
+              encoding="utf-8",
+          )
+
+          Path(".eslintrc.json").unlink(missing_ok=True)
+          for trigger in Path(".").glob(".next15-pr-trigger*"):
+              trigger.unlink()
+          PY
+
+      - name: Upgrade dependencies
         id: install
         shell: bash
         run: |
           set +e
-          npm install --save-exact next@15 react@19 react-dom@19 > .next15-install.log 2>&1
+          : > .next15-install.log
+          npm install --save-exact \
+            next@15.5.19 \
+            react@19.2.7 \
+            react-dom@19.2.7 \
+            recharts@3 >> .next15-install.log 2>&1
           APP_EXIT=$?
           if [ "$APP_EXIT" -eq 0 ]; then
-            npm install --save-dev --save-exact eslint@9 eslint-config-next@15 @types/react@19 @types/react-dom@19 >> .next15-install.log 2>&1
+            npm install --save-dev --save-exact \
+              eslint@9 \
+              eslint-config-next@15.5.19 \
+              @types/react@19 \
+              @types/react-dom@19 \
+              @eslint/eslintrc >> .next15-install.log 2>&1
             DEV_EXIT=$?
           else
             DEV_EXIT=99
@@ -39,7 +132,8 @@ jobs:
           node -e "const fs=require('fs');const p=require('./package.json');p.scripts.lint='eslint .';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
           echo "app_exit=$APP_EXIT" >> "$GITHUB_OUTPUT"
           echo "dev_exit=$DEV_EXIT" >> "$GITHUB_OUTPUT"
-      - name: Scan Next 15 migration surfaces
+
+      - name: Audit migration surfaces
         shell: bash
         run: |
           python - <<'PY'
@@ -47,22 +141,25 @@ jobs:
           from pathlib import Path
 
           patterns = {
-              'request_apis': re.compile(r'\b(cookies|headers|draftMode)\s*\('),
-              'params_or_search_params': re.compile(r'\b(params|searchParams)\b'),
-              'fetch_calls': re.compile(r'\bfetch\s*\('),
-              'route_exports': re.compile(r'export\s+(?:default\s+)?(?:async\s+)?function|export\s+const\s+(?:GET|POST|PUT|PATCH|DELETE)'),
+              "request_apis": re.compile(r"\b(cookies|headers|draftMode)\s*\("),
+              "sync_page_props": re.compile(r"(?:params|searchParams)\s*:\s*(?!Promise<)"),
+              "fetch_calls": re.compile(r"\bfetch\s*\("),
           }
           report = {name: [] for name in patterns}
-          files = sorted([p for p in Path('src').rglob('*') if p.suffix in {'.ts', '.tsx', '.js', '.jsx'}])
+          files = sorted(path for path in Path("src").rglob("*") if path.suffix in {".ts", ".tsx", ".js", ".jsx"})
           for path in files:
-              text = path.read_text(encoding='utf-8')
-              for line_no, line in enumerate(text.splitlines(), 1):
+              for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
                   for name, pattern in patterns.items():
                       if pattern.search(line):
-                          report[name].append({'file': str(path), 'line': line_no, 'text': line.strip()})
-          Path('.next15-audit.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+                          report[name].append({"file": str(path), "line": line_number, "text": line.strip()})
+          Path(".next15-audit.json").write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
           PY
+
       - name: Run lint and build
+        id: verify
         shell: bash
         run: |
           set +e
@@ -72,12 +169,23 @@ jobs:
           BUILD_EXIT=$?
           printf '{"install_app":%s,"install_dev":%s,"lint":%s,"build":%s}\n' \
             '${{ steps.install.outputs.app_exit }}' '${{ steps.install.outputs.dev_exit }}' "$LINT_EXIT" "$BUILD_EXIT" > .next15-status.json
-      - name: Commit audit artifacts and resolved lockfile
+          echo "lint_exit=$LINT_EXIT" >> "$GITHUB_OUTPUT"
+          echo "build_exit=$BUILD_EXIT" >> "$GITHUB_OUTPUT"
+
+      - name: Commit migration and diagnostics
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json .next15-audit.json .next15-install.log .next15-lint.log .next15-build.log .next15-status.json
+          git add -A
           git diff --cached --quiet && exit 0
-          git commit -m "chore: record Next 15 upgrade audit"
-          git push
+          git commit -m "chore: apply Next 15 migration"
+          git push origin HEAD:upgrade-next15
+
+      - name: Enforce verification result
+        shell: bash
+        run: |
+          test '${{ steps.install.outputs.app_exit }}' = '0'
+          test '${{ steps.install.outputs.dev_exit }}' = '0'
+          test '${{ steps.verify.outputs.lint_exit }}' = '0'
+          test '${{ steps.verify.outputs.build_exit }}' = '0'
