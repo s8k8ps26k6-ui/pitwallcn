@@ -1,47 +1,13 @@
 npm warn ERESOLVE overriding peer dependency
 npm warn While resolving: grid-delta-cn@0.1.0
-npm warn Found: react@18.3.1
+npm warn Found: react@19.2.7
 npm warn node_modules/react
-npm warn   peer react@"^18.3.1" from react-dom@18.3.1
+npm warn   peer react@"^19.2.7" from react-dom@19.2.7
 npm warn   node_modules/react-dom
 npm warn     peer react-dom@"^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" from react-smooth@4.0.4
 npm warn     node_modules/react-smooth
-npm warn     4 more (react-transition-group, recharts, the root project, next)
-npm warn   5 more (react-smooth, react-transition-group, recharts, ...)
-npm warn
-npm warn Could not resolve dependency:
-npm warn peer react@"^18.3.1" from react-dom@18.3.1
-npm warn node_modules/react-dom
-npm warn   peer react-dom@"^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" from react-smooth@4.0.4
-npm warn   node_modules/react-smooth
-npm warn   4 more (react-transition-group, recharts, the root project, next)
-npm warn ERESOLVE overriding peer dependency
-npm warn While resolving: grid-delta-cn@0.1.0
-npm warn Found: react@18.3.1
-npm warn node_modules/react
-npm warn   peer react@"^18.3.1" from react-dom@18.3.1
-npm warn   node_modules/react-dom
-npm warn     peer react-dom@"^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" from react-smooth@4.0.4
-npm warn     node_modules/react-smooth
-npm warn     4 more (react-transition-group, recharts, the root project, next)
-npm warn   5 more (react-smooth, react-transition-group, recharts, ...)
-npm warn
-npm warn Could not resolve dependency:
-npm warn peer react@"^18.3.1" from react-dom@18.3.1
-npm warn node_modules/react-dom
-npm warn   peer react-dom@"^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" from react-smooth@4.0.4
-npm warn   node_modules/react-smooth
-npm warn   4 more (react-transition-group, recharts, the root project, next)
-npm warn ERESOLVE overriding peer dependency
-npm warn While resolving: grid-delta-cn@0.1.0
-npm warn Found: react@18.3.1
-npm warn node_modules/react
-npm warn   peer react@"^18.3.1" from react-dom@18.3.1
-npm warn   node_modules/react-dom
-npm warn     peer react-dom@"^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" from react-smooth@4.0.4
-npm warn     node_modules/react-smooth
-npm warn     4 more (react-transition-group, recharts, the root project, next)
-npm warn   5 more (react-smooth, react-transition-group, recharts, ...)
+npm warn     3 more (react-transition-group, the root project, next)
+npm warn   5 more (react-smooth, react-transition-group, styled-jsx, ...)
 npm warn
 npm warn Could not resolve dependency:
 npm warn peer react@"^16.0.0 || ^17.0.0 || ^18.0.0" from recharts@2.12.7
@@ -49,13 +15,13 @@ npm warn node_modules/recharts
 npm warn   recharts@"2.12.7" from the root project
 npm warn ERESOLVE overriding peer dependency
 npm warn While resolving: grid-delta-cn@0.1.0
-npm warn Found: react-dom@18.3.1
+npm warn Found: react-dom@19.2.7
 npm warn node_modules/react-dom
 npm warn   peer react-dom@"^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" from react-smooth@4.0.4
 npm warn   node_modules/react-smooth
 npm warn     react-smooth@"^4.0.0" from recharts@2.12.7
 npm warn     node_modules/recharts
-npm warn   4 more (react-transition-group, recharts, the root project, next)
+npm warn   3 more (react-transition-group, the root project, next)
 npm warn
 npm warn Could not resolve dependency:
 npm warn peer react-dom@"^16.0.0 || ^17.0.0 || ^18.0.0" from recharts@2.12.7
@@ -70,9 +36,9 @@ npm warn deprecated glob@10.3.10: Old versions of glob are not supported, and co
 npm warn deprecated recharts@2.12.7: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide
 npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
 
-added 427 packages, and audited 428 packages in 21s
+added 431 packages, and audited 432 packages in 20s
 
-159 packages are looking for funding
+161 packages are looking for funding
   run `npm fund` for details
 
 5 vulnerabilities (2 moderate, 3 high)
@@ -120,5 +86,5 @@ npm error to accept an incorrect (and potentially broken) dependency resolution.
 npm error
 npm error
 npm error For a full report see:
-npm error /home/runner/.npm/_logs/2026-06-18T11_11_15_720Z-eresolve-report.txt
-npm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-06-18T11_11_15_720Z-debug-0.log
+npm error /home/runner/.npm/_logs/2026-06-18T11_19_01_384Z-eresolve-report.txt
+npm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-06-18T11_19_01_384Z-debug-0.log
