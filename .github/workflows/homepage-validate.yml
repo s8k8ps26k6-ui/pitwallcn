@@ -1,4 +1,4 @@
-name: Validate immersive homepage
+name: Remove homepage validation diagnostics
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  verify:
+  cleanup:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -17,48 +17,15 @@ jobs:
         with:
           ref: feat/immersive-homepage
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - name: Apply strict TypeScript fix
-        shell: bash
+      - name: Remove temporary files
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path("src/components/cinematic-homepage.tsx")
-          text = path.read_text(encoding="utf-8")
-          old = "        ScrollTrigger.refresh();"
-          new = "        ScrollTrigger?.refresh();"
-          if old not in text:
-              raise RuntimeError("Expected ScrollTrigger refresh call was not found")
-          path.write_text(text.replace(old, new, 1), encoding="utf-8")
-          PY
-      - name: Install dependencies
-        run: npm ci
-      - name: Run ESLint and production build
-        id: verify
-        shell: bash
-        run: |
-          set +e
-          npm run lint > .homepage-lint.log 2>&1
-          LINT_EXIT=$?
-          npm run build > .homepage-build.log 2>&1
-          BUILD_EXIT=$?
-          printf '{"lint":%s,"build":%s}\n' "$LINT_EXIT" "$BUILD_EXIT" > .homepage-status.json
-          echo "lint_exit=$LINT_EXIT" >> "$GITHUB_OUTPUT"
-          echo "build_exit=$BUILD_EXIT" >> "$GITHUB_OUTPUT"
-      - name: Commit source fix and validation diagnostics
-        shell: bash
+          rm -f .homepage-lint.log .homepage-build.log .homepage-status.json
+          rm -f .github/workflows/homepage-validate.yml
+      - name: Commit cleanup
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/components/cinematic-homepage.tsx .homepage-lint.log .homepage-build.log .homepage-status.json
+          git add -A
           git diff --cached --quiet && exit 0
-          git commit -m "fix: satisfy strict ScrollTrigger typing"
+          git commit -m "chore: remove temporary homepage validation files"
           git push origin HEAD:feat/immersive-homepage
-      - name: Enforce result
-        shell: bash
-        run: |
-          test '${{ steps.verify.outputs.lint_exit }}' = '0'
-          test '${{ steps.verify.outputs.build_exit }}' = '0'
