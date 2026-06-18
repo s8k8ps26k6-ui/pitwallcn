@@ -123,6 +123,7 @@ export function CinematicHomepage({
       const prefersReducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)",
       ).matches;
+      const usesDesktopPinning = window.matchMedia("(min-width: 768px)").matches;
       const siteHeader = document.querySelector<HTMLElement>("[data-site-header]");
       const countdownNodes = Array.from(
         root.querySelectorAll<HTMLElement>("[data-countdown-key]"),
@@ -233,35 +234,66 @@ export function CinematicHomepage({
         );
 
         if (moduleSection && moduleCards.length) {
-          gsap
-            .timeline({
-              scrollTrigger: {
-                trigger: moduleSection,
-                start: "top top+=24",
-                end: "+=1100",
-                scrub: 0.7,
-                pin: true,
-                pinSpacing: true,
-                anticipatePin: 1,
-              },
-            })
-            .fromTo(
-              "[data-module-heading]",
-              { autoAlpha: 0, y: 28 },
-              { autoAlpha: 1, y: 0, duration: 0.45, ease: "power3.out" },
-            )
-            .fromTo(
-              moduleCards,
-              { autoAlpha: 0, x: -60 },
-              {
-                autoAlpha: 1,
-                x: 0,
-                duration: 0.78,
-                stagger: 0.12,
-                ease: "power3.out",
-              },
-              0.12,
-            );
+          if (usesDesktopPinning) {
+            gsap
+              .timeline({
+                scrollTrigger: {
+                  trigger: moduleSection,
+                  start: "top top+=72",
+                  end: "+=780",
+                  scrub: 0.45,
+                  pin: true,
+                  pinSpacing: true,
+                  anticipatePin: 1,
+                  invalidateOnRefresh: true,
+                },
+              })
+              .fromTo(
+                "[data-module-heading]",
+                { autoAlpha: 0, y: 24 },
+                { autoAlpha: 1, y: 0, duration: 0.34, ease: "power3.out" },
+              )
+              .fromTo(
+                moduleCards,
+                { autoAlpha: 0, x: -48 },
+                {
+                  autoAlpha: 1,
+                  x: 0,
+                  duration: 0.58,
+                  stagger: 0.1,
+                  ease: "power3.out",
+                },
+                0.08,
+              );
+          } else {
+            gsap
+              .timeline({
+                scrollTrigger: {
+                  trigger: moduleSection,
+                  start: "top 94%",
+                  once: true,
+                  toggleActions: "play none none none",
+                  invalidateOnRefresh: true,
+                },
+              })
+              .fromTo(
+                "[data-module-heading]",
+                { autoAlpha: 0, y: 16 },
+                { autoAlpha: 1, y: 0, duration: 0.24, ease: "power2.out" },
+              )
+              .fromTo(
+                moduleCards,
+                { autoAlpha: 0, x: -28 },
+                {
+                  autoAlpha: 1,
+                  x: 0,
+                  duration: 0.38,
+                  stagger: 0.055,
+                  ease: "power2.out",
+                },
+                0.04,
+              );
+          }
         }
 
         moduleCards.forEach((card) => {
@@ -326,7 +358,7 @@ export function CinematicHomepage({
         if (seasonSection && countdownNodes.length) {
           ScrollTrigger?.create({
             trigger: seasonSection,
-            start: "top 72%",
+            start: usesDesktopPinning ? "top 86%" : "top 94%",
             once: true,
             onEnter: () => {
               const values = getCountdownValues(nextRace.countdownTarget);
@@ -369,23 +401,29 @@ export function CinematicHomepage({
           });
         }
 
-        gsap.fromTo(
-          "[data-season-panel]",
-          { autoAlpha: 0, y: 54 },
-          {
-            autoAlpha: 1,
-            y: 0,
-            duration: 0.8,
-            stagger: 0.12,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: seasonSection,
-              start: "top 78%",
+        if (seasonSection) {
+          gsap.fromTo(
+            "[data-season-panel]",
+            { autoAlpha: 0, y: usesDesktopPinning ? 42 : 18 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              duration: usesDesktopPinning ? 0.64 : 0.4,
+              stagger: usesDesktopPinning ? 0.1 : 0.055,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: seasonSection,
+                start: usesDesktopPinning ? "top 86%" : "top 94%",
+                once: true,
+                toggleActions: "play none none none",
+                invalidateOnRefresh: true,
+              },
             },
-          },
-        );
+          );
+        }
 
         ScrollTrigger?.refresh();
+        ScrollTrigger?.update();
       }, root);
     })();
 
@@ -478,7 +516,7 @@ export function CinematicHomepage({
 
       <section
         data-module-section
-        className="relative isolate flex min-h-screen items-center overflow-hidden border-b border-white/10 bg-[#050506] py-16 sm:py-20"
+        className="relative isolate flex min-h-0 items-center overflow-hidden border-b border-white/10 bg-[#050506] py-16 sm:min-h-screen sm:py-20"
       >
         <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,46,46,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,46,46,0.05)_1px,transparent_1px)] [background-size:72px_72px]" aria-hidden="true" />
         <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-red-500/45 to-transparent" aria-hidden="true" />
