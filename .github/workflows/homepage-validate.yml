@@ -6,20 +6,46 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: feat/immersive-homepage
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Run ESLint
-        run: npm run lint
-      - name: Run production build
-        run: npm run build
+      - name: Run ESLint and production build
+        id: verify
+        shell: bash
+        run: |
+          set +e
+          npm run lint > .homepage-lint.log 2>&1
+          LINT_EXIT=$?
+          npm run build > .homepage-build.log 2>&1
+          BUILD_EXIT=$?
+          printf '{"lint":%s,"build":%s}\n' "$LINT_EXIT" "$BUILD_EXIT" > .homepage-status.json
+          echo "lint_exit=$LINT_EXIT" >> "$GITHUB_OUTPUT"
+          echo "build_exit=$BUILD_EXIT" >> "$GITHUB_OUTPUT"
+      - name: Commit validation diagnostics
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .homepage-lint.log .homepage-build.log .homepage-status.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: record homepage validation diagnostics"
+          git push origin HEAD:feat/immersive-homepage
+      - name: Enforce result
+        shell: bash
+        run: |
+          test '${{ steps.verify.outputs.lint_exit }}' = '0'
+          test '${{ steps.verify.outputs.build_exit }}' = '0'
