@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Link from "next/link";
 
-const siteUrl = "https://pitwallcn-57ny.vercel.app";
+const siteUrl = "https://pitwallcn.vercel.app";
 
 export const viewport: Viewport = {
   width: "device-width",
