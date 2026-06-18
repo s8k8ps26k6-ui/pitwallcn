@@ -1,0 +1,80 @@
+name: Next 15 upgrade audit
+
+on:
+  push:
+    branches:
+      - upgrade-next15
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: upgrade-next15
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Resolve Next 15, React 19 and ESLint 9
+        id: install
+        shell: bash
+        run: |
+          set +e
+          npm install --save-exact next@15 react@19 react-dom@19 > .next15-install.log 2>&1
+          APP_EXIT=$?
+          if [ "$APP_EXIT" -eq 0 ]; then
+            npm install --save-dev --save-exact eslint@9 eslint-config-next@15 @types/react@19 @types/react-dom@19 >> .next15-install.log 2>&1
+            DEV_EXIT=$?
+          else
+            DEV_EXIT=99
+          fi
+          node -e "const fs=require('fs');const p=require('./package.json');p.scripts.lint='eslint .';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          echo "app_exit=$APP_EXIT" >> "$GITHUB_OUTPUT"
+          echo "dev_exit=$DEV_EXIT" >> "$GITHUB_OUTPUT"
+      - name: Scan Next 15 migration surfaces
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, re
+          from pathlib import Path
+
+          patterns = {
+              'request_apis': re.compile(r'\b(cookies|headers|draftMode)\s*\('),
+              'params_or_search_params': re.compile(r'\b(params|searchParams)\b'),
+              'fetch_calls': re.compile(r'\bfetch\s*\('),
+              'route_exports': re.compile(r'export\s+(?:default\s+)?(?:async\s+)?function|export\s+const\s+(?:GET|POST|PUT|PATCH|DELETE)'),
+          }
+          report = {name: [] for name in patterns}
+          files = sorted([p for p in Path('src').rglob('*') if p.suffix in {'.ts', '.tsx', '.js', '.jsx'}])
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              for line_no, line in enumerate(text.splitlines(), 1):
+                  for name, pattern in patterns.items():
+                      if pattern.search(line):
+                          report[name].append({'file': str(path), 'line': line_no, 'text': line.strip()})
+          Path('.next15-audit.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+      - name: Run lint and build
+        shell: bash
+        run: |
+          set +e
+          npm run lint > .next15-lint.log 2>&1
+          LINT_EXIT=$?
+          npm run build > .next15-build.log 2>&1
+          BUILD_EXIT=$?
+          printf '{"install_app":%s,"install_dev":%s,"lint":%s,"build":%s}\n' \
+            '${{ steps.install.outputs.app_exit }}' '${{ steps.install.outputs.dev_exit }}' "$LINT_EXIT" "$BUILD_EXIT" > .next15-status.json
+      - name: Commit audit artifacts and resolved lockfile
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json .next15-audit.json .next15-install.log .next15-lint.log .next15-build.log .next15-status.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: record Next 15 upgrade audit"
+          git push
