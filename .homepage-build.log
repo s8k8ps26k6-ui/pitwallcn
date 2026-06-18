@@ -1,0 +1,28 @@
+
+> grid-delta-cn@0.1.0 build
+> next build
+
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 15.5.19
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 7.0s
+   Linting and checking validity of types ...
+Failed to compile.
+
+./src/components/cinematic-homepage.tsx:388:9
+Type error: 'ScrollTrigger' is possibly 'undefined'.
+
+[0m [90m 386 |[39m         )[33m;[39m
+ [90m 387 |[39m
+[31m[1m>[22m[39m[90m 388 |[39m         [33mScrollTrigger[39m[33m.[39mrefresh()[33m;[39m
+ [90m     |[39m         [31m[1m^[22m[39m
+ [90m 389 |[39m       }[33m,[39m root)[33m;[39m
+ [90m 390 |[39m     })()[33m;[39m
+ [90m 391 |[39m[0m
+Next.js build worker exited with code: 1 and signal: null
