@@ -21,6 +21,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Apply strict TypeScript fix
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("src/components/cinematic-homepage.tsx")
+          text = path.read_text(encoding="utf-8")
+          old = "        ScrollTrigger.refresh();"
+          new = "        ScrollTrigger?.refresh();"
+          if old not in text:
+              raise RuntimeError("Expected ScrollTrigger refresh call was not found")
+          path.write_text(text.replace(old, new, 1), encoding="utf-8")
+          PY
       - name: Install dependencies
         run: npm ci
       - name: Run ESLint and production build
@@ -35,14 +48,14 @@ jobs:
           printf '{"lint":%s,"build":%s}\n' "$LINT_EXIT" "$BUILD_EXIT" > .homepage-status.json
           echo "lint_exit=$LINT_EXIT" >> "$GITHUB_OUTPUT"
           echo "build_exit=$BUILD_EXIT" >> "$GITHUB_OUTPUT"
-      - name: Commit validation diagnostics
+      - name: Commit source fix and validation diagnostics
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .homepage-lint.log .homepage-build.log .homepage-status.json
+          git add src/components/cinematic-homepage.tsx .homepage-lint.log .homepage-build.log .homepage-status.json
           git diff --cached --quiet && exit 0
-          git commit -m "chore: record homepage validation diagnostics"
+          git commit -m "fix: satisfy strict ScrollTrigger typing"
           git push origin HEAD:feat/immersive-homepage
       - name: Enforce result
         shell: bash
