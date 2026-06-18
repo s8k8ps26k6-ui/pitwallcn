@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - chore/security-openf1-hardening
+  pull_request:
+    branches:
+      - main
 
 jobs:
   audit:
