@@ -1,8 +1,5 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
-import { HudGridCanvas } from "@/components/hud-grid-canvas";
 import type { RaceWeekend } from "@/lib/types";
 
 type CinematicHomepageProps = {
@@ -11,637 +8,173 @@ type CinematicHomepageProps = {
   dateRange: string;
 };
 
-type CountdownValues = {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  isStarted: boolean;
-};
-
-type CountdownKey = Exclude<keyof CountdownValues, "isStarted">;
-
-const titleCharacters = Array.from("GridDelta CN");
-
-const commandModules = [
+const primaryModules = [
   {
-    label: "单站复盘",
+    href: "/live",
+    eyebrow: "Live timing",
+    title: "实时计时",
+    description: "比赛进行时，把位置、间隔和进站变化放在一张干净的时间轴里。",
+    action: "进入实时数据",
+  },
+  {
     href: "/race-weekend",
-    meta: "Race Weekend",
-    index: "01",
-    description: "把结果、赛控、圈速与天气整合成同一个比赛周末作战视图。",
+    eyebrow: "Race weekend",
+    title: "单站复盘",
+    description: "从结果、赛会控制、圈速到天气，按比赛周末重新组织关键线索。",
+    action: "查看比赛周末",
   },
   {
-    label: "比赛结果",
-    href: "/results",
-    meta: "Results",
-    index: "02",
-    description: "快速回看完赛顺序、关键成绩与比赛最终落点。",
-  },
-  {
-    label: "赛会控制",
-    href: "/race-control",
-    meta: "Race Control",
-    index: "03",
-    description: "捕捉旗语、安全车、事件记录与赛段状态的关键上下文。",
-  },
-  {
-    label: "圈速分析",
-    href: "/lap-analysis",
-    meta: "Lap Analysis",
-    index: "04",
-    description: "用圈速节奏拆解长距离表现、轮胎窗口与追赶态势。",
-  },
-  {
-    label: "赛道天气",
-    href: "/weather",
-    meta: "Track Weather",
-    index: "05",
-    description: "把温度、风向和赛道条件纳入实时策略判断。",
+    href: "/standings",
+    eyebrow: "Season overview",
+    title: "赛季格局",
+    description: "查看积分、车手与赛程，回到整个赛季的坐标系里理解一场比赛。",
+    action: "查看积分榜",
   },
 ] as const;
 
-const seasonLinks = [
-  { label: "完整赛程", href: "/schedule", meta: "Calendar" },
-  { label: "赛季积分", href: "/standings", meta: "Standings" },
-  { label: "车手索引", href: "/drivers", meta: "Drivers" },
+const quickLinks = [
+  { href: "/schedule", label: "完整赛程" },
+  { href: "/drivers", label: "车手索引" },
+  { href: "/results", label: "比赛结果" },
+  { href: "/race-control", label: "赛会控制" },
+  { href: "/lap-analysis", label: "圈速分析" },
+  { href: "/weather", label: "赛道天气" },
 ] as const;
-
-const countdownItems: Array<{ key: CountdownKey; label: string }> = [
-  { key: "days", label: "天" },
-  { key: "hours", label: "小时" },
-  { key: "minutes", label: "分钟" },
-  { key: "seconds", label: "秒" },
-];
-
-function getCountdownValues(targetIso: string): CountdownValues {
-  const targetTime = new Date(targetIso).getTime();
-  const rawDifference = targetTime - Date.now();
-  const difference = Number.isFinite(rawDifference) ? Math.max(rawDifference, 0) : 0;
-
-  return {
-    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-    minutes: Math.floor((difference / (1000 * 60)) % 60),
-    seconds: Math.floor((difference / 1000) % 60),
-    isStarted: difference <= 0,
-  };
-}
-
-function formatCountdownValue(value: number) {
-  return String(Math.max(0, Math.floor(value))).padStart(2, "0");
-}
 
 export function CinematicHomepage({
   nextRace,
   sourceLabel,
   dateRange,
 }: CinematicHomepageProps) {
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    let isDisposed = false;
-    let context: { revert: () => void } | undefined;
-    let ScrollTrigger: typeof import("gsap/ScrollTrigger").ScrollTrigger | undefined;
-    let countdownIntervalId = 0;
-    const eventCleanups: Array<() => void> = [];
-
-    void (async () => {
-      const [{ gsap }, scrollTriggerModule] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-      ]);
-
-      if (isDisposed) return;
-
-      ScrollTrigger = scrollTriggerModule.ScrollTrigger;
-      gsap.registerPlugin(ScrollTrigger);
-
-      const prefersReducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)",
-      ).matches;
-      const usesDesktopPinning = window.matchMedia("(min-width: 768px)").matches;
-      const siteHeader = document.querySelector<HTMLElement>("[data-site-header]");
-      const countdownNodes = Array.from(
-        root.querySelectorAll<HTMLElement>("[data-countdown-key]"),
-      );
-      const countdownStatus = root.querySelector<HTMLElement>("[data-countdown-status]");
-
-      const syncCountdown = () => {
-        const values = getCountdownValues(nextRace.countdownTarget);
-
-        countdownNodes.forEach((node) => {
-          const key = node.dataset.countdownKey as CountdownKey | undefined;
-          if (!key) return;
-          node.textContent = formatCountdownValue(values[key]);
-        });
-
-        if (countdownStatus) {
-          countdownStatus.textContent = values.isStarted
-            ? "比赛周末进行中"
-            : "距离下一场比赛信号上线";
-        }
-      };
-
-      const startCountdownTicker = () => {
-        if (countdownIntervalId) return;
-        syncCountdown();
-        countdownIntervalId = window.setInterval(syncCountdown, 1000);
-      };
-
-      context = gsap.context(() => {
-        if (prefersReducedMotion) {
-          gsap.set(root, { autoAlpha: 1 });
-          gsap.set(siteHeader, { autoAlpha: 1, y: 0 });
-          gsap.set(
-            "[data-hero-signal], [data-hero-char], [data-hero-cta], [data-hero-metric], [data-module-card]",
-            { autoAlpha: 1, x: 0, y: 0, scale: 1, rotationX: 0, rotationY: 0 },
-          );
-          syncCountdown();
-          startCountdownTicker();
-          return;
-        }
-
-        const heroTimeline = gsap.timeline({
-          defaults: { ease: "power3.out" },
-        });
-
-        heroTimeline
-          .to(root, { autoAlpha: 1, duration: 0.3, ease: "power1.out" }, 0)
-          .fromTo(
-            siteHeader,
-            { autoAlpha: 0, y: -20 },
-            { autoAlpha: 1, y: 0, duration: 0.4 },
-            0.08,
-          )
-          .fromTo(
-            "[data-hero-signal]",
-            { autoAlpha: 0, letterSpacing: "0.52em", y: 8 },
-            {
-              autoAlpha: 1,
-              letterSpacing: "0.24em",
-              y: 0,
-              duration: 0.46,
-              ease: "power2.out",
-            },
-            0.28,
-          )
-          .fromTo(
-            "[data-hero-char]",
-            { autoAlpha: 0, y: 40, rotationX: 24 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              rotationX: 0,
-              duration: 0.52,
-              stagger: 0.04,
-              ease: "power4.out",
-            },
-            0.48,
-          )
-          .fromTo(
-            "[data-hero-copy]",
-            { autoAlpha: 0, y: 18 },
-            { autoAlpha: 1, y: 0, duration: 0.42 },
-            0.92,
-          )
-          .fromTo(
-            "[data-hero-cta]",
-            { autoAlpha: 0, scale: 0.9, y: 10 },
-            {
-              autoAlpha: 1,
-              scale: 1,
-              y: 0,
-              duration: 0.42,
-              stagger: 0.08,
-              ease: "back.out(1.2)",
-            },
-            1.14,
-          )
-          .fromTo(
-            "[data-hero-metric]",
-            { autoAlpha: 0, y: 14 },
-            { autoAlpha: 1, y: 0, duration: 0.32, stagger: 0.06 },
-            1.42,
-          );
-
-        const moduleSection = root.querySelector<HTMLElement>("[data-module-section]");
-        const moduleCards = Array.from(
-          root.querySelectorAll<HTMLElement>("[data-module-card]"),
-        );
-
-        if (moduleSection && moduleCards.length) {
-          if (usesDesktopPinning) {
-            gsap
-              .timeline({
-                scrollTrigger: {
-                  trigger: moduleSection,
-                  start: "top top+=72",
-                  end: "+=780",
-                  scrub: 0.45,
-                  pin: true,
-                  pinSpacing: true,
-                  anticipatePin: 1,
-                  invalidateOnRefresh: true,
-                },
-              })
-              .fromTo(
-                "[data-module-heading]",
-                { autoAlpha: 0, y: 24 },
-                { autoAlpha: 1, y: 0, duration: 0.34, ease: "power3.out" },
-              )
-              .fromTo(
-                moduleCards,
-                { autoAlpha: 0, x: -48 },
-                {
-                  autoAlpha: 1,
-                  x: 0,
-                  duration: 0.58,
-                  stagger: 0.1,
-                  ease: "power3.out",
-                },
-                0.08,
-              );
-          } else {
-            gsap
-              .timeline({
-                scrollTrigger: {
-                  trigger: moduleSection,
-                  start: "top 94%",
-                  once: true,
-                  toggleActions: "play none none none",
-                  invalidateOnRefresh: true,
-                },
-              })
-              .fromTo(
-                "[data-module-heading]",
-                { autoAlpha: 0, y: 16 },
-                { autoAlpha: 1, y: 0, duration: 0.24, ease: "power2.out" },
-              )
-              .fromTo(
-                moduleCards,
-                { autoAlpha: 0, x: -28 },
-                {
-                  autoAlpha: 1,
-                  x: 0,
-                  duration: 0.38,
-                  stagger: 0.055,
-                  ease: "power2.out",
-                },
-                0.04,
-              );
-          }
-        }
-
-        moduleCards.forEach((card) => {
-          gsap.set(card, {
-            transformPerspective: 900,
-            transformStyle: "preserve-3d",
-            transformOrigin: "center center",
-          });
-
-          const rotateX = gsap.quickTo(card, "rotationX", {
-            duration: 0.24,
-            ease: "power2.out",
-          });
-          const rotateY = gsap.quickTo(card, "rotationY", {
-            duration: 0.24,
-            ease: "power2.out",
-          });
-
-          const handlePointerMove = (event: PointerEvent) => {
-            const bounds = card.getBoundingClientRect();
-            const relativeX = (event.clientX - bounds.left) / bounds.width - 0.5;
-            const relativeY = (event.clientY - bounds.top) / bounds.height - 0.5;
-
-            rotateX(relativeY * -12);
-            rotateY(relativeX * 12);
-          };
-
-          const handlePointerEnter = () => {
-            gsap.to(card, {
-              borderColor: "rgba(255,46,46,0.78)",
-              boxShadow: "0 30px 80px rgba(255,46,46,0.12)",
-              duration: 0.24,
-              overwrite: "auto",
-            });
-          };
-
-          const handlePointerLeave = () => {
-            rotateX(0);
-            rotateY(0);
-            gsap.to(card, {
-              borderColor: "rgba(255,255,255,0.12)",
-              boxShadow: "0 24px 70px rgba(0,0,0,0.38)",
-              duration: 0.32,
-              overwrite: "auto",
-            });
-          };
-
-          card.addEventListener("pointermove", handlePointerMove);
-          card.addEventListener("pointerenter", handlePointerEnter);
-          card.addEventListener("pointerleave", handlePointerLeave);
-
-          eventCleanups.push(() => {
-            card.removeEventListener("pointermove", handlePointerMove);
-            card.removeEventListener("pointerenter", handlePointerEnter);
-            card.removeEventListener("pointerleave", handlePointerLeave);
-            gsap.killTweensOf(card);
-          });
-        });
-
-        const seasonSection = root.querySelector<HTMLElement>("[data-season-section]");
-
-        if (seasonSection && countdownNodes.length) {
-          ScrollTrigger?.create({
-            trigger: seasonSection,
-            start: usesDesktopPinning ? "top 86%" : "top 94%",
-            once: true,
-            onEnter: () => {
-              const values = getCountdownValues(nextRace.countdownTarget);
-              let completedTweens = 0;
-
-              countdownNodes.forEach((node, index) => {
-                const key = node.dataset.countdownKey as CountdownKey | undefined;
-                if (!key) return;
-
-                const realValue = values[key];
-                const proxy = {
-                  val: realValue + 40 + Math.floor(Math.random() * 180),
-                };
-
-                node.textContent = formatCountdownValue(proxy.val);
-
-                gsap.to(proxy, {
-                  val: realValue,
-                  duration: 1.2,
-                  delay: index * 0.05,
-                  ease: "power2.out",
-                  onUpdate: () => {
-                    node.textContent = formatCountdownValue(proxy.val);
-                  },
-                  onComplete: () => {
-                    completedTweens += 1;
-                    if (completedTweens === countdownNodes.length) {
-                      startCountdownTicker();
-                    }
-                  },
-                });
-              });
-
-              if (countdownStatus) {
-                countdownStatus.textContent = values.isStarted
-                  ? "比赛周末进行中"
-                  : "距离下一场比赛信号上线";
-              }
-            },
-          });
-        }
-
-        if (seasonSection) {
-          gsap.fromTo(
-            "[data-season-panel]",
-            { autoAlpha: 0, y: usesDesktopPinning ? 42 : 18 },
-            {
-              autoAlpha: 1,
-              y: 0,
-              duration: usesDesktopPinning ? 0.64 : 0.4,
-              stagger: usesDesktopPinning ? 0.1 : 0.055,
-              ease: "power3.out",
-              scrollTrigger: {
-                trigger: seasonSection,
-                start: usesDesktopPinning ? "top 86%" : "top 94%",
-                once: true,
-                toggleActions: "play none none none",
-                invalidateOnRefresh: true,
-              },
-            },
-          );
-        }
-
-        ScrollTrigger?.refresh();
-        ScrollTrigger?.update();
-      }, root);
-    })();
-
-    return () => {
-      isDisposed = true;
-      if (countdownIntervalId) window.clearInterval(countdownIntervalId);
-      eventCleanups.forEach((cleanup) => cleanup());
-      ScrollTrigger?.getAll().forEach((trigger) => trigger.kill());
-      context?.revert();
-    };
-  }, [nextRace.countdownTarget]);
-
   return (
-    <div
-      ref={rootRef}
-      className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-black text-white"
-      style={{ opacity: 0 }}
-    >
-      <section className="relative isolate min-h-[calc(100svh-7rem)] overflow-hidden border-y border-white/10 bg-black">
-        <HudGridCanvas />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_28%,rgba(255,46,46,0.18),transparent_24%),radial-gradient(circle_at_28%_82%,rgba(127,29,29,0.12),transparent_28%),linear-gradient(115deg,rgba(0,0,0,0.98)_12%,rgba(6,6,8,0.84)_54%,rgba(0,0,0,0.96)_100%)]" aria-hidden="true" />
-        <div className="absolute left-[-10vw] top-[54%] h-px w-[120vw] -rotate-3 bg-gradient-to-r from-transparent via-red-500/90 to-transparent shadow-[0_0_32px_rgba(255,46,46,0.72)]" aria-hidden="true" />
-        <div className="absolute left-[68%] top-0 h-full w-px bg-gradient-to-b from-transparent via-red-400/25 to-transparent" aria-hidden="true" />
+    <main className="pb-12 sm:pb-20">
+      <section className="relative isolate overflow-hidden border-b border-white/10 bg-zinc-950">
+        <div className="absolute inset-0">
+          <Image
+            src="/images/hero.jpg"
+            alt="一辆 F1 赛车驶过终点线"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[64%_center] opacity-65 sm:object-center"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,9,11,0.98)_0%,rgba(9,9,11,0.88)_33%,rgba(9,9,11,0.42)_70%,rgba(9,9,11,0.7)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(9,9,11,0.92)_0%,transparent_48%)]" />
+        </div>
 
-        <div className="relative mx-auto flex min-h-[calc(100svh-7rem)] max-w-[1440px] flex-col justify-between px-5 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
-          <div className="max-w-6xl pt-2 sm:pt-8">
-            <div
-              data-hero-signal
-              className="inline-flex items-center gap-3 border border-red-400/30 bg-black/55 px-3 py-2 font-mono text-[0.62rem] font-bold uppercase text-red-100/80 backdrop-blur sm:text-xs"
-            >
-              <span className="h-2 w-2 rounded-full bg-neonRed shadow-[0_0_20px_rgba(255,46,46,0.95)]" aria-hidden="true" />
-              Race Signal Online
-            </div>
-
-            <h1
-              className="mt-7 flex max-w-7xl flex-wrap overflow-hidden text-[clamp(3.7rem,12vw,10.5rem)] font-black leading-[0.84] tracking-[-0.075em]"
-              aria-label="GridDelta CN"
-            >
-              {titleCharacters.map((character, index) => (
-                <span
-                  key={`${character}-${index}`}
-                  data-hero-char
-                  className="inline-block origin-bottom will-change-transform"
-                  aria-hidden="true"
-                >
-                  {character === " " ? "\u00A0" : character}
-                </span>
-              ))}
+        <div className="relative mx-auto grid min-h-[min(680px,calc(100svh-4rem))] max-w-7xl items-end gap-10 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[minmax(0,1fr)_340px] lg:px-10 lg:py-20">
+          <div className="max-w-2xl">
+            <p className="eyebrow text-zinc-400">GridDelta CN · F1 数据看板</p>
+            <h1 className="mt-5 text-5xl font-semibold leading-[0.98] tracking-[-0.06em] text-white sm:text-7xl lg:text-8xl">
+              看懂每一个
+              <br />
+              比赛周末。
             </h1>
-
-            <p
-              data-hero-copy
-              className="mt-7 max-w-2xl text-base leading-8 text-zinc-300 sm:text-xl sm:leading-9"
-            >
-              面向中文车迷的 F1 数据指挥台。把实时计时、比赛复盘和赛季上下文压进同一块数字 pitwall。
+            <p className="mt-6 max-w-xl text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8">
+              面向中文车迷的非官方 F1 数据看板。实时计时、单站复盘与赛季信息，都从这里开始。
             </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                data-hero-cta
                 href="/live"
-                className="inline-flex h-12 items-center justify-center bg-neonRed px-6 text-sm font-black uppercase tracking-[0.12em] text-white shadow-[0_0_42px_rgba(255,46,46,0.3)]"
+                className="inline-flex items-center justify-center bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
               >
                 查看实时计时
               </Link>
               <Link
-                data-hero-cta
                 href="/race-weekend"
-                className="inline-flex h-12 items-center justify-center border border-white/20 bg-white/[0.045] px-6 text-sm font-black uppercase tracking-[0.12em] text-zinc-100 backdrop-blur"
+                className="inline-flex items-center justify-center border border-white/30 bg-black/20 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-white/60 hover:bg-white/10"
               >
                 进入单站复盘
               </Link>
             </div>
           </div>
 
-          <div className="mt-12 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
-            {[
-              ["OPENF1", "LINK READY"],
-              ["CN", "DATA PITWALL"],
-              ["2026", "SEASON CONTEXT"],
-            ].map(([label, value]) => (
-              <div key={label} data-hero-metric className="bg-black/70 px-4 py-4 backdrop-blur">
-                <p className="font-mono text-[0.6rem] font-bold tracking-[0.2em] text-red-300/70">{label}</p>
-                <p className="mt-2 text-xs font-semibold tracking-[0.16em] text-zinc-300">{value}</p>
+          <aside className="border-t border-white/25 pt-5 lg:border-l lg:border-t-0 lg:pl-7 lg:pt-0">
+            <p className="eyebrow text-zinc-400">下一站比赛</p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-white sm:text-3xl">
+              {nextRace.raceName}
+            </h2>
+            <dl className="mt-6 space-y-3 text-sm">
+              <div className="flex items-start justify-between gap-5 border-b border-white/10 pb-3">
+                <dt className="text-zinc-500">地点</dt>
+                <dd className="text-right font-medium text-zinc-100">
+                  {nextRace.country} · {nextRace.location}
+                </dd>
               </div>
-            ))}
-          </div>
+              <div className="flex items-start justify-between gap-5 border-b border-white/10 pb-3">
+                <dt className="text-zinc-500">赛道</dt>
+                <dd className="max-w-[13rem] text-right font-medium text-zinc-100">{nextRace.circuitName}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-5 border-b border-white/10 pb-3">
+                <dt className="text-zinc-500">日期</dt>
+                <dd className="text-right font-medium text-zinc-100">{dateRange}</dd>
+              </div>
+            </dl>
+            <p className="mt-4 text-xs text-zinc-500">赛历来源：{sourceLabel}</p>
+          </aside>
         </div>
       </section>
 
-      <section
-        data-module-section
-        className="relative isolate flex min-h-0 items-center overflow-hidden border-b border-white/10 bg-[#050506] py-16 sm:min-h-screen sm:py-20"
-      >
-        <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,46,46,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,46,46,0.05)_1px,transparent_1px)] [background-size:72px_72px]" aria-hidden="true" />
-        <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-red-500/45 to-transparent" aria-hidden="true" />
+      <section className="mx-auto max-w-7xl px-5 pt-12 sm:px-8 sm:pt-16 lg:px-10">
+        <div className="flex flex-col gap-3 border-b border-zinc-800 pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow">比赛周末</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white sm:text-3xl">
+              从数据进入比赛，而不是从装饰开始。
+            </h2>
+          </div>
+          <p className="max-w-md text-sm leading-6 text-zinc-500">
+            三个主要入口覆盖比赛进行时、单站回看和整个赛季的上下文。
+          </p>
+        </div>
 
-        <div className="relative mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12">
-          <div data-module-heading className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-4xl">
-              <p className="font-mono text-xs font-bold uppercase tracking-[0.24em] text-red-300/70">Command Modules</p>
-              <h2 className="mt-4 text-4xl font-black leading-tight tracking-[-0.045em] sm:text-6xl lg:text-7xl">
-                五个模块，组成比赛周末控制台。
-              </h2>
-            </div>
-            <p className="max-w-md text-sm leading-7 text-zinc-400 sm:text-base">
-              滚动进入时整段锁定，模块按信号顺序装配。鼠标掠过卡片时，视角会根据指针位置发生轻微偏转。
+        <div className="grid divide-y divide-zinc-800 border-b border-zinc-800 md:grid-cols-3 md:divide-x md:divide-y-0">
+          {primaryModules.map((module, index) => (
+            <Link
+              key={module.href}
+              href={module.href}
+              className="group relative py-8 md:px-7 md:first:pl-0 md:last:pr-0"
+            >
+              <span className="font-mono text-xs text-zinc-600">0{index + 1}</span>
+              <p className="mt-6 font-mono text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                {module.eyebrow}
+              </p>
+              <h3 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-white transition group-hover:text-zinc-300">
+                {module.title}
+              </h3>
+              <p className="mt-4 max-w-sm text-sm leading-7 text-zinc-400">{module.description}</p>
+              <span className="mt-7 inline-flex items-center gap-2 text-sm font-medium text-zinc-200">
+                {module.action}
+                <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-5 pt-12 sm:px-8 sm:pt-16 lg:px-10">
+        <div className="grid gap-8 border-t border-zinc-800 pt-7 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+          <div>
+            <p className="eyebrow">更多数据</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white">按你想看的方式进入。</h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-500">
+              不把所有内容塞进首页。每个模块保留自己的信息密度和阅读节奏。
             </p>
           </div>
-
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            {commandModules.map((module) => (
-              <Link
-                key={module.href}
-                href={module.href}
-                data-module-card
-                className="group relative min-h-[300px] overflow-hidden border border-white/[0.12] bg-black/70 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.38)] will-change-transform xl:min-h-[390px]"
-              >
-                <span className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-red-400/90 to-transparent" aria-hidden="true" />
-                <span className="absolute right-4 top-4 font-mono text-[0.62rem] font-bold tracking-[0.2em] text-red-300/60">{module.index}</span>
-                <div className="relative flex h-full flex-col justify-between">
-                  <div>
-                    <p className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.18em] text-zinc-500">{module.meta}</p>
-                    <h3 className="mt-7 text-3xl font-black tracking-[-0.035em] text-white">{module.label}</h3>
-                    <p className="mt-5 text-sm leading-7 text-zinc-400">{module.description}</p>
-                  </div>
-                  <div className="mt-12 flex items-center justify-between border-t border-white/10 pt-4 text-sm font-bold text-zinc-300">
-                    <span>打开模块</span>
-                    <span className="text-xl text-neonRed" aria-hidden="true">→</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        data-season-section
-        className="relative isolate overflow-hidden bg-black py-20 sm:py-28 lg:py-36"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(255,46,46,0.16),transparent_26%),radial-gradient(circle_at_82%_78%,rgba(127,29,29,0.1),transparent_30%)]" aria-hidden="true" />
-        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(115deg,rgba(255,46,46,0.12)_1px,transparent_1px)] [background-size:120px_120px]" aria-hidden="true" />
-
-        <div className="relative mx-auto grid max-w-[1440px] gap-5 px-5 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:px-12">
-          <div data-season-panel className="border border-white/[0.12] bg-white/[0.035] p-5 backdrop-blur sm:p-8">
-            <p className="font-mono text-xs font-bold uppercase tracking-[0.24em] text-red-300/70">Season Context</p>
-            <h2 className="mt-4 max-w-4xl text-4xl font-black leading-tight tracking-[-0.045em] sm:text-6xl">
-              下一站信息与赛季秩序，保持在同一视野。
-            </h2>
-
-            <div className="mt-9 grid gap-px border border-white/10 bg-white/10 sm:grid-cols-3">
-              <div className="bg-black/75 p-4">
-                <p className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.18em] text-zinc-500">下一站</p>
-                <p className="mt-4 text-2xl font-black text-white">{nextRace.raceName}</p>
-              </div>
-              <div className="bg-black/75 p-4">
-                <p className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.18em] text-zinc-500">地点</p>
-                <p className="mt-4 text-lg font-bold text-zinc-100">{nextRace.country} · {nextRace.location}</p>
-                <p className="mt-2 text-sm text-zinc-500">{nextRace.circuitName}</p>
-              </div>
-              <div className="bg-black/75 p-4">
-                <p className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.18em] text-zinc-500">日期</p>
-                <p className="mt-4 text-lg font-bold text-zinc-100">{dateRange}</p>
-                <p className="mt-2 text-xs text-zinc-500">{sourceLabel}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 border border-white/10 bg-black/70 p-4 sm:p-5">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p data-countdown-status className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.18em] text-red-300/70">
-                  等待计时信号
-                </p>
-                <p className="text-xs text-zinc-600">Live countdown / Asia Shanghai</p>
-              </div>
-              <div className="mt-5 grid grid-cols-4 gap-2 text-center">
-                {countdownItems.map((item) => (
-                  <div key={item.key} className="border-l border-white/10 first:border-l-0">
-                    <p
-                      data-countdown-key={item.key}
-                      className="font-mono text-3xl font-black tabular-nums text-white sm:text-5xl"
-                    >
-                      --
-                    </p>
-                    <p className="mt-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-zinc-600">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4">
-            {seasonLinks.map((item) => (
+          <div className="grid grid-cols-2 border-l border-t border-zinc-800 sm:grid-cols-3">
+            {quickLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                data-season-panel
-                className="group border border-white/[0.12] bg-black/70 p-6"
+                className="group flex min-h-24 items-end justify-between border-b border-r border-zinc-800 px-4 py-4 text-sm font-medium text-zinc-300 transition hover:bg-white/[0.035] hover:text-white"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-mono text-[0.62rem] font-bold uppercase tracking-[0.18em] text-red-300/70">{item.meta}</p>
-                    <h3 className="mt-4 text-3xl font-black tracking-[-0.035em] text-white">{item.label}</h3>
-                  </div>
-                  <span className="text-2xl text-neonRed" aria-hidden="true">→</span>
-                </div>
+                {item.label}
+                <span aria-hidden="true" className="text-zinc-600 transition group-hover:text-white">↗</span>
               </Link>
             ))}
-
-            <footer data-season-panel className="border border-zinc-900 bg-black/55 p-5 text-sm text-zinc-500">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="font-semibold text-zinc-300">GridDelta CN</p>
-                <p>非官方项目 · OpenF1 数据辅助 · For Chinese F1 fans</p>
-              </div>
-            </footer>
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
