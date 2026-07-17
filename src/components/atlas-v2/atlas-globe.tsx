@@ -4,6 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Effects, Html, OrbitControls, useTexture } from "@react-three/drei";
 import {
   Suspense,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -96,7 +97,7 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
   varying vec3 vWorldNormal;
   varying vec3 vObjectPosition;
 
-  float luminance(vec3 color) {
+  float atlasLuminance(vec3 color) {
     return dot(color, vec3(0.2126, 0.7152, 0.0722));
   }
 
@@ -108,7 +109,7 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
 
     vec3 daySample = texture2D(uDayMap, vUv).rgb;
     vec3 nightSample = texture2D(uNightMap, vUv).rgb;
-    float nightLuma = luminance(nightSample);
+    float nightLuma = atlasLuminance(nightSample);
     float cityMask = smoothstep(0.13, 0.62, nightLuma);
 
     vec3 dayColor = pow(daySample, vec3(1.08));
@@ -632,6 +633,7 @@ function RegionLabel({ currentRace, hide }: { currentRace: SeasonRace; hide: boo
 function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | null; reducedMotion: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const materialRef = useRef<THREE.PointsMaterial>(null);
+  const ringMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const strengthRef = useRef(0);
   const targetPosition = useMemo(() => new THREE.Vector3(), []);
   const targetQuaternion = useMemo(() => new THREE.Quaternion(), []);
@@ -688,6 +690,9 @@ function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | 
     if (materialRef.current) {
       materialRef.current.opacity = strength * 0.7;
     }
+    if (ringMaterialRef.current) {
+      ringMaterialRef.current.opacity = strength * 0.32;
+    }
 
     const attribute = geometry.getAttribute("position") as THREE.BufferAttribute;
     const positions = attribute.array as Float32Array;
@@ -721,9 +726,10 @@ function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | 
       <mesh position={[0, 0, -0.002]}>
         <ringGeometry args={[0.12, 0.124, 64]} />
         <meshBasicMaterial
+          ref={ringMaterialRef}
           color="#95c9ff"
           transparent
-          opacity={0.32}
+          opacity={0}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
           toneMapped={false}
@@ -758,6 +764,38 @@ function RaycastMagnet({
     [races],
   );
 
+  const resolveNearestRace = useCallback(() => {
+    if (!hitTargetRef.current) return null;
+
+    raycaster.setFromCamera(pointerNdc.current, camera);
+    const hit = raycaster.intersectObject(hitTargetRef.current, false)[0];
+    let closestId: string | null = null;
+
+    if (hit) {
+      const surfaceVector = hit.point.clone().normalize();
+      let closestDistance = Number.POSITIVE_INFINITY;
+      for (const entry of raceVectors) {
+        const distance = angularDistanceDegrees(surfaceVector, entry.vector);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestId = entry.race.id;
+        }
+      }
+      const cameraDistance = camera.position.length();
+      const magneticRadius = THREE.MathUtils.mapLinear(
+        cameraDistance,
+        CAMERA_NEAR_DISTANCE,
+        CAMERA_FAR_DISTANCE,
+        7.5,
+        13.5,
+      );
+      if (closestDistance > magneticRadius) closestId = null;
+    }
+
+    nearestRaceId.current = closestId;
+    return closestId;
+  }, [camera, raceVectors, raycaster]);
+
   useEffect(() => {
     const canvas = gl.domElement;
     const updatePointer = (event: PointerEvent) => {
@@ -787,14 +825,15 @@ function RaycastMagnet({
       updatePointer(event);
       const start = pointerDown.current;
       pointerDown.current = null;
+      const closestId = resolveNearestRace();
       const travel = start
         ? Math.hypot(event.clientX - start.x, event.clientY - start.y)
         : Number.POSITIVE_INFINITY;
       const elapsed = start ? performance.now() - start.at : Number.POSITIVE_INFINITY;
-      if (travel < 9 && elapsed < 520 && nearestRaceId.current) {
-        onSelectRace(nearestRaceId.current);
+      if (travel < 9 && elapsed < 520 && closestId) {
+        onSelectRace(closestId);
       }
-      canvas.style.cursor = nearestRaceId.current ? "pointer" : "grab";
+      canvas.style.cursor = closestId ? "pointer" : "grab";
     };
 
     canvas.addEventListener("pointerenter", handleEnter);
@@ -814,36 +853,11 @@ function RaycastMagnet({
       canvas.removeEventListener("pointercancel", handleLeave);
       canvas.style.cursor = "";
     };
-  }, [gl, onHoverRace, onSelectRace]);
+  }, [gl, onHoverRace, onSelectRace, resolveNearestRace]);
 
   useFrame(() => {
     if (!hitTargetRef.current || !pointerInside.current) return;
-    raycaster.setFromCamera(pointerNdc.current, camera);
-    const hit = raycaster.intersectObject(hitTargetRef.current, false)[0];
-    let closestId: string | null = null;
-
-    if (hit) {
-      const surfaceVector = hit.point.clone().normalize();
-      let closestDistance = Number.POSITIVE_INFINITY;
-      for (const entry of raceVectors) {
-        const distance = angularDistanceDegrees(surfaceVector, entry.vector);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestId = entry.race.id;
-        }
-      }
-      const cameraDistance = camera.position.length();
-      const magneticRadius = THREE.MathUtils.mapLinear(
-        cameraDistance,
-        CAMERA_NEAR_DISTANCE,
-        CAMERA_FAR_DISTANCE,
-        7.5,
-        13.5,
-      );
-      if (closestDistance > magneticRadius) closestId = null;
-    }
-
-    nearestRaceId.current = closestId;
+    const closestId = resolveNearestRace();
     if (closestId !== lastReportedRaceId.current) {
       lastReportedRaceId.current = closestId;
       onHoverRace(closestId);
@@ -910,11 +924,12 @@ function AtlasControls({
     }
 
     if (hoveredRace) {
-      const baseDistance = camera.position.length();
-      hoverBaseDistanceRef.current = baseDistance;
+      if (hoverBaseDistanceRef.current === null) {
+        hoverBaseDistanceRef.current = camera.position.length();
+      }
       hoverDistanceTargetRef.current = Math.max(
         CAMERA_NEAR_DISTANCE,
-        baseDistance - 0.24,
+        hoverBaseDistanceRef.current - 0.24,
       );
     } else if (hoverBaseDistanceRef.current !== null) {
       hoverDistanceTargetRef.current = hoverBaseDistanceRef.current;
@@ -969,9 +984,7 @@ function AtlasControls({
         hoverDistanceTargetRef.current = null;
       }
     }
-
-    controls.update();
-  });
+  }, -2);
 
   return (
     <OrbitControls

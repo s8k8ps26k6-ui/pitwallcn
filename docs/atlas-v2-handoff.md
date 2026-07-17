@@ -9,6 +9,7 @@
 - 当前分支：`codex/velocity-at-dawn-homepage`
 - 归档前 HEAD：`2798e80ff97a5e1817e95112ef29c631dd6d7ab9`
 - 归档前最近提交：`chore: retrigger Vercel deployment`
+- 第一阶段归档检查点：`af2258bb`（`wip: checkpoint atlas-v2 interactive globe`）。
 - 工作区在 Atlas V2 开始前已经是 dirty 状态，包含用户对原首页、布局、依赖和视觉素材的大量未提交修改。
 - 本次未推送 GitHub、未合并 `main`、未部署，也未回滚任何用户修改。
 - Atlas 本地检查点只允许包含可明确归属本次工作的新增文件和本文档。`src/components/site-shell.tsx` 是混合所有权文件，原因见第 13 节。
@@ -119,13 +120,38 @@
 
 ## 6. 实际浏览器测试结果
 
+**最终状态（2026-07-17）：已完成真实浏览器验收。** 已失效的 in-app Browser QA 没有再次使用；最终使用本机 Microsoft Edge 的 Playwright 库直接驱动真实 Chromium/WebGL2 上下文，临时脚本位于仓库外，未生成截图、视频或仓库测试产物。
+
+最终桌面测试环境为 1440×900、DPR 1、headless Edge/WebGL2：
+
+| 项目 | 最终实际结果 |
+| --- | --- |
+| 页面与全屏 WebGL | HTTP 200；CSS 画布与绘制缓冲均为 1440×900；WebGL 2.0 上下文正常 |
+| 22 个全球节点 | `data-atlas-node-count=22`，Three HTML 标签层检测到 R01—R22 共 22 个标签 |
+| 欧洲 9 站 | 选择 Dutch GP 后 R06—R14 九个欧洲标签全部可见，包括 Madrid/Madring |
+| 空闲自转 | Belgium 标签 1.2 秒位移 7.588 px，确认实时自转 |
+| 磁吸 hover | 从 Belgium 靠近 Netherlands 后右下焦点切换为 Dutch GP；Belgium 邻域显现 R06—R13 标签 |
+| 节点点击与镜头聚焦 | Dutch GP 点击后出现 `LOCKED FOCUS` 和 `RELEASE FOCUS`，欧洲镜头过渡完成 |
+| 缩放边界 | 近端标签宽度 633.634 px、远端 201.660 px；继续同向滚轮后两端变化均为 0，确认上下限生效 |
+| 鼠标拖动 | 标签位移 159.597 px，确认球体旋转 |
+| 松手惯性 | 抬手后 350 ms 继续位移 31.184 px |
+| 自转自然恢复 | 冷却后 1.2 秒继续位移 0.217 px，确认自动恢复而非跳变 |
+| 手机基本打开 | 390×844、DPR 1 下 HTTP 200、WebGL 画布正常、22 标签全部挂载 |
+| 触控轻触/拖动 | 轻触节点成功锁定；CDP 原生触控拖动产生 155.601 px 位移 |
+| reduced motion | 1280×800、`prefers-reduced-motion: reduce` 下 1.2 秒空闲位移为 0 |
+| 运行时错误 | `pageerror=0`、场景资源 `requestfailed=0`；最终无 Three.js shader 编译错误 |
+
+真实浏览器首次运行发现昼夜地球 fragment shader 中自定义 `luminance()` 与 Three.js 内置 GLSL 函数重名，导致材质无法编译；已重命名为 `atlasLuminance()`，最终复测通过。另发现触控 tap 的 `pointerup` 可能早于下一帧 Raycast，已改为抬手事件内同步计算最近节点，移动端复测通过。
+
+### 6.1 归档阶段历史记录
+
 昨晚 Browser QA 子任务已完成其原子检查，但 in-app Browser 初始化和清理重试均失败，原始错误为：
 
 ```text
 Cannot redefine property: process
 ```
 
-因此没有伪造浏览器结果，也没有使用截图替代测试。遵守“不要生成或上传截图”的归档要求，本轮没有新增截图。当前可确认的是开发服务器编译和 HTTP 可达性；以下交互仍需真实浏览器验收。
+因此归档阶段没有伪造浏览器结果，也没有使用截图替代测试。下表保留的是归档当时的历史状态，已由上方最终实测取代。
 
 | 项目 | 代码实现 | 实际浏览器结果 |
 | --- | --- | --- |
@@ -142,6 +168,19 @@ Cannot redefine property: process
 已获得的运行证据：2026-07-16 开发服务器成功编译 `/atlas-v2`（1755 modules），`GET http://127.0.0.1:3000/atlas-v2` 返回 HTTP 200。归档时端口 3000 已停止监听。
 
 ## 7. TypeScript、lint 与 production build
+
+### 7.1 最终检查（2026-07-17）
+
+- 唯一一次局部 TypeScript：通过。临时配置仅覆盖 Atlas、`site-shell.tsx` 和最小修复的 `scene-background.tsx`，检查后已删除。
+- 唯一一次局部 ESLint：通过。范围为 `src/app/atlas-v2`、`src/components/atlas-v2`、`src/lib/atlas`、`src/components/scene-background.tsx`、`src/components/site-shell.tsx`。
+- 最终全仓 TypeScript：`tsc --noEmit --incremental false` 通过。
+- 最终全仓 lint：`npm.cmd run lint` 通过，0 errors。
+- 最终 production build：`npm.cmd run build` 通过；15/15 静态页面生成完成，`/atlas-v2` 静态输出为 261 kB、First Load JS 364 kB。
+- 构建仍打印一次 `@next/swc-win32-x64-msvc` 文件被其他进程占用的警告，但 wasm fallback 完成优化编译、类型检查、lint 和静态生成，退出码为 0。该警告不再阻断构建。
+
+旧首页重复属性已做唯一允许的最小修复：把 `src/components/scene-background.tsx` 原第 774、775 行的两个 `className` 合并为一个，保留 `!pointer-events-none absolute inset-0 z-0 h-full w-full`，未改变视觉或重构首页。
+
+### 7.2 归档阶段历史结果（问题已解决）
 
 归档恢复后于 2026-07-17 重新运行：
 
@@ -188,23 +227,21 @@ Cannot redefine property: process
 
 ## 8. 尚未完成、存在问题或需重新调整
 
-- 最重要缺口是真实浏览器交互验收尚未完成；代码存在不等于拖动、惯性、磁吸、点击和缩放手感已通过。
-- 需要观察 WebGL 控制台、纹理加载、Bloom 和显卡负载，尤其是 Windows/Chrome 桌面端。
-- 欧洲 9 站的密集标签虽然已有偏移、层级和引导线，仍需在实际 1440p/1080p 画面中调整避让。
-- 局部磁吸光晕、粒子聚集和镜头靠近强度尚未做视觉验收，可能需要克制化微调。
-- 手机端仅实现可打开和降级策略，未做完整触控视觉适配。
-- 滚动状态接口只有占位，赛季数据/积分榜尚未实现，符合第一阶段范围。
-- 全仓 TypeScript/lint/build 被用户既有的重复 `className` 阻断；明日只允许做最小范围 JSX 属性修复。
-- Production build 出现 SWC 文件占用警告；修复 JSX 后应在确认没有本仓库 dev server 占用时复跑，以判断警告是否复现。
-- Atlas 检查点不包含用户原有 `package.json`/`package-lock.json` 中的 Three 依赖修改，也不包含混合所有权 `site-shell.tsx`；恢复时必须保留当前工作区。
+- 核心功能和自动化交互标准已完成；仍需人在真实显示器上主观确认电影感、Bloom 克制度、城市夜光层次和欧洲密集标签的最终审美。按要求没有生成截图，因此本交接不把自动化数值当作视觉签字。
+- 自动化使用本机 Edge/WebGL2 和 390×844 触控模拟；物理手机、不同 GPU 和 Safari 仍属于后续兼容性抽查范围。
+- 浏览器控制台仍出现一条通用静态资源 HTTP 404 日志，但 `pageerror=0`、`requestfailed=0`，地球三张纹理和场景均正常；大概率为站点 favicon，需后续按网络 URL 精确确认，不阻断 Atlas。
+- Production build 仍出现 SWC 原生模块文件占用警告，但最终退出码为 0；若以后追求干净日志，可单独排查 Windows 文件锁，不应借机重构页面。
+- 22 条坐标已统一、合法并通过运行验证，但当前来源元数据只指向 Wikidata 总入口，尚未逐站记录 QID；这是数据可追溯性增强项，不是当前显示阻塞。
+- 滚动状态接口仍只有占位，赛季数据/积分榜未实现，符合 Global Core 第一阶段范围。
+- `site-shell.tsx` 与 `scene-background.tsx` 都是用户此前已有的未跟踪文件。Atlas 集成判断和重复 `className` 最小修复保留在工作区，但不能为了检查点而把用户整份文件错误归入本次提交。
 
-## 9. 恢复开发后的优先任务
+## 9. 无人值守完成记录与后续优先级
 
-1. **核心交互浏览器验收**：启动 `/atlas-v2`，依次验证鼠标拖动、惯性、自转暂停/恢复、hover/Raycasting、磁吸、点击保持、滚轮缩放边界和离开后的平滑恢复；记录真实控制台与行为结果，不用截图代替。
-2. **触控与欧洲密集区验收**：验证轻触选中不依赖 hover，并聚焦欧洲确认 9 个节点全部保留、标签避让/引导线可读；只修复验收发现的 Atlas 核心问题。
-3. **最小修复既有 JSX 错误**：在完成 `/atlas-v2` 核心交互验收之后，只解决 `src/components/scene-background.tsx:775` 的重复 `className`/对应 JSX 属性，不重做原首页、不改变视觉设计、不顺带重构。
-4. **最终全仓检查**：重新运行全量 TypeScript、全量 lint 和 production build，确认重复属性修复后全仓结果，并复核 SWC 文件占用警告是否复现。
-5. **有证据后再微调**：仅基于实际浏览器结果调整欧洲标签、磁吸强度、Bloom 或性能参数；继续保持 22 个节点，不扩展积分榜等新功能。
+1. **已完成：核心交互浏览器验收。** 拖动、惯性、自转、恢复、hover、磁吸、点击、镜头、缩放和欧洲 9 站均通过。
+2. **已完成：移动基本触控与 reduced-motion。** 390×844 加载、tap、touch drag 和 reduced motion 均通过。
+3. **已完成：最小 JSX 修复。** 仅合并重复 `className`，未更改首页设计。
+4. **已完成：一次局部检查与一次最终全仓检查。** TypeScript、lint、build 全部通过。
+5. **后续人工优先：视觉签字。** 在真实桌面 GPU 上查看 `http://127.0.0.1:3000/atlas-v2`，只记录主观视觉问题；若无阻塞，不再扩展第一阶段范围。
 
 ## 10. 启动命令与准确地址
 
