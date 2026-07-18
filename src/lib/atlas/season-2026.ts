@@ -7,6 +7,8 @@ export type AtlasRegion =
 
 export type RaceStatus = "completed" | "current" | "upcoming";
 
+export type SeasonSelectionPhase = "current" | "next" | "off-season";
+
 export type SeasonRace = {
   id: string;
   round: number;
@@ -24,6 +26,11 @@ export type SeasonRace = {
 };
 
 type RaceDefinition = Omit<SeasonRace, "status">;
+
+export type SeasonRaceSelection = {
+  phase: SeasonSelectionPhase;
+  race: SeasonRace;
+};
 
 export const SEASON_2026_SOURCES = {
   calendar: "https://www.formula1.com/en/racing/2026",
@@ -349,21 +356,57 @@ const RACE_DEFINITIONS = [
   },
 ] as const satisfies readonly RaceDefinition[];
 
+function startOfRaceWeekend(startDate: string) {
+  return Date.parse(`${startDate}T00:00:00.000Z`);
+}
+
 function endOfRaceWeekend(endDate: string) {
   return Date.parse(`${endDate}T23:59:59.999Z`);
 }
 
-export function getSeason2026(now = new Date()): SeasonRace[] {
-  const currentRace = RACE_DEFINITIONS.find(
-    (race) => endOfRaceWeekend(race.endDate) >= now.getTime(),
+function getSelectionDefinition(now: Date) {
+  const timestamp = now.getTime();
+  const activeRace = RACE_DEFINITIONS.find(
+    (race) =>
+      startOfRaceWeekend(race.startDate) <= timestamp &&
+      endOfRaceWeekend(race.endDate) >= timestamp,
   );
+  if (activeRace) return { phase: "current" as const, race: activeRace };
+
+  const nextRace = RACE_DEFINITIONS.find(
+    (race) => startOfRaceWeekend(race.startDate) > timestamp,
+  );
+  if (nextRace) return { phase: "next" as const, race: nextRace };
+
+  return {
+    phase: "off-season" as const,
+    race: RACE_DEFINITIONS[RACE_DEFINITIONS.length - 1],
+  };
+}
+
+export function getSeasonRaceSelection2026(
+  now = new Date(),
+): SeasonRaceSelection {
+  const selection = getSelectionDefinition(now);
+  const races = getSeason2026(now);
+  const race = races.find((entry) => entry.id === selection.race.id);
+
+  return {
+    phase: selection.phase,
+    race: race ?? { ...selection.race, status: "completed" },
+  };
+}
+
+export function getSeason2026(now = new Date()): SeasonRace[] {
+  const selection = getSelectionDefinition(now);
+  const timestamp = now.getTime();
 
   return RACE_DEFINITIONS.map((race) => ({
     ...race,
     status:
-      endOfRaceWeekend(race.endDate) < now.getTime()
+      endOfRaceWeekend(race.endDate) < timestamp
         ? "completed"
-        : race.id === currentRace?.id
+        : selection.phase !== "off-season" && race.id === selection.race.id
           ? "current"
           : "upcoming",
   }));

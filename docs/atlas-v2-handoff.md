@@ -247,6 +247,18 @@ Cannot redefine property: process
 
 PowerShell：
 
+### Latest update — 2026-07-19: race-driven focus and responsive layout
+
+- The typed 22-round calendar now chooses the race active during its inclusive UTC weekend, otherwise the next race; it uses Australia before the season and Abu Dhabi during the post-season. Belgium is not hard-coded.
+- The scene requests automatic focus once after load. Manual interaction cancels the flight; `RETURN TO CURRENT RACE` clears manual focus and requests the automatic target again.
+- Global mode keeps one Europe-region entry rather than nine Europe nodes. An automatic European race warms that entry while the information panel names the real race; entering Europe selects that circuit and only hover/selected labels are shown.
+- Idle nodes are small dim neutral-grey points. Current/next is warm, with slow breathing under 8%; labels, leaders and raycast targets share the same anchor and disappear when back-facing or viewport-outside.
+- `src/lib/atlas/visibility.ts` centralizes projected-viewport, horizon and adaptive-label placement helpers. Responsive CSS now includes safe-area-aware portrait and low-height landscape layouts, `100dvh`, and horizontal clipping.
+
+Automated verification passed: calendar/visibility pure checks (Belgium during 2026-07-19, Hungary after; pre/post-season; 22 races; nine Europe races; Belgium R10), static route/CSS checks, TypeScript (after one one-line dead-branch correction), ESLint, and `npm.cmd run build` (all 15 pages; `/atlas-v2` static, 321 kB route size, 423 kB first-load JS).
+
+This update deliberately did not run a local browser, headless browser, screenshot probe, or WebGL automation. Awaiting user Preview verification: automatic race focus, post-weekend next-race change, Europe entry and nine internal nodes, `RETURN TO CURRENT RACE`, and 390x844 / 844x390 / 430x932 / 1440x900 visual layouts with no horizontal overflow.
+
 ```powershell
 Set-Location 'E:\GridDeltaSandbox\pitwallcn'
 npm.cmd run dev -- --hostname 127.0.0.1 --port 3000

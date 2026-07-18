@@ -20,6 +20,12 @@ import {
   latLonToVector3,
   tangentQuaternion,
 } from "@/lib/atlas/geo";
+import {
+  chooseAdaptiveLabelOffset,
+  isProjectedPointVisible,
+  isSurfacePointVisible,
+  type AtlasLabelOffset,
+} from "@/lib/atlas/visibility";
 import type { SeasonRace } from "@/lib/atlas/season-2026";
 import { EuropePlate } from "./europe-plate";
 import styles from "./season-atlas.module.css";
@@ -33,6 +39,8 @@ type AtlasGlobeProps = {
   hoveredRace: SeasonRace | null;
   selectedRace: SeasonRace | null;
   currentRace: SeasonRace;
+  autoFocusRace: SeasonRace | null;
+  autoFocusVersion: number;
   viewMode: AtlasViewMode;
   navigationVersion: number;
   reducedMotion: boolean;
@@ -40,11 +48,12 @@ type AtlasGlobeProps = {
   active: boolean;
   onHoverTarget: (targetId: string | null) => void;
   onSelectTarget: (targetId: string) => void;
+  onSceneReady: () => void;
 };
 
 type SceneProps = AtlasGlobeProps;
 
-type LabelOffset = readonly [number, number];
+type LabelOffset = AtlasLabelOffset;
 
 type StationAnchor = {
   race: SeasonRace;
@@ -447,8 +456,9 @@ function RaceLabel({
 }) {
   const labelRef = useRef<HTMLDivElement>(null);
   const opacityRef = useRef(0);
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const cameraDirection = useMemo(() => new THREE.Vector3(), []);
+  const projected = useMemo(() => new THREE.Vector3(), []);
   const [offsetX, offsetY] = anchor.labelOffset;
   const customStyle = {
     "--atlas-label-x": `${offsetX}px`,
@@ -457,11 +467,28 @@ function RaceLabel({
     "--atlas-leader-angle": `${Math.atan2(offsetY, offsetX)}rad`,
   } as CSSProperties;
 
+  useEffect(() => {
+    opacityRef.current = 0;
+  }, [size.height, size.width]);
+
   useFrame((_, delta) => {
     if (!labelRef.current) return;
     cameraDirection.copy(camera.position).normalize();
-    const horizon = EARTH_RADIUS / Math.max(camera.position.length(), 0.001);
-    const frontFacing = anchor.normal.dot(cameraDirection) > horizon + 0.012;
+    const frontFacing = isSurfacePointVisible(
+      anchor.normal.dot(cameraDirection),
+      camera.position.length(),
+      EARTH_RADIUS,
+    );
+    projected.copy(anchor.position).project(camera);
+    const placement =
+      frontFacing && isProjectedPointVisible(projected)
+        ? chooseAdaptiveLabelOffset({
+            point: projected,
+            viewportWidth: size.width,
+            viewportHeight: size.height,
+            preferred: anchor.labelOffset,
+          })
+        : null;
     const emphasisOpacity =
       emphasis === "selected"
         ? 1
@@ -470,7 +497,7 @@ function RaceLabel({
           : emphasis === "current"
             ? 0.52
             : 0.22;
-    const target = show && frontFacing ? emphasisOpacity : 0;
+    const target = show && placement ? emphasisOpacity : 0;
     opacityRef.current = THREE.MathUtils.damp(
       opacityRef.current,
       target,
@@ -483,7 +510,21 @@ function RaceLabel({
     labelRef.current.style.pointerEvents =
       selectable && opacityRef.current > 0.2 ? "auto" : "none";
     labelRef.current.dataset.atlasVisible =
-      show && frontFacing ? "true" : "false";
+      show && placement ? "true" : "false";
+    if (placement) {
+      const [nextX, nextY] = placement;
+      labelRef.current.style.setProperty("--atlas-label-x", `${nextX}px`);
+      labelRef.current.style.setProperty("--atlas-label-y", `${nextY}px`);
+      labelRef.current.style.setProperty(
+        "--atlas-leader-length",
+        `${Math.hypot(nextX, nextY)}px`,
+      );
+      labelRef.current.style.setProperty(
+        "--atlas-leader-angle",
+        `${Math.atan2(nextY, nextX)}rad`,
+      );
+      labelRef.current.classList.toggle(styles.raceLabelLeft, nextX < 0);
+    }
   });
 
   return (
@@ -555,13 +596,14 @@ function RaceNode({
   const revealElapsedRef = useRef(
     revealDelay > 0 ? 0 : Number.POSITIVE_INFINITY,
   );
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const cameraDirection = useMemo(() => new THREE.Vector3(), []);
+  const projected = useMemo(() => new THREE.Vector3(), []);
   const targetColor = useMemo(() => {
     if (state === "selected") return new THREE.Color("#f2d28c");
     if (state === "hovered") return new THREE.Color("#c9e7ff");
     if (state === "current") return new THREE.Color("#d5bd83");
-    return new THREE.Color("#a8c6dc");
+    return new THREE.Color("#b7c0c7");
   }, [state]);
   const quaternion = useMemo(
     () => tangentQuaternion(anchor.normal),
@@ -571,21 +613,25 @@ function RaceNode({
   useEffect(() => {
     revealElapsedRef.current =
       visibility > 0 && revealDelay > 0 ? 0 : Number.POSITIVE_INFINITY;
-  }, [revealDelay, revealVersion, visibility]);
+    visibilityRef.current = 0;
+  }, [revealDelay, revealVersion, size.height, size.width, visibility]);
 
   useFrame(({ clock }, delta) => {
     if (revealElapsedRef.current !== Number.POSITIVE_INFINITY) {
       revealElapsedRef.current += delta;
     }
     cameraDirection.copy(camera.position).normalize();
-    const horizon = EARTH_RADIUS / Math.max(camera.position.length(), 0.001);
-    const horizonFade = THREE.MathUtils.smoothstep(
+    const surfaceVisible = isSurfacePointVisible(
       anchor.normal.dot(cameraDirection),
-      horizon - 0.025,
-      horizon + 0.035,
+      camera.position.length(),
+      EARTH_RADIUS,
+      0.006,
     );
+    projected.copy(anchor.position).project(camera);
+    const screenVisible = isProjectedPointVisible(projected);
     const revealReady = revealElapsedRef.current >= revealDelay;
-    const visibilityTarget = revealReady ? visibility * horizonFade : 0;
+    const visibilityTarget =
+      revealReady && surfaceVisible && screenVisible ? visibility : 0;
     visibilityRef.current = THREE.MathUtils.damp(
       visibilityRef.current,
       visibilityTarget,
@@ -608,13 +654,16 @@ function RaceNode({
       delta,
     );
     const energy = energyRef.current;
-    const active = state === "hovered" || state === "selected";
+    const active = state !== "idle";
     const breath =
       reducedMotion || !active
         ? 1
         : 1 +
-          Math.sin(clock.elapsedTime * 0.78 + anchor.race.round * 0.37) *
-            0.025;
+          Math.sin(
+            clock.elapsedTime * (state === "current" ? 0.34 : 0.78) +
+              anchor.race.round * 0.37,
+          ) *
+            (state === "current" ? 0.018 : 0.025);
     const visibilityValue = visibilityRef.current;
 
     if (groupRef.current) {
@@ -666,8 +715,8 @@ function RaceNode({
           <sphereGeometry args={[0.021, 16, 12]} />
           <meshStandardMaterial
             ref={coreMaterialRef}
-            color="#a8c6dc"
-            emissive="#a8c6dc"
+            color="#b7c0c7"
+            emissive="#b7c0c7"
             emissiveIntensity={0.6}
             roughness={0.25}
             metalness={0.1}
@@ -679,7 +728,7 @@ function RaceNode({
           <circleGeometry args={[0.038, 32]} />
           <meshBasicMaterial
             ref={haloMaterialRef}
-            color="#a8c6dc"
+            color="#b7c0c7"
             transparent
             opacity={0}
             depthWrite={false}
@@ -690,7 +739,7 @@ function RaceNode({
           <ringGeometry args={[0.039, 0.043, 36]} />
           <meshBasicMaterial
             ref={ringMaterialRef}
-            color="#a8c6dc"
+            color="#b7c0c7"
             transparent
             opacity={0}
             depthWrite={false}
@@ -713,12 +762,14 @@ function EuropeEntryNode({
   normal,
   position,
   hovered,
+  current,
   visible,
   onSelect,
 }: {
   normal: THREE.Vector3;
   position: THREE.Vector3;
   hovered: boolean;
+  current: boolean;
   visible: boolean;
   onSelect: (targetId: string) => void;
 }) {
@@ -728,15 +779,36 @@ function EuropeEntryNode({
   const ringMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const visibilityRef = useRef(0);
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const cameraDirection = useMemo(() => new THREE.Vector3(), []);
+  const projected = useMemo(() => new THREE.Vector3(), []);
   const quaternion = useMemo(() => tangentQuaternion(normal), [normal]);
+  const warm = useMemo(() => new THREE.Color("#e2c988"), []);
+  const cold = useMemo(() => new THREE.Color("#c4dcf0"), []);
+
+  useEffect(() => {
+    visibilityRef.current = 0;
+  }, [size.height, size.width]);
 
   useFrame((_, delta) => {
     cameraDirection.copy(camera.position).normalize();
-    const horizon = EARTH_RADIUS / Math.max(camera.position.length(), 0.001);
-    const frontFacing = normal.dot(cameraDirection) > horizon + 0.012;
-    const target = visible && frontFacing ? 1 : 0;
+    const frontFacing = isSurfacePointVisible(
+      normal.dot(cameraDirection),
+      camera.position.length(),
+      EARTH_RADIUS,
+    );
+    projected.copy(position).project(camera);
+    const placement =
+      frontFacing && isProjectedPointVisible(projected)
+        ? chooseAdaptiveLabelOffset({
+            point: projected,
+            viewportWidth: size.width,
+            viewportHeight: size.height,
+            preferred: [70, -42],
+            labelWidth: 194,
+          })
+        : null;
+    const target = visible && placement ? 1 : 0;
     visibilityRef.current = THREE.MathUtils.damp(
       visibilityRef.current,
       target,
@@ -744,7 +816,8 @@ function EuropeEntryNode({
       delta,
     );
     const value = visibilityRef.current;
-    const energy = hovered ? 0.66 : 0.24;
+    const energy = hovered ? 0.66 : current ? 0.46 : 0.24;
+    const targetColor = current || hovered ? warm : cold;
     if (groupRef.current) {
       groupRef.current.visible = value > 0.004;
       groupRef.current.scale.setScalar(0.98 + energy * 0.08);
@@ -752,17 +825,37 @@ function EuropeEntryNode({
     if (coreMaterialRef.current) {
       coreMaterialRef.current.opacity = value * (0.65 + energy * 0.25);
       coreMaterialRef.current.emissiveIntensity = 0.62 + energy * 0.85;
+      coreMaterialRef.current.color.lerp(targetColor, 1 - Math.exp(-delta * 7));
+      coreMaterialRef.current.emissive.lerp(targetColor, 1 - Math.exp(-delta * 7));
     }
     if (haloMaterialRef.current) {
       haloMaterialRef.current.opacity = value * (0.04 + energy * 0.1);
+      haloMaterialRef.current.color.lerp(targetColor, 1 - Math.exp(-delta * 7));
     }
     if (ringMaterialRef.current) {
       ringMaterialRef.current.opacity = value * (0.025 + energy * 0.07);
+      ringMaterialRef.current.color.lerp(targetColor, 1 - Math.exp(-delta * 7));
     }
     if (labelRef.current) {
-      labelRef.current.style.opacity = (value * (hovered ? 1 : 0.78)).toFixed(3);
+      labelRef.current.style.opacity = (
+        value * (hovered || current ? 1 : 0.78)
+      ).toFixed(3);
       labelRef.current.style.visibility = value < 0.015 ? "hidden" : "visible";
       labelRef.current.style.pointerEvents = value > 0.2 ? "auto" : "none";
+      if (placement) {
+        const [nextX, nextY] = placement;
+        labelRef.current.style.setProperty("--atlas-region-x", `${nextX}px`);
+        labelRef.current.style.setProperty("--atlas-region-y", `${nextY}px`);
+        labelRef.current.style.setProperty(
+          "--atlas-region-line-length",
+          `${Math.hypot(nextX, nextY)}px`,
+        );
+        labelRef.current.style.setProperty(
+          "--atlas-region-line-angle",
+          `${Math.atan2(nextY, nextX)}rad`,
+        );
+        labelRef.current.classList.toggle(styles.regionLabelLeft, nextX < 0);
+      }
     }
   });
 
@@ -840,7 +933,7 @@ function FocusParticles({
   reducedMotion,
 }: {
   focusPosition: THREE.Vector3 | null;
-  level: "hovered" | "selected" | null;
+  level: "current" | "hovered" | "selected" | null;
   reducedMotion: boolean;
 }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -878,7 +971,8 @@ function FocusParticles({
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame(({ clock }, delta) => {
-    const targetStrength = level === "selected" ? 1 : level === "hovered" ? 0.62 : 0;
+    const targetStrength =
+      level === "selected" ? 1 : level === "hovered" ? 0.62 : level === "current" ? 0.42 : 0;
     strengthRef.current = THREE.MathUtils.damp(
       strengthRef.current,
       targetStrength,
@@ -975,6 +1069,7 @@ function RaycastMagnet({
     () => new Map(targets.map((target) => [target.id, target])),
     [targets],
   );
+  const projected = useMemo(() => new THREE.Vector3(), []);
 
   const acquireRadius = useCallback(() => {
     const mapped = THREE.MathUtils.mapLinear(
@@ -1005,11 +1100,21 @@ function RaycastMagnet({
 
     const surface = hit.point.clone().normalize();
     const cameraDirection = camera.position.clone().normalize();
-    const horizon = EARTH_RADIUS / Math.max(camera.position.length(), 0.001);
     let closest: { id: string; distance: number; surface: THREE.Vector3 } | null = null;
 
     for (const target of targets) {
-      if (target.normal.dot(cameraDirection) <= horizon + 0.008) continue;
+      if (
+        !isSurfacePointVisible(
+          target.normal.dot(cameraDirection),
+          camera.position.length(),
+          EARTH_RADIUS,
+          0.008,
+        )
+      ) {
+        continue;
+      }
+      projected.copy(target.position).project(camera);
+      if (!isProjectedPointVisible(projected)) continue;
       const distance = angularDistanceDegrees(surface, target.normal);
       if (!closest || distance < closest.distance) {
         closest = { id: target.id, distance, surface };
@@ -1017,7 +1122,7 @@ function RaycastMagnet({
     }
 
     return closest;
-  }, [camera, raycaster, targets]);
+  }, [camera, projected, raycaster, targets]);
 
   useEffect(() => {
     stableIdRef.current = null;
@@ -1190,6 +1295,8 @@ function AtlasControls({
   navigationVersion,
   hoveredTargetId,
   selectedRace,
+  autoFocusRace,
+  autoFocusVersion,
   europeNormal,
   reducedMotion,
 }: {
@@ -1197,6 +1304,8 @@ function AtlasControls({
   navigationVersion: number;
   hoveredTargetId: string | null;
   selectedRace: SeasonRace | null;
+  autoFocusRace: SeasonRace | null;
+  autoFocusVersion: number;
   europeNormal: THREE.Vector3;
   reducedMotion: boolean;
 }) {
@@ -1207,7 +1316,6 @@ function AtlasControls({
   const idleCooldownRef = useRef(0);
   const flightRef = useRef<{
     fromDirection: THREE.Vector3;
-    toDirection: THREE.Vector3;
     fromDistance: number;
     toDistance: number;
     fromTarget: THREE.Vector3;
@@ -1217,6 +1325,8 @@ function AtlasControls({
   } | null>(null);
   const hoverBaseDistanceRef = useRef<number | null>(null);
   const hoverDistanceTargetRef = useRef<number | null>(null);
+  const appliedAutoFocusRef = useRef(0);
+  const appliedNavigationRef = useRef<number | null>(null);
   const zeroTarget = useMemo(() => new THREE.Vector3(), []);
   const frameDirection = useMemo(() => new THREE.Vector3(), []);
   const frameRotation = useMemo(() => new THREE.Quaternion(), []);
@@ -1229,10 +1339,32 @@ function AtlasControls({
         : { min: 4.25, max: 5.85 };
 
   useEffect(() => {
+    const hasNewNavigation = appliedNavigationRef.current !== navigationVersion;
+    const hasNewAutoFocus =
+      viewMode === "global" &&
+      Boolean(autoFocusRace) &&
+      autoFocusVersion > appliedAutoFocusRef.current;
+    if (!hasNewNavigation && !hasNewAutoFocus) return;
+
+    appliedNavigationRef.current = navigationVersion;
+    if (hasNewAutoFocus) appliedAutoFocusRef.current = autoFocusVersion;
+
     const controls = controlsRef.current;
     const homeNormal = latLonToVector3(31, 5, 1).normalize();
+    const autoFocusNormal =
+      autoFocusRace?.region === EUROPE_REGION
+        ? europeNormal
+        : autoFocusRace
+          ? latLonToVector3(
+              autoFocusRace.latitude,
+              autoFocusRace.longitude,
+              1,
+            ).normalize()
+          : homeNormal;
     const desiredNormal =
-      viewMode === "global"
+      hasNewAutoFocus
+        ? autoFocusNormal
+        : viewMode === "global"
         ? homeNormal
         : viewMode === "europe-focus"
           ? europeNormal
@@ -1243,8 +1375,15 @@ function AtlasControls({
                 1,
               ).normalize()
             : europeNormal;
-    const desiredDistance =
-      viewMode === "global" ? 7.45 : viewMode === "europe-focus" ? 5.08 : 4.58;
+    const desiredDistance = hasNewAutoFocus
+      ? autoFocusRace?.region === EUROPE_REGION
+        ? 5.35
+        : 5.25
+      : viewMode === "global"
+        ? 7.45
+        : viewMode === "europe-focus"
+          ? 5.08
+          : 4.58;
 
     if (controls) {
       controls.minDistance = modeRange.min;
@@ -1265,7 +1404,6 @@ function AtlasControls({
       const fromDirection = camera.position.clone().normalize();
       flightRef.current = {
         fromDirection,
-        toDirection: desiredNormal.clone(),
         fromDistance: camera.position.length(),
         toDistance: desiredDistance,
         fromTarget: controls?.target.clone() ?? zeroTarget.clone(),
@@ -1278,6 +1416,8 @@ function AtlasControls({
       };
     }
   }, [
+    autoFocusRace,
+    autoFocusVersion,
     camera,
     europeNormal,
     modeRange.max,
@@ -1432,18 +1572,40 @@ function SubtleBloom({ enabled }: { enabled: boolean }) {
   );
 }
 
+function ViewportSync({ compact }: { compact: boolean }) {
+  const { camera, gl, size } = useThree();
+
+  useEffect(() => {
+    const pixelRatio = Math.min(
+      window.devicePixelRatio || 1,
+      compact ? 1.25 : 1.7,
+    );
+    gl.setPixelRatio(pixelRatio);
+    gl.setSize(size.width, size.height, false);
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.aspect = size.width / Math.max(size.height, 1);
+      camera.updateProjectionMatrix();
+    }
+  }, [camera, compact, gl, size.height, size.width]);
+
+  return null;
+}
+
 function AtlasScene({
   races,
   hoveredTargetId,
   hoveredRace,
   selectedRace,
   currentRace,
+  autoFocusRace,
+  autoFocusVersion,
   viewMode,
   navigationVersion,
   reducedMotion,
   compact,
   onHoverTarget,
   onSelectTarget,
+  onSceneReady,
 }: SceneProps) {
   const stationAnchors = useMemo<StationAnchor[]>(
     () =>
@@ -1494,37 +1656,28 @@ function AtlasScene({
     viewMode === "europe-focus" ||
     (viewMode === "station-focus" &&
       selectedRace?.region === EUROPE_REGION);
+  const currentFocusAnchor =
+    viewMode === "global" && currentRace.region === EUROPE_REGION
+      ? europeEntry
+      : anchorMap.get(currentRace.id) ?? null;
   const activeFocusAnchor = selectedRace
     ? anchorMap.get(selectedRace.id) ?? null
     : hoveredTargetId === EUROPE_ENTRY_ID
       ? europeEntry
       : hoveredRace
         ? anchorMap.get(hoveredRace.id) ?? null
-        : null;
+        : currentFocusAnchor;
   const focusLevel = selectedRace
     ? "selected"
-    : activeFocusAnchor
+    : hoveredTargetId || hoveredRace
       ? "hovered"
+      : currentFocusAnchor
+        ? "current"
       : null;
-  const nearbyRaceIds = useMemo(() => {
-    if (!hoveredRace) return new Set<string>();
-    const hoveredVector = latLonToVector3(
-      hoveredRace.latitude,
-      hoveredRace.longitude,
-      1,
-    );
-    return new Set(
-      races
-        .filter((race) => {
-          const raceVector = latLonToVector3(race.latitude, race.longitude, 1);
-          return (
-            race.region === hoveredRace.region &&
-            angularDistanceDegrees(hoveredVector, raceVector) < 8.5
-          );
-        })
-        .map((race) => race.id),
-    );
-  }, [hoveredRace, races]);
+
+  useEffect(() => {
+    onSceneReady();
+  }, [onSceneReady]);
   const interactiveTargets = useMemo<InteractiveTarget[]>(() => {
     if (viewMode === "global") {
       return [
@@ -1567,6 +1720,7 @@ function AtlasScene({
     <>
       <color attach="background" args={["#01040a"]} />
       <fog attach="fog" args={["#01040a", 15, 39]} />
+      <ViewportSync compact={compact} />
       <ambientLight intensity={0.14} />
       <directionalLight position={[4, 3, 2]} intensity={0.28} color="#a9ccf4" />
       <StarField compact={compact} reducedMotion={reducedMotion} />
@@ -1602,12 +1756,8 @@ function AtlasScene({
             : current && visibility > 0.5
               ? "current"
               : "idle";
-        const showLabel = isEuropeContext
-          ? race.region === EUROPE_REGION
-          : visibility > 0 &&
-            (hovered || selected || current || nearbyRaceIds.has(race.id));
-        const labelSelectable =
-          visibility > 0.2 && (isEuropeContext || hovered || selected);
+        const showLabel = visibility > 0 && (hovered || selected);
+        const labelSelectable = showLabel && visibility > 0.2;
 
         return (
           <RaceNode
@@ -1632,6 +1782,7 @@ function AtlasScene({
         normal={europeEntry.normal}
         position={europeEntry.position}
         hovered={hoveredTargetId === EUROPE_ENTRY_ID}
+        current={currentRace.region === EUROPE_REGION}
         visible={viewMode === "global"}
         onSelect={onSelectTarget}
       />
@@ -1651,6 +1802,8 @@ function AtlasScene({
         navigationVersion={navigationVersion}
         hoveredTargetId={hoveredTargetId}
         selectedRace={selectedRace}
+        autoFocusRace={autoFocusRace}
+        autoFocusVersion={autoFocusVersion}
         europeNormal={europeNormal}
         reducedMotion={reducedMotion}
       />

@@ -15,6 +15,8 @@ import {
 } from "./atlas-globe";
 import {
   getSeason2026,
+  getSeasonRaceSelection2026,
+  type SeasonSelectionPhase,
   type SeasonRace,
 } from "@/lib/atlas/season-2026";
 import styles from "./season-atlas.module.css";
@@ -72,6 +74,24 @@ function useDocumentVisibility() {
   return visible;
 }
 
+function useSeasonClock() {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const refresh = () => setNow(new Date());
+    const timer = window.setInterval(refresh, 60_000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, []);
+
+  return now;
+}
+
 function formatRaceDates(race: SeasonRace) {
   const start = new Date(`${race.startDate}T12:00:00Z`);
   const end = new Date(`${race.endDate}T12:00:00Z`);
@@ -95,24 +115,33 @@ function formatRaceDates(race: SeasonRace) {
     : `${startDay} ${month}–${endDay} ${endMonth}`;
 }
 
-function statusLabel(race: SeasonRace, selected: boolean) {
+function statusLabel(
+  phase: SeasonSelectionPhase,
+  selected: boolean,
+  isAutomaticRace: boolean,
+) {
   if (selected) return "LOCKED FOCUS";
-  if (race.status === "current") return "CURRENT / NEXT RACE";
-  if (race.status === "completed") return "RACE COMPLETE";
-  return "UPCOMING";
+  if (!isAutomaticRace) return "STATION PREVIEW";
+  if (phase === "current") return "CURRENT RACE";
+  if (phase === "next") return "NEXT RACE";
+  return "OFF SEASON / LAST ROUND";
 }
 
 export function SeasonAtlas() {
   const rootRef = useRef<HTMLElement>(null);
-  const races = useMemo(() => getSeason2026(), []);
-  const currentRace = useMemo(
-    () => races.find((race) => race.status === "current") ?? races[0],
-    [races],
+  const initialFocusRequestedRef = useRef(false);
+  const now = useSeasonClock();
+  const races = useMemo(() => getSeason2026(now), [now]);
+  const automaticSelection = useMemo(
+    () => getSeasonRaceSelection2026(now),
+    [now],
   );
+  const currentRace = automaticSelection.race;
   const [hoveredTargetId, setHoveredTargetId] = useState<string | null>(null);
   const [selectedRaceId, setSelectedRaceId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<AtlasViewMode>("global");
   const [navigationVersion, setNavigationVersion] = useState(0);
+  const [autoFocusVersion, setAutoFocusVersion] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const webglState = useWebGLState();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -129,8 +158,7 @@ export function SeasonAtlas() {
   );
   const focusedRace = selectedRace ?? hoveredRace ?? currentRace;
   const showEuropeSummary =
-    hoveredTargetId === EUROPE_ENTRY_ID ||
-    (viewMode === "europe-focus" && !hoveredRace);
+    viewMode === "europe-focus" && !selectedRace && !hoveredRace;
   const scrollStage: AtlasScrollStage =
     scrollProgress > 0.72 ? "season-data-reserved" : "global-core";
 
@@ -138,17 +166,22 @@ export function SeasonAtlas() {
     setHoveredTargetId(targetId);
   }, []);
 
-  const handleSelectTarget = useCallback((targetId: string) => {
-    setHoveredTargetId(null);
-    setNavigationVersion((version) => version + 1);
-    if (targetId === EUROPE_ENTRY_ID) {
-      setSelectedRaceId(null);
-      setViewMode("europe-focus");
-      return;
-    }
-    setSelectedRaceId(targetId);
-    setViewMode("station-focus");
-  }, []);
+  const handleSelectTarget = useCallback(
+    (targetId: string) => {
+      setHoveredTargetId(null);
+      setNavigationVersion((version) => version + 1);
+      if (targetId === EUROPE_ENTRY_ID) {
+        setSelectedRaceId(
+          currentRace.region === "EUROPE" ? currentRace.id : null,
+        );
+        setViewMode("europe-focus");
+        return;
+      }
+      setSelectedRaceId(targetId);
+      setViewMode("station-focus");
+    },
+    [currentRace.id, currentRace.region],
+  );
 
   const handleBackToGlobe = useCallback(() => {
     setHoveredTargetId(null);
@@ -156,6 +189,26 @@ export function SeasonAtlas() {
     setViewMode("global");
     setNavigationVersion((version) => version + 1);
   }, []);
+
+  const handleReturnToCurrentRace = useCallback(() => {
+    setHoveredTargetId(null);
+    setSelectedRaceId(null);
+    setViewMode("global");
+    setNavigationVersion((version) => version + 1);
+    setAutoFocusVersion((version) => version + 1);
+  }, []);
+
+  const handleSceneReady = useCallback(() => {
+    if (initialFocusRequestedRef.current) return;
+    initialFocusRequestedRef.current = true;
+    setAutoFocusVersion((version) => version + 1);
+  }, []);
+
+  useEffect(() => {
+    if (viewMode === "europe-focus" && currentRace.region === "EUROPE") {
+      setSelectedRaceId(currentRace.id);
+    }
+  }, [currentRace.id, currentRace.region, viewMode]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -201,9 +254,11 @@ export function SeasonAtlas() {
       data-atlas-mode={viewMode}
       data-atlas-hover-target={hoveredTargetId ?? ""}
       data-atlas-selected-station={selectedRaceId ?? ""}
+      data-atlas-active-race={currentRace.id}
+      data-atlas-selection-phase={automaticSelection.phase}
     >
       <section className={styles.stage} aria-label="2026 Formula 1 season atlas">
-        <div className={styles.canvasLayer} aria-hidden="true">
+        <div className={styles.canvasLayer}>
           {webglState === "ready" ? (
             <AtlasGlobe
               races={races}
@@ -211,6 +266,8 @@ export function SeasonAtlas() {
               hoveredRace={hoveredRace}
               selectedRace={selectedRace}
               currentRace={currentRace}
+              autoFocusRace={currentRace}
+              autoFocusVersion={autoFocusVersion}
               viewMode={viewMode}
               navigationVersion={navigationVersion}
               reducedMotion={reducedMotion}
@@ -218,6 +275,7 @@ export function SeasonAtlas() {
               active={documentVisible}
               onHoverTarget={handleHoverTarget}
               onSelectTarget={handleSelectTarget}
+              onSceneReady={handleSceneReady}
             />
           ) : (
             <div className={styles.loadingState}>
@@ -253,6 +311,15 @@ export function SeasonAtlas() {
           </button>
         ) : null}
 
+        <button
+          type="button"
+          className={styles.returnToCurrent}
+          onClick={handleReturnToCurrentRace}
+          data-atlas-action="return-to-current-race"
+        >
+          <span aria-hidden="true">↺</span> RETURN TO CURRENT RACE
+        </button>
+
         <aside className={styles.focusPanel} aria-live="polite">
           {showEuropeSummary ? (
             <>
@@ -281,13 +348,19 @@ export function SeasonAtlas() {
               </dl>
               <div className={styles.focusFooter}>
                 <span>TRUE CIRCUIT COORDINATES</span>
-                <span>{viewMode === "global" ? "SELECT REGION" : "SELECT STATION"}</span>
+                <span>SELECT STATION</span>
               </div>
             </>
           ) : (
             <>
               <div className={styles.focusKicker}>
-                <span>{statusLabel(focusedRace, Boolean(selectedRace))}</span>
+                <span>
+                  {statusLabel(
+                    automaticSelection.phase,
+                    Boolean(selectedRace),
+                    focusedRace.id === currentRace.id,
+                  )}
+                </span>
                 <span>{focusedRace.region.replace("_", " ")}</span>
               </div>
               <div className={styles.focusRound}>
@@ -320,7 +393,7 @@ export function SeasonAtlas() {
                 <span>
                   {focusedRace.isSprint ? "SPRINT WEEKEND" : "GRAND PRIX WEEKEND"}
                 </span>
-                <span>{selectedRace ? "STATION LOCKED" : "DRAG · HOVER · SELECT"}</span>
+                <span>{selectedRace ? "STATION LOCKED" : "AUTO RACE FOCUS"}</span>
               </div>
             </>
           )}

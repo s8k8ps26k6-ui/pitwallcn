@@ -8,6 +8,7 @@
   background: #01040a;
   color: var(--atlas-cold);
   isolation: isolate;
+  overflow-x: clip;
 }
 
 .stage {
@@ -151,6 +152,36 @@
   color: #f0f5f9;
   outline: none;
   text-shadow: 0 0 14px rgba(126, 181, 226, 0.42);
+}
+
+.returnToCurrent {
+  position: absolute;
+  z-index: 12;
+  right: clamp(28px, 5vw, 82px);
+  top: clamp(28px, 5.2vh, 62px);
+  appearance: none;
+  padding: 8px 0;
+  border: 0;
+  color: rgba(184, 208, 226, 0.76);
+  font: 500 8px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: transparent;
+  cursor: pointer;
+}
+
+.returnToCurrent span {
+  margin-right: 6px;
+  color: var(--atlas-gold);
+  font-size: 11px;
+}
+
+.returnToCurrent:hover,
+.returnToCurrent:focus-visible {
+  color: #edf4f9;
+  outline: none;
+  text-shadow: 0 0 12px rgba(120, 180, 226, 0.38);
 }
 
 .focusPanel {
@@ -453,6 +484,10 @@
 }
 
 .regionLabelAnchor {
+  --atlas-region-x: 62px;
+  --atlas-region-y: -43px;
+  --atlas-region-line-length: 70px;
+  --atlas-region-line-angle: -0.55rad;
   position: relative;
   width: 0;
   height: 0;
@@ -463,10 +498,10 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 70px;
+  width: var(--atlas-region-line-length);
   height: 1px;
   background: linear-gradient(90deg, rgba(222, 198, 139, 0.72), rgba(131, 169, 198, 0.12));
-  transform: rotate(-0.55rad);
+  transform: rotate(var(--atlas-region-line-angle));
   transform-origin: 0 50%;
 }
 
@@ -484,8 +519,8 @@
 
 .regionLabel {
   position: absolute;
-  left: 62px;
-  top: -43px;
+  left: var(--atlas-region-x);
+  top: var(--atlas-region-y);
   appearance: none;
   min-width: max-content;
   padding: 5px 0 5px 12px;
@@ -498,6 +533,10 @@
   white-space: nowrap;
   background: transparent;
   cursor: pointer;
+}
+
+.regionLabelLeft .regionLabel {
+  transform: translateX(-100%);
 }
 
 .regionLabel:hover,
@@ -590,7 +629,7 @@
 
 @media (max-width: 720px) {
   .root {
-    min-height: 112svh;
+    min-height: 112dvh;
   }
 
   .identity {
@@ -613,6 +652,15 @@
     font-size: 8px;
   }
 
+  .returnToCurrent {
+    top: 22px;
+    right: 20px;
+    max-width: calc(100vw - 238px);
+    overflow: hidden;
+    font-size: 7px;
+    text-overflow: ellipsis;
+  }
+
   .focusPanel {
     right: 20px;
     bottom: 74px;
@@ -623,8 +671,9 @@
   }
 
   .focusPanel h2 {
-    max-width: 250px;
+    max-width: 100%;
     font-size: 18px;
+    overflow-wrap: anywhere;
   }
 
   .focusMeta,
@@ -659,6 +708,181 @@
 
   .reservedStage {
     right: 20px;
+  }
+}
+
+@supports (height: 100dvh) {
+  .stage {
+    height: 100dvh;
+  }
+}
+
+@media (max-width: 720px) and (orientation: portrait) {
+  .identity {
+    top: calc(env(safe-area-inset-top) + 18px);
+    left: calc(env(safe-area-inset-left) + 18px);
+  }
+
+  .returnToCurrent {
+    top: calc(env(safe-area-inset-top) + 18px);
+    right: calc(env(safe-area-inset-right) + 18px);
+  }
+
+  .backToGlobe {
+    top: calc(env(safe-area-inset-top) + 104px);
+    left: calc(env(safe-area-inset-left) + 18px);
+  }
+
+  .focusPanel {
+    right: calc(env(safe-area-inset-right) + 18px);
+    bottom: calc(env(safe-area-inset-bottom) + 56px);
+    left: calc(env(safe-area-inset-left) + 18px);
+    max-height: min(31dvh, 252px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .focusKicker,
+  .focusRound,
+  .focusFooter {
+    gap: 10px;
+  }
+
+  .focusKicker span,
+  .focusFooter span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .focusPanel dd {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 600px) and (orientation: landscape) {
+  .root {
+    min-height: 100dvh;
+  }
+
+  .canvasLayer {
+    right: auto;
+    width: 62%;
+  }
+
+  .vignette {
+    background:
+      linear-gradient(90deg, rgba(1, 4, 10, 0.22), transparent 42%, rgba(1, 4, 10, 0.86) 64%, #01040a 100%),
+      radial-gradient(circle at 29% 48%, transparent 25%, rgba(1, 4, 10, 0.36) 64%, rgba(1, 4, 10, 0.8) 100%);
+  }
+
+  .identity {
+    top: calc(env(safe-area-inset-top) + 12px);
+    left: calc(env(safe-area-inset-left) + 16px);
+    width: 176px;
+  }
+
+  .identityRule {
+    width: 32px;
+    margin-bottom: 8px;
+  }
+
+  .identity p {
+    font-size: 9px;
+  }
+
+  .identity h1 {
+    margin-top: 5px;
+    font-size: 7px;
+  }
+
+  .identity > span:last-child {
+    display: none;
+  }
+
+  .returnToCurrent {
+    top: calc(env(safe-area-inset-top) + 12px);
+    right: calc(env(safe-area-inset-right) + 16px);
+    max-width: 34vw;
+    overflow: hidden;
+    font-size: 7px;
+    text-overflow: ellipsis;
+  }
+
+  .backToGlobe {
+    top: calc(env(safe-area-inset-top) + 64px);
+    left: calc(env(safe-area-inset-left) + 16px);
+    font-size: 7px;
+  }
+
+  .focusPanel {
+    top: calc(env(safe-area-inset-top) + 54px);
+    right: calc(env(safe-area-inset-right) + 16px);
+    bottom: calc(env(safe-area-inset-bottom) + 14px);
+    left: 64%;
+    width: auto;
+    max-height: none;
+    min-width: 0;
+    padding: 4px 0 4px 15px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .focusKicker,
+  .focusRound,
+  .focusFooter {
+    gap: 7px;
+  }
+
+  .focusKicker,
+  .focusRound,
+  .focusCircuit,
+  .focusFooter,
+  .focusMeta {
+    font-size: 6px;
+  }
+
+  .focusRound {
+    margin-top: 8px;
+  }
+
+  .focusRound strong {
+    font-size: 13px;
+  }
+
+  .focusPanel h2 {
+    max-width: 100%;
+    margin-top: 6px;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  .focusCircuit {
+    margin-top: 5px;
+    overflow-wrap: anywhere;
+  }
+
+  .focusRule {
+    margin-top: 9px;
+  }
+
+  .focusMeta {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    margin-top: 8px;
+  }
+
+  .focusMeta dd,
+  .focusFooter span {
+    overflow-wrap: anywhere;
+  }
+
+  .scrollPrompt,
+  .reservedStage {
+    display: none;
+  }
+
+  .frameLines {
+    opacity: 0.18;
   }
 }
 
