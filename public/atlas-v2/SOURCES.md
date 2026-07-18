@@ -1,5 +1,14 @@
 # Atlas V2 image sources
 
+## 2026-07-19 texture tiers
+
+- `earth-day-8192.png` is the desktop day/albedo tier: NASA Visible Earth,
+  Blue Marble land/ocean/ice composite, 8192x4096:
+  https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png
+- `earth-day.png` remains the 2048x1024 mobile tier. Night-light and cloud
+  maps remain data/opacity inputs in linear color space; only day/albedo is
+  decoded as sRGB by the globe shader.
+
 The globe uses real, equirectangular Earth observation imagery. The uploaded
 concept artwork is not used as geographic source material.
 

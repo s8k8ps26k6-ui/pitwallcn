@@ -23,9 +23,11 @@ import {
 import {
   chooseAdaptiveLabelOffset,
   isProjectedPointVisible,
+  isLabelOffsetWithinSafeViewport,
   isSurfacePointVisible,
   type AtlasLabelOffset,
 } from "@/lib/atlas/visibility";
+import { getSolarDirection } from "@/lib/atlas/solar";
 import type { SeasonRace } from "@/lib/atlas/season-2026";
 import { EuropePlate } from "./europe-plate";
 import styles from "./season-atlas.module.css";
@@ -77,6 +79,62 @@ const CAMERA_NEAR_DISTANCE = 4.35;
 const CAMERA_FAR_DISTANCE = 9.2;
 const EUROPE_REGION = "EUROPE";
 
+function getSafeViewportInsets(
+  size: { width: number; height: number },
+  compact: boolean,
+) {
+  if (!compact) return { top: 14, right: 14, bottom: 14, left: 14 };
+
+  return {
+    top: Math.min(42, size.height * 0.08),
+    right: Math.min(16, size.width * 0.04),
+    bottom: Math.min(144, size.height * 0.24),
+    left: Math.min(16, size.width * 0.04),
+  };
+}
+
+function getProjectedSafePadding(
+  size: { width: number; height: number },
+  compact: boolean,
+) {
+  const insets = getSafeViewportInsets(size, compact);
+  return {
+    top: (insets.top / Math.max(size.height, 1)) * 2,
+    right: (insets.right / Math.max(size.width, 1)) * 2,
+    bottom: (insets.bottom / Math.max(size.height, 1)) * 2,
+    left: (insets.left / Math.max(size.width, 1)) * 2,
+  };
+}
+
+function getScaleForCssPixels({
+  camera,
+  size,
+  position,
+  targetPixels,
+  baseDiameter,
+  min = 0.42,
+  max = 1.6,
+}: {
+  camera: THREE.Camera;
+  size: { width: number; height: number };
+  position: THREE.Vector3;
+  targetPixels: number;
+  baseDiameter: number;
+  min?: number;
+  max?: number;
+}) {
+  if (!(camera instanceof THREE.PerspectiveCamera)) return 1;
+  const distance = Math.max(camera.position.distanceTo(position), 0.01);
+  const worldPerPixel =
+    (2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov) * 0.5)) /
+    Math.max(size.height, 1);
+  return THREE.MathUtils.clamp(
+    (targetPixels * worldPerPixel) / baseDiameter,
+    min,
+    max,
+  );
+}
+
 const EUROPE_LABEL_OFFSETS: Record<string, LabelOffset> = {
   monaco: [-118, 72],
   "barcelona-catalunya": [-158, 108],
@@ -119,6 +177,8 @@ const EARTH_VERTEX_SHADER = /* glsl */ `
 `;
 
 const EARTH_FRAGMENT_SHADER = /* glsl */ `
+  #include <colorspace_pars_fragment>
+
   uniform sampler2D uDayMap;
   uniform sampler2D uNightMap;
   uniform vec3 uLightDirection;
@@ -139,24 +199,27 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
     float daylight = smoothstep(-0.24, 0.42, sun);
     float nightSide = 1.0 - smoothstep(-0.20, 0.20, sun);
 
-    vec3 daySample = texture2D(uDayMap, vUv).rgb;
+    vec3 daySample = sRGBTransferEOTF(texture2D(uDayMap, vUv).rgb);
     vec3 nightSample = texture2D(uNightMap, vUv).rgb;
     float nightLuma = atlasLuminance(nightSample);
     float cityMask = smoothstep(0.13, 0.62, nightLuma);
 
-    vec3 dayColor = pow(daySample, vec3(1.08));
-    dayColor *= vec3(0.40, 0.56, 0.76);
-    dayColor *= 0.18 + max(sun, 0.0) * 0.78;
+    float terrainLuma = atlasLuminance(daySample);
+    float terrainRoughness = smoothstep(0.06, 0.76, terrainLuma);
+    vec3 neutralAlbedo = mix(daySample, vec3(terrainLuma), 0.26);
+    vec3 dayColor = neutralAlbedo * vec3(0.31, 0.42, 0.60);
+    dayColor *= 0.30 + max(sun, 0.0) * 0.68;
+    dayColor *= mix(0.92, 1.025, terrainRoughness);
 
     vec3 nightBase = daySample * vec3(0.075, 0.105, 0.155);
     nightBase += vec3(0.012, 0.024, 0.044) * (0.48 + 0.52 * max(normal.y, 0.0));
     vec3 cityColor = mix(
-      vec3(0.82, 0.64, 0.36),
-      vec3(1.45, 1.08, 0.62),
+      vec3(0.54, 0.46, 0.31),
+      vec3(1.08, 0.82, 0.50),
       smoothstep(0.25, 0.90, nightLuma)
     );
     vec3 color = mix(nightBase, dayColor, daylight);
-    color += cityColor * cityMask * nightSide * 0.72;
+    color += cityColor * cityMask * nightSide * 0.58;
 
     float focusDot = max(dot(normalize(vObjectPosition), normalize(uFocusPoint)), 0.0);
     float localFocus = pow(focusDot, 96.0) * uFocusStrength;
@@ -167,6 +230,7 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
     color += vec3(0.04, 0.07, 0.12) * polarShade * 0.25;
 
     gl_FragColor = vec4(color, 1.0);
+    #include <colorspace_fragment>
   }
 `;
 
@@ -208,9 +272,9 @@ const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
   varying vec3 vNormalView;
 
   void main() {
-    float fresnel = pow(1.0 - abs(vNormalView.z), 4.1);
-    vec3 color = mix(vec3(0.05, 0.20, 0.48), vec3(0.24, 0.62, 1.0), fresnel);
-    gl_FragColor = vec4(color, fresnel * 0.27);
+    float fresnel = pow(1.0 - abs(vNormalView.z), 5.6);
+    vec3 color = mix(vec3(0.025, 0.09, 0.20), vec3(0.11, 0.32, 0.62), fresnel);
+    gl_FragColor = vec4(color, fresnel * 0.13);
   }
 `;
 
@@ -340,39 +404,59 @@ function EarthSystem({
   focusNormal,
   focusLevel,
   reducedMotion,
+  compact,
 }: {
   focusNormal: THREE.Vector3 | null;
   focusLevel: number;
   reducedMotion: boolean;
+  compact: boolean;
 }) {
   const cloudRef = useRef<THREE.Mesh>(null);
   const earthMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const [dayMap, nightMap, cloudMap] = useTexture([
-    "/atlas-v2/earth-day.png",
+    compact ? "/atlas-v2/earth-day.png" : "/atlas-v2/earth-day-8192.png",
     "/atlas-v2/earth-night.jpg",
     "/atlas-v2/earth-clouds.jpg",
   ]);
   const { gl } = useThree();
   const focusTarget = useMemo(() => new THREE.Vector3(1, 0, 0), []);
+  const sunDirection = useMemo(() => getSolarDirection(), []);
 
   useEffect(() => {
     const maxAnisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
-    for (const texture of [dayMap, nightMap, cloudMap]) {
-      texture.colorSpace = THREE.SRGBColorSpace;
+    dayMap.colorSpace = THREE.SRGBColorSpace;
+    for (const texture of [nightMap, cloudMap]) {
+      texture.colorSpace = THREE.NoColorSpace;
       texture.anisotropy = maxAnisotropy;
       texture.needsUpdate = true;
     }
+    dayMap.anisotropy = maxAnisotropy;
+    dayMap.needsUpdate = true;
   }, [cloudMap, dayMap, gl, nightMap]);
+
+  useEffect(() => {
+    const updateSunDirection = () => sunDirection.copy(getSolarDirection());
+    const interval = window.setInterval(updateSunDirection, 45_000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") updateSunDirection();
+    };
+    updateSunDirection();
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [sunDirection]);
 
   const earthUniforms = useMemo(
     () => ({
       uDayMap: { value: dayMap },
       uNightMap: { value: nightMap },
-      uLightDirection: { value: new THREE.Vector3(2.4, 1.15, -1.4).normalize() },
+      uLightDirection: { value: sunDirection },
       uFocusPoint: { value: new THREE.Vector3(1, 0, 0) },
       uFocusStrength: { value: 0 },
     }),
-    [dayMap, nightMap],
+    [dayMap, nightMap, sunDirection],
   );
 
   const cloudUniforms = useMemo(
@@ -407,7 +491,7 @@ function EarthSystem({
   return (
     <group>
       <mesh>
-        <sphereGeometry args={[EARTH_RADIUS, 128, 96]} />
+        <sphereGeometry args={[EARTH_RADIUS, compact ? 96 : 192, compact ? 72 : 144]} />
         <shaderMaterial
           ref={earthMaterialRef}
           uniforms={earthUniforms}
@@ -416,7 +500,7 @@ function EarthSystem({
         />
       </mesh>
       <mesh ref={cloudRef} scale={1.0085} renderOrder={2}>
-        <sphereGeometry args={[EARTH_RADIUS, 96, 72]} />
+        <sphereGeometry args={[EARTH_RADIUS, compact ? 64 : 128, compact ? 48 : 96]} />
         <shaderMaterial
           uniforms={cloudUniforms}
           vertexShader={CLOUD_VERTEX_SHADER}
@@ -426,8 +510,8 @@ function EarthSystem({
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-      <mesh scale={1.036} renderOrder={1}>
-        <sphereGeometry args={[EARTH_RADIUS, 96, 72]} />
+      <mesh scale={1.018} renderOrder={1}>
+        <sphereGeometry args={[EARTH_RADIUS, compact ? 64 : 128, compact ? 48 : 96]} />
         <shaderMaterial
           vertexShader={ATMOSPHERE_VERTEX_SHADER}
           fragmentShader={ATMOSPHERE_FRAGMENT_SHADER}
@@ -446,12 +530,14 @@ function RaceLabel({
   show,
   emphasis,
   selectable,
+  compact,
   onSelect,
 }: {
   anchor: StationAnchor;
   show: boolean;
   emphasis: NodeState;
   selectable: boolean;
+  compact: boolean;
   onSelect: (raceId: string) => void;
 }) {
   const labelRef = useRef<HTMLDivElement>(null);
@@ -459,6 +545,7 @@ function RaceLabel({
   const { camera, size } = useThree();
   const cameraDirection = useMemo(() => new THREE.Vector3(), []);
   const projected = useMemo(() => new THREE.Vector3(), []);
+  const placementRef = useRef<AtlasLabelOffset | null>(null);
   const [offsetX, offsetY] = anchor.labelOffset;
   const customStyle = {
     "--atlas-label-x": `${offsetX}px`,
@@ -469,6 +556,7 @@ function RaceLabel({
 
   useEffect(() => {
     opacityRef.current = 0;
+    placementRef.current = null;
   }, [size.height, size.width]);
 
   useFrame((_, delta) => {
@@ -480,15 +568,34 @@ function RaceLabel({
       EARTH_RADIUS,
     );
     projected.copy(anchor.position).project(camera);
-    const placement =
-      frontFacing && isProjectedPointVisible(projected)
+    const safeInsets = getSafeViewportInsets(size, compact);
+    const calculatedPlacement =
+      frontFacing &&
+      isProjectedPointVisible(projected, getProjectedSafePadding(size, compact))
         ? chooseAdaptiveLabelOffset({
             point: projected,
             viewportWidth: size.width,
             viewportHeight: size.height,
             preferred: anchor.labelOffset,
+            safeInsets,
           })
         : null;
+    const retainedPlacement = placementRef.current;
+    const placement =
+      emphasis === "selected" &&
+      retainedPlacement &&
+      isLabelOffsetWithinSafeViewport({
+        point: projected,
+        viewportWidth: size.width,
+        viewportHeight: size.height,
+        offset: retainedPlacement,
+        labelWidth: 146,
+        labelHeight: 26,
+        margin: 14,
+        safeInsets,
+      })
+        ? retainedPlacement
+        : calculatedPlacement;
     const emphasisOpacity =
       emphasis === "selected"
         ? 1
@@ -512,6 +619,7 @@ function RaceLabel({
     labelRef.current.dataset.atlasVisible =
       show && placement ? "true" : "false";
     if (placement) {
+      placementRef.current = placement;
       const [nextX, nextY] = placement;
       labelRef.current.style.setProperty("--atlas-label-x", `${nextX}px`);
       labelRef.current.style.setProperty("--atlas-label-y", `${nextY}px`);
@@ -572,6 +680,7 @@ function RaceNode({
   visibility,
   showLabel,
   labelSelectable,
+  compact,
   revealDelay = 0,
   revealVersion,
   reducedMotion,
@@ -582,6 +691,7 @@ function RaceNode({
   visibility: number;
   showLabel: boolean;
   labelSelectable: boolean;
+  compact: boolean;
   revealDelay?: number;
   revealVersion: number;
   reducedMotion: boolean;
@@ -628,7 +738,10 @@ function RaceNode({
       0.006,
     );
     projected.copy(anchor.position).project(camera);
-    const screenVisible = isProjectedPointVisible(projected);
+    const screenVisible = isProjectedPointVisible(
+      projected,
+      getProjectedSafePadding(size, compact),
+    );
     const revealReady = revealElapsedRef.current >= revealDelay;
     const visibilityTarget =
       revealReady && surfaceVisible && screenVisible ? visibility : 0;
@@ -665,10 +778,33 @@ function RaceNode({
           ) *
             (state === "current" ? 0.018 : 0.025);
     const visibilityValue = visibilityRef.current;
+    const targetCorePixels = compact
+      ? state === "selected"
+        ? 15
+        : state === "current"
+          ? 14
+          : state === "hovered"
+            ? 13
+            : 8.5
+      : state === "selected"
+        ? 14
+        : state === "current"
+          ? 12
+          : state === "hovered"
+            ? 12
+            : 7;
+    const pixelScale = getScaleForCssPixels({
+      camera,
+      size,
+      position: anchor.position,
+      targetPixels: targetCorePixels,
+      baseDiameter: 0.042,
+      max: compact ? 1.42 : 1.58,
+    });
 
     if (groupRef.current) {
       groupRef.current.visible = visibilityValue > 0.004;
-      groupRef.current.scale.setScalar((0.96 + energy * 0.1) * breath);
+      groupRef.current.scale.setScalar(pixelScale * breath);
     }
     if (haloMaterialRef.current) {
       haloMaterialRef.current.opacity =
@@ -747,13 +883,16 @@ function RaceNode({
           />
         </mesh>
       </group>
-      <RaceLabel
-        anchor={anchor}
-        show={showLabel}
-        emphasis={state}
-        selectable={labelSelectable}
-        onSelect={onSelect}
-      />
+      {!compact ? (
+        <RaceLabel
+          anchor={anchor}
+          show={showLabel}
+          emphasis={state}
+          selectable={labelSelectable}
+          compact={compact}
+          onSelect={onSelect}
+        />
+      ) : null}
     </>
   );
 }
@@ -764,6 +903,7 @@ function EuropeEntryNode({
   hovered,
   current,
   visible,
+  compact,
   onSelect,
 }: {
   normal: THREE.Vector3;
@@ -771,6 +911,7 @@ function EuropeEntryNode({
   hovered: boolean;
   current: boolean;
   visible: boolean;
+  compact: boolean;
   onSelect: (targetId: string) => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -799,13 +940,15 @@ function EuropeEntryNode({
     );
     projected.copy(position).project(camera);
     const placement =
-      frontFacing && isProjectedPointVisible(projected)
+      frontFacing &&
+      isProjectedPointVisible(projected, getProjectedSafePadding(size, compact))
         ? chooseAdaptiveLabelOffset({
             point: projected,
             viewportWidth: size.width,
             viewportHeight: size.height,
             preferred: [70, -42],
             labelWidth: 194,
+            safeInsets: getSafeViewportInsets(size, compact),
           })
         : null;
     const target = visible && placement ? 1 : 0;
@@ -931,10 +1074,12 @@ function FocusParticles({
   focusPosition,
   level,
   reducedMotion,
+  compact,
 }: {
   focusPosition: THREE.Vector3 | null;
   level: "current" | "hovered" | "selected" | null;
   reducedMotion: boolean;
+  compact: boolean;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const materialRef = useRef<THREE.PointsMaterial>(null);
@@ -942,6 +1087,7 @@ function FocusParticles({
   const strengthRef = useRef(0);
   const targetPosition = useMemo(() => new THREE.Vector3(), []);
   const targetQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const { camera, size } = useThree();
   const count = 40;
   const { geometry, radii, angles, heights, speeds } = useMemo(() => {
     const random = seededRandom(22610);
@@ -971,8 +1117,21 @@ function FocusParticles({
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame(({ clock }, delta) => {
-    const targetStrength =
-      level === "selected" ? 1 : level === "hovered" ? 0.62 : level === "current" ? 0.42 : 0;
+    const targetStrength = compact
+      ? level === "selected"
+        ? 0.52
+        : level === "hovered"
+          ? 0.34
+          : level === "current"
+            ? 0.26
+            : 0
+      : level === "selected"
+        ? 1
+        : level === "hovered"
+          ? 0.62
+          : level === "current"
+            ? 0.42
+            : 0;
     strengthRef.current = THREE.MathUtils.damp(
       strengthRef.current,
       targetStrength,
@@ -990,12 +1149,30 @@ function FocusParticles({
       groupRef.current.position.lerp(targetPosition, 1 - Math.exp(-delta * 8));
       groupRef.current.quaternion.slerp(targetQuaternion, 1 - Math.exp(-delta * 8));
       groupRef.current.visible = strength > 0.008;
+      groupRef.current.scale.setScalar(
+        getScaleForCssPixels({
+          camera,
+          size,
+          position: targetPosition,
+          targetPixels:
+            compact && level === "selected"
+              ? 28
+              : compact
+                ? 24
+                : level === "selected"
+                  ? 36
+                  : 28,
+          baseDiameter: 0.086,
+          min: 0.35,
+          max: compact ? 1.28 : 1.5,
+        }),
+      );
     }
     if (materialRef.current) {
-      materialRef.current.opacity = strength * 0.2;
+      materialRef.current.opacity = strength * (compact ? 0.1 : 0.2);
     }
     if (ringMaterialRef.current) {
-      ringMaterialRef.current.opacity = strength * 0.1;
+      ringMaterialRef.current.opacity = strength * (compact ? 0.055 : 0.1);
     }
 
     const attribute = geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -1044,19 +1221,26 @@ function FocusParticles({
 function RaycastMagnet({
   targets,
   resetKey,
+  compact,
   onHoverTarget,
   onSelectTarget,
 }: {
   targets: readonly InteractiveTarget[];
   resetKey: string;
+  compact: boolean;
   onHoverTarget: (targetId: string | null) => void;
   onSelectTarget: (targetId: string) => void;
 }) {
   const hitTargetRef = useRef<THREE.Mesh>(null);
-  const { camera, gl, raycaster } = useThree();
+  const { camera, gl, raycaster, size } = useThree();
   const pointerNdc = useRef(new THREE.Vector2(99, 99));
   const pointerInside = useRef(false);
-  const pointerDown = useRef<{ x: number; y: number; at: number } | null>(null);
+  const pointerDown = useRef<{
+    x: number;
+    y: number;
+    at: number;
+    pointerType: string;
+  } | null>(null);
   const draggingRef = useRef(false);
   const stableIdRef = useRef<string | null>(null);
   const stableSinceRef = useRef(0);
@@ -1114,7 +1298,9 @@ function RaycastMagnet({
         continue;
       }
       projected.copy(target.position).project(camera);
-      if (!isProjectedPointVisible(projected)) continue;
+      if (!isProjectedPointVisible(projected, getProjectedSafePadding(size, compact))) {
+        continue;
+      }
       const distance = angularDistanceDegrees(surface, target.normal);
       if (!closest || distance < closest.distance) {
         closest = { id: target.id, distance, surface };
@@ -1122,7 +1308,7 @@ function RaycastMagnet({
     }
 
     return closest;
-  }, [camera, projected, raycaster, targets]);
+  }, [camera, compact, projected, raycaster, size, targets]);
 
   useEffect(() => {
     stableIdRef.current = null;
@@ -1147,7 +1333,12 @@ function RaycastMagnet({
     const handleMove = (event: PointerEvent) => {
       updatePointer(event);
       const start = pointerDown.current;
-      if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) {
+      const dragThreshold = event.pointerType === "touch" ? 12 : 6;
+      if (
+        start &&
+        Math.hypot(event.clientX - start.x, event.clientY - start.y) >
+          dragThreshold
+      ) {
         draggingRef.current = true;
       }
     };
@@ -1159,7 +1350,12 @@ function RaycastMagnet({
     };
     const handleDown = (event: PointerEvent) => {
       updatePointer(event);
-      pointerDown.current = { x: event.clientX, y: event.clientY, at: performance.now() };
+      pointerDown.current = {
+        x: event.clientX,
+        y: event.clientY,
+        at: performance.now(),
+        pointerType: event.pointerType,
+      };
       draggingRef.current = false;
       canvas.style.cursor = "grabbing";
     };
@@ -1174,11 +1370,12 @@ function RaycastMagnet({
         ? Math.hypot(event.clientX - start.x, event.clientY - start.y)
         : Number.POSITIVE_INFINITY;
       const elapsed = start ? performance.now() - start.at : Number.POSITIVE_INFINITY;
+      const tapThreshold = start?.pointerType === "touch" ? 10 : 7;
       const tappedTarget =
         closest && closest.distance <= acquireRadius() * 1.08
           ? closest.id
           : stableIdRef.current;
-      if (!wasDragging && travel < 9 && elapsed < 520 && tappedTarget) {
+      if (!wasDragging && travel < tapThreshold && elapsed < 520 && tappedTarget) {
         onSelectTarget(tappedTarget);
       }
       canvas.style.cursor = tappedTarget ? "pointer" : "grab";
@@ -1299,6 +1496,7 @@ function AtlasControls({
   autoFocusVersion,
   europeNormal,
   reducedMotion,
+  compact,
 }: {
   viewMode: AtlasViewMode;
   navigationVersion: number;
@@ -1308,6 +1506,7 @@ function AtlasControls({
   autoFocusVersion: number;
   europeNormal: THREE.Vector3;
   reducedMotion: boolean;
+  compact: boolean;
 }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
   const { camera } = useThree();
@@ -1526,8 +1725,8 @@ function AtlasControls({
       makeDefault
       enablePan={false}
       enableDamping
-      dampingFactor={0.065}
-      rotateSpeed={0.42}
+      dampingFactor={compact ? 0.09 : 0.065}
+      rotateSpeed={compact ? 0.25 : 0.42}
       zoomSpeed={0.65}
       minDistance={modeRange.min}
       maxDistance={modeRange.max}
@@ -1553,7 +1752,7 @@ function AtlasControls({
 function SubtleBloom({ enabled }: { enabled: boolean }) {
   const { size } = useThree();
   const pass = useMemo(
-    () => new UnrealBloomPass(new THREE.Vector2(1, 1), 0.26, 0.34, 0.92),
+    () => new UnrealBloomPass(new THREE.Vector2(1, 1), 0.18, 0.28, 1.08),
     [],
   );
 
@@ -1728,6 +1927,7 @@ function AtlasScene({
         focusNormal={activeFocusAnchor?.normal ?? null}
         focusLevel={focusLevel === "selected" ? 0.58 : focusLevel ? 0.32 : 0}
         reducedMotion={reducedMotion}
+        compact={compact}
       />
       <EuropePlate active={isEuropeContext} reducedMotion={reducedMotion} />
       {stationAnchors.map((anchor) => {
@@ -1767,6 +1967,7 @@ function AtlasScene({
             visibility={visibility}
             showLabel={showLabel}
             labelSelectable={labelSelectable}
+            compact={compact}
             revealDelay={
               viewMode === "europe-focus" && race.region === EUROPE_REGION
                 ? 0.34 + (race.round % 3) * 0.04
@@ -1784,16 +1985,19 @@ function AtlasScene({
         hovered={hoveredTargetId === EUROPE_ENTRY_ID}
         current={currentRace.region === EUROPE_REGION}
         visible={viewMode === "global"}
+        compact={compact}
         onSelect={onSelectTarget}
       />
       <FocusParticles
         focusPosition={activeFocusAnchor?.position ?? null}
         level={focusLevel}
         reducedMotion={reducedMotion}
+        compact={compact}
       />
       <RaycastMagnet
         targets={interactiveTargets}
         resetKey={`${viewMode}:${navigationVersion}`}
+        compact={compact}
         onHoverTarget={onHoverTarget}
         onSelectTarget={onSelectTarget}
       />
@@ -1806,6 +2010,7 @@ function AtlasScene({
         autoFocusVersion={autoFocusVersion}
         europeNormal={europeNormal}
         reducedMotion={reducedMotion}
+        compact={compact}
       />
       <SubtleBloom enabled={!compact && !reducedMotion} />
     </>
@@ -1831,7 +2036,7 @@ export function AtlasGlobe(props: AtlasGlobeProps) {
         alpha: false,
         powerPreference: "high-performance",
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 0.92,
+        toneMappingExposure: 0.84,
       }}
       onCreated={({ gl }) => {
         gl.outputColorSpace = THREE.SRGBColorSpace;

@@ -6,17 +6,30 @@ export type ProjectedPoint = {
   z: number;
 };
 
+export type ProjectedViewportPadding =
+  | number
+  | {
+      top: number;
+      right: number;
+      bottom: number;
+      left: number;
+    };
+
 export function isProjectedPointVisible(
   point: ProjectedPoint,
-  padding = 0,
+  padding: ProjectedViewportPadding = 0,
 ) {
+  const safePadding =
+    typeof padding === "number"
+      ? { top: padding, right: padding, bottom: padding, left: padding }
+      : padding;
   return (
     point.z >= -1 &&
     point.z <= 1 &&
-    point.x >= -1 + padding &&
-    point.x <= 1 - padding &&
-    point.y >= -1 + padding &&
-    point.y <= 1 - padding
+    point.x >= -1 + safePadding.left &&
+    point.x <= 1 - safePadding.right &&
+    point.y >= -1 + safePadding.bottom &&
+    point.y <= 1 - safePadding.top
   );
 }
 
@@ -37,7 +50,51 @@ type LabelPlacementInput = {
   labelWidth?: number;
   labelHeight?: number;
   margin?: number;
+  safeInsets?: { top: number; right: number; bottom: number; left: number };
+  maxLeaderLength?: number;
 };
+
+function isOffsetWithinSafeViewport({
+  point,
+  viewportWidth,
+  viewportHeight,
+  offset,
+  labelWidth,
+  labelHeight,
+  margin,
+  safeInsets,
+}: Omit<LabelPlacementInput, "preferred" | "maxLeaderLength"> & {
+  offset: AtlasLabelOffset;
+}) {
+  const anchorX = (point.x * 0.5 + 0.5) * viewportWidth;
+  const anchorY = (-point.y * 0.5 + 0.5) * viewportHeight;
+  const [offsetX, offsetY] = offset;
+  const width = labelWidth ?? 146;
+  const height = labelHeight ?? 26;
+  const edgeMargin = margin ?? 14;
+  const viewportInsets = safeInsets ?? { top: 0, right: 0, bottom: 0, left: 0 };
+  const left = offsetX < 0 ? anchorX + offsetX - width : anchorX + offsetX;
+  const right = left + width;
+  const top = anchorY + offsetY - height / 2;
+  const bottom = top + height;
+  return (
+    left >= edgeMargin + viewportInsets.left &&
+    right <= viewportWidth - edgeMargin - viewportInsets.right &&
+    top >= edgeMargin + viewportInsets.top &&
+    bottom <= viewportHeight - edgeMargin - viewportInsets.bottom
+  );
+}
+
+export function isLabelOffsetWithinSafeViewport(
+  input: Omit<LabelPlacementInput, "preferred" | "maxLeaderLength"> & {
+    offset: AtlasLabelOffset;
+  },
+) {
+  return isOffsetWithinSafeViewport({
+    ...input,
+    safeInsets: input.safeInsets ?? { top: 0, right: 0, bottom: 0, left: 0 },
+  });
+}
 
 function uniqueOffsets(offsets: readonly AtlasLabelOffset[]) {
   return offsets.filter(
@@ -56,11 +113,11 @@ export function chooseAdaptiveLabelOffset({
   labelWidth = 146,
   labelHeight = 26,
   margin = 14,
+  safeInsets = { top: 0, right: 0, bottom: 0, left: 0 },
+  maxLeaderLength = 132,
 }: LabelPlacementInput): AtlasLabelOffset | null {
   if (!isProjectedPointVisible(point)) return null;
 
-  const anchorX = (point.x * 0.5 + 0.5) * viewportWidth;
-  const anchorY = (-point.y * 0.5 + 0.5) * viewportHeight;
   const horizontal = preferred[0] === 0 ? 1 : Math.sign(preferred[0]);
   const vertical = preferred[1] === 0 ? -1 : Math.sign(preferred[1]);
   const candidates = uniqueOffsets([
@@ -74,15 +131,19 @@ export function chooseAdaptiveLabelOffset({
   ]);
 
   for (const [offsetX, offsetY] of candidates) {
-    const left = offsetX < 0 ? anchorX + offsetX - labelWidth : anchorX + offsetX;
-    const right = left + labelWidth;
-    const top = anchorY + offsetY - labelHeight / 2;
-    const bottom = top + labelHeight;
+    const offset = [offsetX, offsetY] as AtlasLabelOffset;
     if (
-      left >= margin &&
-      right <= viewportWidth - margin &&
-      top >= margin &&
-      bottom <= viewportHeight - margin
+      Math.hypot(offsetX, offsetY) <= maxLeaderLength &&
+      isOffsetWithinSafeViewport({
+        point,
+        viewportWidth,
+        viewportHeight,
+        offset,
+        labelWidth,
+        labelHeight,
+        margin,
+        safeInsets,
+      })
     ) {
       return [offsetX, offsetY];
     }
