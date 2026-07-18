@@ -8,7 +8,11 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { AtlasGlobe } from "./atlas-globe";
+import {
+  AtlasGlobe,
+  EUROPE_ENTRY_ID,
+  type AtlasViewMode,
+} from "./atlas-globe";
 import {
   getSeason2026,
   type SeasonRace,
@@ -105,8 +109,10 @@ export function SeasonAtlas() {
     () => races.find((race) => race.status === "current") ?? races[0],
     [races],
   );
-  const [hoveredRaceId, setHoveredRaceId] = useState<string | null>(null);
+  const [hoveredTargetId, setHoveredTargetId] = useState<string | null>(null);
   const [selectedRaceId, setSelectedRaceId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<AtlasViewMode>("global");
+  const [navigationVersion, setNavigationVersion] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const webglState = useWebGLState();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -114,32 +120,53 @@ export function SeasonAtlas() {
   const documentVisible = useDocumentVisibility();
 
   const hoveredRace = useMemo(
-    () => races.find((race) => race.id === hoveredRaceId) ?? null,
-    [hoveredRaceId, races],
+    () => races.find((race) => race.id === hoveredTargetId) ?? null,
+    [hoveredTargetId, races],
   );
   const selectedRace = useMemo(
     () => races.find((race) => race.id === selectedRaceId) ?? null,
     [races, selectedRaceId],
   );
   const focusedRace = selectedRace ?? hoveredRace ?? currentRace;
+  const showEuropeSummary =
+    hoveredTargetId === EUROPE_ENTRY_ID ||
+    (viewMode === "europe-focus" && !hoveredRace);
   const scrollStage: AtlasScrollStage =
     scrollProgress > 0.72 ? "season-data-reserved" : "global-core";
 
-  const handleHoverRace = useCallback((raceId: string | null) => {
-    setHoveredRaceId(raceId);
+  const handleHoverTarget = useCallback((targetId: string | null) => {
+    setHoveredTargetId(targetId);
   }, []);
 
-  const handleSelectRace = useCallback((raceId: string | null) => {
-    setSelectedRaceId((current) => (current === raceId ? null : raceId));
+  const handleSelectTarget = useCallback((targetId: string) => {
+    setHoveredTargetId(null);
+    setNavigationVersion((version) => version + 1);
+    if (targetId === EUROPE_ENTRY_ID) {
+      setSelectedRaceId(null);
+      setViewMode("europe-focus");
+      return;
+    }
+    setSelectedRaceId(targetId);
+    setViewMode("station-focus");
+  }, []);
+
+  const handleBackToGlobe = useCallback(() => {
+    setHoveredTargetId(null);
+    setSelectedRaceId(null);
+    setViewMode("global");
+    setNavigationVersion((version) => version + 1);
   }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setSelectedRaceId(null);
+      if (event.key === "Escape" && viewMode !== "global") {
+        event.preventDefault();
+        handleBackToGlobe();
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [handleBackToGlobe, viewMode]);
 
   useEffect(() => {
     const syncScroll = () => {
@@ -171,20 +198,26 @@ export function SeasonAtlas() {
       style={rootStyle}
       data-atlas-scroll-stage={scrollStage}
       data-atlas-node-count={races.length}
+      data-atlas-mode={viewMode}
+      data-atlas-hover-target={hoveredTargetId ?? ""}
+      data-atlas-selected-station={selectedRaceId ?? ""}
     >
       <section className={styles.stage} aria-label="2026 Formula 1 season atlas">
         <div className={styles.canvasLayer} aria-hidden="true">
           {webglState === "ready" ? (
             <AtlasGlobe
               races={races}
+              hoveredTargetId={hoveredTargetId}
               hoveredRace={hoveredRace}
               selectedRace={selectedRace}
               currentRace={currentRace}
+              viewMode={viewMode}
+              navigationVersion={navigationVersion}
               reducedMotion={reducedMotion}
               compact={compact}
               active={documentVisible}
-              onHoverRace={handleHoverRace}
-              onSelectRace={handleSelectRace}
+              onHoverTarget={handleHoverTarget}
+              onSelectTarget={handleSelectTarget}
             />
           ) : (
             <div className={styles.loadingState}>
@@ -209,47 +242,88 @@ export function SeasonAtlas() {
           <span>2026 · GLOBAL CORE</span>
         </header>
 
+        {viewMode !== "global" ? (
+          <button
+            type="button"
+            className={styles.backToGlobe}
+            onClick={handleBackToGlobe}
+            data-atlas-action="back-to-globe"
+          >
+            <span aria-hidden="true">←</span> BACK TO GLOBE
+          </button>
+        ) : null}
+
         <aside className={styles.focusPanel} aria-live="polite">
-          <div className={styles.focusKicker}>
-            <span>{statusLabel(focusedRace, Boolean(selectedRace))}</span>
-            <span>{focusedRace.region.replace("_", " ")}</span>
-          </div>
-          <div className={styles.focusRound}>
-            <span>ROUND</span>
-            <strong>{String(focusedRace.round).padStart(2, "0")}</strong>
-          </div>
-          <h2>{focusedRace.name}</h2>
-          <p className={styles.focusCircuit}>{focusedRace.circuitName}</p>
-          <div className={styles.focusRule} aria-hidden="true" />
-          <dl className={styles.focusMeta}>
-            <div>
-              <dt>DATE</dt>
-              <dd>{formatRaceDates(focusedRace)}</dd>
-            </div>
-            <div>
-              <dt>LOCATION</dt>
-              <dd>{focusedRace.city}</dd>
-            </div>
-            <div>
-              <dt>COORD</dt>
-              <dd>
-                {Math.abs(focusedRace.latitude).toFixed(3)}°
-                {focusedRace.latitude >= 0 ? "N" : "S"} /{" "}
-                {Math.abs(focusedRace.longitude).toFixed(3)}°
-                {focusedRace.longitude >= 0 ? "E" : "W"}
-              </dd>
-            </div>
-          </dl>
-          <div className={styles.focusFooter}>
-            <span>{focusedRace.isSprint ? "SPRINT WEEKEND" : "GRAND PRIX WEEKEND"}</span>
-            {selectedRace ? (
-              <button type="button" onClick={() => setSelectedRaceId(null)}>
-                RELEASE FOCUS
-              </button>
-            ) : (
-              <span>DRAG · HOVER · SELECT</span>
-            )}
-          </div>
+          {showEuropeSummary ? (
+            <>
+              <div className={styles.focusKicker}>
+                <span>REGIONAL SEASON</span>
+                <span>EUROPE</span>
+              </div>
+              <div className={styles.focusRound}>
+                <span>ROUNDS</span>
+                <strong>09</strong>
+              </div>
+              <h2>EUROPE SEASON</h2>
+              <p className={styles.focusCircuit}>
+                NINE CIRCUITS · ONE GEOGRAPHIC FOCUS
+              </p>
+              <div className={styles.focusRule} aria-hidden="true" />
+              <dl className={styles.focusMeta}>
+                <div>
+                  <dt>RANGE</dt>
+                  <dd>ROUND 06–14</dd>
+                </div>
+                <div>
+                  <dt>NEW FOR 2026</dt>
+                  <dd>MADRID · MADRING</dd>
+                </div>
+              </dl>
+              <div className={styles.focusFooter}>
+                <span>TRUE CIRCUIT COORDINATES</span>
+                <span>{viewMode === "global" ? "SELECT REGION" : "SELECT STATION"}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.focusKicker}>
+                <span>{statusLabel(focusedRace, Boolean(selectedRace))}</span>
+                <span>{focusedRace.region.replace("_", " ")}</span>
+              </div>
+              <div className={styles.focusRound}>
+                <span>ROUND</span>
+                <strong>{String(focusedRace.round).padStart(2, "0")}</strong>
+              </div>
+              <h2>{focusedRace.name}</h2>
+              <p className={styles.focusCircuit}>{focusedRace.circuitName}</p>
+              <div className={styles.focusRule} aria-hidden="true" />
+              <dl className={styles.focusMeta}>
+                <div>
+                  <dt>DATE</dt>
+                  <dd>{formatRaceDates(focusedRace)}</dd>
+                </div>
+                <div>
+                  <dt>LOCATION</dt>
+                  <dd>{focusedRace.city}</dd>
+                </div>
+                <div>
+                  <dt>COORD</dt>
+                  <dd>
+                    {Math.abs(focusedRace.latitude).toFixed(3)}°
+                    {focusedRace.latitude >= 0 ? "N" : "S"} /{" "}
+                    {Math.abs(focusedRace.longitude).toFixed(3)}°
+                    {focusedRace.longitude >= 0 ? "E" : "W"}
+                  </dd>
+                </div>
+              </dl>
+              <div className={styles.focusFooter}>
+                <span>
+                  {focusedRace.isSprint ? "SPRINT WEEKEND" : "GRAND PRIX WEEKEND"}
+                </span>
+                <span>{selectedRace ? "STATION LOCKED" : "DRAG · HOVER · SELECT"}</span>
+              </div>
+            </>
+          )}
         </aside>
 
         <div className={styles.scrollPrompt} aria-hidden="true">

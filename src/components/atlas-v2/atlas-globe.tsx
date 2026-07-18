@@ -20,30 +20,53 @@ import {
   latLonToVector3,
   tangentQuaternion,
 } from "@/lib/atlas/geo";
-import type { AtlasRegion, SeasonRace } from "@/lib/atlas/season-2026";
+import type { SeasonRace } from "@/lib/atlas/season-2026";
+import { EuropePlate } from "./europe-plate";
 import styles from "./season-atlas.module.css";
+
+export type AtlasViewMode = "global" | "europe-focus" | "station-focus";
+export const EUROPE_ENTRY_ID = "europe-season";
 
 type AtlasGlobeProps = {
   races: readonly SeasonRace[];
+  hoveredTargetId: string | null;
   hoveredRace: SeasonRace | null;
   selectedRace: SeasonRace | null;
   currentRace: SeasonRace;
+  viewMode: AtlasViewMode;
+  navigationVersion: number;
   reducedMotion: boolean;
   compact: boolean;
   active: boolean;
-  onHoverRace: (raceId: string | null) => void;
-  onSelectRace: (raceId: string | null) => void;
+  onHoverTarget: (targetId: string | null) => void;
+  onSelectTarget: (targetId: string) => void;
 };
 
 type SceneProps = AtlasGlobeProps;
 
 type LabelOffset = readonly [number, number];
 
+type StationAnchor = {
+  race: SeasonRace;
+  normal: THREE.Vector3;
+  position: THREE.Vector3;
+  labelOffset: LabelOffset;
+};
+
+type InteractiveTarget = {
+  id: string;
+  kind: "station" | "region";
+  normal: THREE.Vector3;
+  position: THREE.Vector3;
+};
+
+type NodeState = "idle" | "current" | "hovered" | "selected";
+
 const EARTH_RADIUS = 2;
 const NODE_RADIUS = 2.035;
 const CAMERA_NEAR_DISTANCE = 4.35;
 const CAMERA_FAR_DISTANCE = 9.2;
-const EUROPE_REGION: AtlasRegion = "EUROPE";
+const EUROPE_REGION = "EUROPE";
 
 const EUROPE_LABEL_OFFSETS: Record<string, LabelOffset> = {
   monaco: [-118, 72],
@@ -116,19 +139,20 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
     dayColor *= vec3(0.40, 0.56, 0.76);
     dayColor *= 0.18 + max(sun, 0.0) * 0.78;
 
-    vec3 nightBase = daySample * vec3(0.018, 0.035, 0.070);
+    vec3 nightBase = daySample * vec3(0.075, 0.105, 0.155);
+    nightBase += vec3(0.012, 0.024, 0.044) * (0.48 + 0.52 * max(normal.y, 0.0));
     vec3 cityColor = mix(
       vec3(0.82, 0.64, 0.36),
       vec3(1.45, 1.08, 0.62),
       smoothstep(0.25, 0.90, nightLuma)
     );
     vec3 color = mix(nightBase, dayColor, daylight);
-    color += cityColor * cityMask * nightSide * 1.45;
+    color += cityColor * cityMask * nightSide * 0.72;
 
     float focusDot = max(dot(normalize(vObjectPosition), normalize(uFocusPoint)), 0.0);
-    float localFocus = pow(focusDot, 58.0) * uFocusStrength;
-    color += vec3(0.18, 0.34, 0.62) * localFocus * 0.80;
-    color += vec3(0.82, 0.66, 0.39) * localFocus * localFocus * 0.42;
+    float localFocus = pow(focusDot, 96.0) * uFocusStrength;
+    color += vec3(0.12, 0.28, 0.52) * localFocus * 0.32;
+    color += vec3(0.52, 0.42, 0.24) * localFocus * localFocus * 0.16;
 
     float polarShade = smoothstep(0.0, 0.95, abs(normal.y));
     color += vec3(0.04, 0.07, 0.12) * polarShade * 0.25;
@@ -157,7 +181,7 @@ const CLOUD_FRAGMENT_SHADER = /* glsl */ `
     vec3 sampleColor = texture2D(uCloudMap, vUv).rgb;
     float density = smoothstep(0.38, 0.82, dot(sampleColor, vec3(0.3333)));
     float rim = pow(1.0 - max(vNormalView.z, 0.0), 2.2);
-    float alpha = density * (0.12 + rim * 0.11);
+    float alpha = density * (0.075 + rim * 0.065);
     gl_FragColor = vec4(vec3(0.57, 0.72, 0.90) * (0.65 + rim * 0.35), alpha);
   }
 `;
@@ -175,9 +199,9 @@ const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
   varying vec3 vNormalView;
 
   void main() {
-    float fresnel = pow(1.0 - abs(vNormalView.z), 3.15);
+    float fresnel = pow(1.0 - abs(vNormalView.z), 4.1);
     vec3 color = mix(vec3(0.05, 0.20, 0.48), vec3(0.24, 0.62, 1.0), fresnel);
-    gl_FragColor = vec4(color, fresnel * 0.46);
+    gl_FragColor = vec4(color, fresnel * 0.27);
   }
 `;
 
@@ -303,7 +327,15 @@ function StarField({ compact, reducedMotion }: { compact: boolean; reducedMotion
   );
 }
 
-function EarthSystem({ focusRace, reducedMotion }: { focusRace: SeasonRace | null; reducedMotion: boolean }) {
+function EarthSystem({
+  focusNormal,
+  focusLevel,
+  reducedMotion,
+}: {
+  focusNormal: THREE.Vector3 | null;
+  focusLevel: number;
+  reducedMotion: boolean;
+}) {
   const cloudRef = useRef<THREE.Mesh>(null);
   const earthMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const [dayMap, nightMap, cloudMap] = useTexture([
@@ -341,26 +373,25 @@ function EarthSystem({ focusRace, reducedMotion }: { focusRace: SeasonRace | nul
 
   useFrame((_, delta) => {
     if (cloudRef.current && !reducedMotion) {
-      cloudRef.current.rotation.y += delta * 0.006;
+      cloudRef.current.rotation.y += delta * 0.0035;
     }
 
     const material = earthMaterialRef.current;
     if (!material) return;
 
-    const desiredStrength = focusRace ? 1 : 0;
+    const desiredStrength = focusNormal ? focusLevel : 0;
     material.uniforms.uFocusStrength.value = THREE.MathUtils.damp(
       material.uniforms.uFocusStrength.value,
       desiredStrength,
-      5.5,
+      4.2,
       delta,
     );
 
-    if (focusRace) {
-      focusTarget.copy(
-        latLonToVector3(focusRace.latitude, focusRace.longitude, 1),
-      );
-    }
-    material.uniforms.uFocusPoint.value.lerp(focusTarget, 1 - Math.exp(-delta * 6));
+    if (focusNormal) focusTarget.copy(focusNormal);
+    material.uniforms.uFocusPoint.value.lerp(
+      focusTarget,
+      1 - Math.exp(-delta * 5),
+    );
     material.uniforms.uFocusPoint.value.normalize();
   });
 
@@ -386,7 +417,7 @@ function EarthSystem({ focusRace, reducedMotion }: { focusRace: SeasonRace | nul
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-      <mesh scale={1.055} renderOrder={1}>
+      <mesh scale={1.036} renderOrder={1}>
         <sphereGeometry args={[EARTH_RADIUS, 96, 72]} />
         <shaderMaterial
           vertexShader={ATMOSPHERE_VERTEX_SHADER}
@@ -402,242 +433,423 @@ function EarthSystem({ focusRace, reducedMotion }: { focusRace: SeasonRace | nul
 }
 
 function RaceLabel({
-  race,
-  position,
+  anchor,
   show,
-  active,
-  offset,
+  emphasis,
+  selectable,
+  onSelect,
 }: {
-  race: SeasonRace;
-  position: THREE.Vector3;
+  anchor: StationAnchor;
   show: boolean;
-  active: boolean;
-  offset: LabelOffset;
+  emphasis: NodeState;
+  selectable: boolean;
+  onSelect: (raceId: string) => void;
 }) {
   const labelRef = useRef<HTMLDivElement>(null);
   const opacityRef = useRef(0);
   const { camera } = useThree();
-  const normal = useMemo(() => position.clone().normalize(), [position]);
   const cameraDirection = useMemo(() => new THREE.Vector3(), []);
+  const [offsetX, offsetY] = anchor.labelOffset;
   const customStyle = {
-    "--atlas-label-x": `${offset[0]}px`,
-    "--atlas-label-y": `${offset[1]}px`,
+    "--atlas-label-x": `${offsetX}px`,
+    "--atlas-label-y": `${offsetY}px`,
+    "--atlas-leader-length": `${Math.hypot(offsetX, offsetY)}px`,
+    "--atlas-leader-angle": `${Math.atan2(offsetY, offsetX)}rad`,
   } as CSSProperties;
 
   useFrame((_, delta) => {
     if (!labelRef.current) return;
     cameraDirection.copy(camera.position).normalize();
-    const frontFacing = normal.dot(cameraDirection) > 0.12;
-    const target = show && frontFacing ? 1 : 0;
+    const horizon = EARTH_RADIUS / Math.max(camera.position.length(), 0.001);
+    const frontFacing = anchor.normal.dot(cameraDirection) > horizon + 0.012;
+    const emphasisOpacity =
+      emphasis === "selected"
+        ? 1
+        : emphasis === "hovered"
+          ? 0.92
+          : emphasis === "current"
+            ? 0.52
+            : 0.22;
+    const target = show && frontFacing ? emphasisOpacity : 0;
     opacityRef.current = THREE.MathUtils.damp(
       opacityRef.current,
       target,
-      8,
+      target > opacityRef.current ? 7 : 9,
       delta,
     );
     labelRef.current.style.opacity = opacityRef.current.toFixed(3);
     labelRef.current.style.visibility =
       opacityRef.current < 0.015 ? "hidden" : "visible";
+    labelRef.current.style.pointerEvents =
+      selectable && opacityRef.current > 0.2 ? "auto" : "none";
+    labelRef.current.dataset.atlasVisible =
+      show && frontFacing ? "true" : "false";
   });
 
   return (
     <Html
-      position={position}
+      position={anchor.position}
       center
       distanceFactor={7.4}
       zIndexRange={[24, 2]}
-      style={{ pointerEvents: "none" }}
+      style={{ pointerEvents: selectable ? "auto" : "none" }}
     >
       <div
         ref={labelRef}
-        className={`${styles.raceLabel} ${active ? styles.raceLabelActive : ""}`}
+        className={`${styles.raceLabelAnchor} ${
+          emphasis === "selected" || emphasis === "hovered"
+            ? styles.raceLabelActive
+            : ""
+        } ${offsetX < 0 ? styles.raceLabelLeft : ""}`}
         style={customStyle}
+        data-atlas-station-label={anchor.race.id}
+        data-atlas-region={anchor.race.region}
       >
         <span className={styles.raceLabelLine} aria-hidden="true" />
-        <span className={styles.raceLabelName}>{race.city}</span>
-        <span className={styles.raceLabelMeta}>R{String(race.round).padStart(2, "0")}</span>
+        <button
+          type="button"
+          className={styles.raceLabelBody}
+          tabIndex={selectable ? 0 : -1}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelect(anchor.race.id);
+          }}
+        >
+          <span className={styles.raceLabelName}>{anchor.race.city}</span>
+          <span className={styles.raceLabelMeta}>
+            R{String(anchor.race.round).padStart(2, "0")}
+          </span>
+        </button>
       </div>
     </Html>
   );
 }
 
 function RaceNode({
-  race,
-  hovered,
-  selected,
-  current,
+  anchor,
+  state,
+  visibility,
   showLabel,
+  labelSelectable,
+  revealDelay = 0,
+  revealVersion,
   reducedMotion,
+  onSelect,
 }: {
-  race: SeasonRace;
-  hovered: boolean;
-  selected: boolean;
-  current: boolean;
+  anchor: StationAnchor;
+  state: NodeState;
+  visibility: number;
   showLabel: boolean;
+  labelSelectable: boolean;
+  revealDelay?: number;
+  revealVersion: number;
   reducedMotion: boolean;
+  onSelect: (raceId: string) => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const haloMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const ringMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const coreMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
   const energyRef = useRef(0);
-  const position = useMemo(
-    () => latLonToVector3(race.latitude, race.longitude, NODE_RADIUS),
-    [race.latitude, race.longitude],
+  const visibilityRef = useRef(0);
+  const revealElapsedRef = useRef(
+    revealDelay > 0 ? 0 : Number.POSITIVE_INFINITY,
   );
-  const normal = useMemo(() => position.clone().normalize(), [position]);
-  const quaternion = useMemo(() => tangentQuaternion(normal), [normal]);
-  const active = hovered || selected;
-  const labelOffset =
-    EUROPE_LABEL_OFFSETS[race.id] ?? DEFAULT_LABEL_OFFSETS[race.id] ?? [58, -20];
+  const { camera } = useThree();
+  const cameraDirection = useMemo(() => new THREE.Vector3(), []);
+  const targetColor = useMemo(() => {
+    if (state === "selected") return new THREE.Color("#f2d28c");
+    if (state === "hovered") return new THREE.Color("#c9e7ff");
+    if (state === "current") return new THREE.Color("#d5bd83");
+    return new THREE.Color("#a8c6dc");
+  }, [state]);
+  const quaternion = useMemo(
+    () => tangentQuaternion(anchor.normal),
+    [anchor.normal],
+  );
+
+  useEffect(() => {
+    revealElapsedRef.current =
+      visibility > 0 && revealDelay > 0 ? 0 : Number.POSITIVE_INFINITY;
+  }, [revealDelay, revealVersion, visibility]);
 
   useFrame(({ clock }, delta) => {
-    const target = active ? 1 : current ? 0.55 : 0.12;
+    if (revealElapsedRef.current !== Number.POSITIVE_INFINITY) {
+      revealElapsedRef.current += delta;
+    }
+    cameraDirection.copy(camera.position).normalize();
+    const horizon = EARTH_RADIUS / Math.max(camera.position.length(), 0.001);
+    const horizonFade = THREE.MathUtils.smoothstep(
+      anchor.normal.dot(cameraDirection),
+      horizon - 0.025,
+      horizon + 0.035,
+    );
+    const revealReady = revealElapsedRef.current >= revealDelay;
+    const visibilityTarget = revealReady ? visibility * horizonFade : 0;
+    visibilityRef.current = THREE.MathUtils.damp(
+      visibilityRef.current,
+      visibilityTarget,
+      visibilityTarget > visibilityRef.current ? 5.5 : 7.5,
+      delta,
+    );
+
+    const target =
+      state === "selected"
+        ? 1
+        : state === "hovered"
+          ? 0.62
+          : state === "current"
+            ? 0.26
+            : 0.08;
     energyRef.current = THREE.MathUtils.damp(
       energyRef.current,
       target,
-      active ? 10 : 5,
+      state === "idle" ? 4 : 7,
       delta,
     );
     const energy = energyRef.current;
-    const pulse = reducedMotion
-      ? 1
-      : 1 + Math.sin(clock.elapsedTime * 2.2 + race.round * 0.47) * 0.16;
+    const active = state === "hovered" || state === "selected";
+    const breath =
+      reducedMotion || !active
+        ? 1
+        : 1 +
+          Math.sin(clock.elapsedTime * 0.78 + anchor.race.round * 0.37) *
+            0.025;
+    const visibilityValue = visibilityRef.current;
 
     if (groupRef.current) {
-      groupRef.current.scale.setScalar(0.88 + energy * 0.38);
+      groupRef.current.visible = visibilityValue > 0.004;
+      groupRef.current.scale.setScalar((0.96 + energy * 0.1) * breath);
     }
     if (haloMaterialRef.current) {
-      haloMaterialRef.current.opacity = 0.10 + energy * 0.34;
+      haloMaterialRef.current.opacity =
+        visibilityValue * (0.028 + energy * 0.12);
+      haloMaterialRef.current.color.lerp(
+        targetColor,
+        1 - Math.exp(-delta * 7),
+      );
     }
     if (ringMaterialRef.current) {
-      ringMaterialRef.current.opacity = (0.08 + energy * 0.38) / pulse;
+      ringMaterialRef.current.opacity =
+        visibilityValue * (0.014 + energy * 0.075);
+      ringMaterialRef.current.color.lerp(
+        targetColor,
+        1 - Math.exp(-delta * 7),
+      );
     }
     if (coreMaterialRef.current) {
-      coreMaterialRef.current.emissiveIntensity = 0.75 + energy * 4.2;
+      const luminanceBreath = active ? 1 + (breath - 1) * 1.4 : 1;
+      coreMaterialRef.current.opacity =
+        visibilityValue * (0.56 + energy * 0.38);
+      coreMaterialRef.current.emissiveIntensity =
+        (0.52 + energy * 1.1) * luminanceBreath;
+      coreMaterialRef.current.color.lerp(
+        targetColor,
+        1 - Math.exp(-delta * 7),
+      );
+      coreMaterialRef.current.emissive.lerp(
+        targetColor,
+        1 - Math.exp(-delta * 7),
+      );
     }
   });
 
-  const activeColor = active || current ? "#ffe2a1" : "#b7d3e8";
-  const nodeOpacity = race.status === "completed" && !active ? 0.5 : 0.86;
-
   return (
     <>
-      <group ref={groupRef} position={position} quaternion={quaternion}>
+      <group
+        ref={groupRef}
+        position={anchor.position}
+        quaternion={quaternion}
+        visible={false}
+      >
         <mesh>
           <sphereGeometry args={[0.021, 16, 12]} />
           <meshStandardMaterial
             ref={coreMaterialRef}
-            color={activeColor}
-            emissive={activeColor}
-            emissiveIntensity={2}
+            color="#a8c6dc"
+            emissive="#a8c6dc"
+            emissiveIntensity={0.6}
             roughness={0.25}
             metalness={0.1}
             transparent
-            opacity={nodeOpacity}
-            toneMapped={false}
+            opacity={0}
           />
         </mesh>
         <mesh position={[0, 0, 0.004]}>
-          <circleGeometry args={[0.061, 36]} />
+          <circleGeometry args={[0.038, 32]} />
           <meshBasicMaterial
             ref={haloMaterialRef}
-            color={activeColor}
+            color="#a8c6dc"
             transparent
-            opacity={0.15}
+            opacity={0}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
-            toneMapped={false}
           />
         </mesh>
         <mesh position={[0, 0, 0.006]}>
-          <ringGeometry args={[0.076, 0.081, 42]} />
+          <ringGeometry args={[0.039, 0.043, 36]} />
           <meshBasicMaterial
             ref={ringMaterialRef}
-            color={activeColor}
+            color="#a8c6dc"
             transparent
-            opacity={0.18}
+            opacity={0}
             depthWrite={false}
             blending={THREE.AdditiveBlending}
-            toneMapped={false}
           />
         </mesh>
-        {[0, 1, 2].map((trailIndex) => (
-          <mesh
-            key={trailIndex}
-            position={[-0.034 - trailIndex * 0.024, 0.007 * trailIndex, -0.004]}
-            scale={1 - trailIndex * 0.23}
-          >
-            <sphereGeometry args={[0.007, 8, 6]} />
-            <meshBasicMaterial
-              color={activeColor}
-              transparent
-              opacity={(0.28 - trailIndex * 0.07) * nodeOpacity}
-              depthWrite={false}
-              toneMapped={false}
-            />
-          </mesh>
-        ))}
       </group>
       <RaceLabel
-        race={race}
-        position={position.clone().multiplyScalar(1.025)}
+        anchor={anchor}
         show={showLabel}
-        active={active || current}
-        offset={labelOffset}
+        emphasis={state}
+        selectable={labelSelectable}
+        onSelect={onSelect}
       />
     </>
   );
 }
 
-function RegionLabel({ currentRace, hide }: { currentRace: SeasonRace; hide: boolean }) {
+function EuropeEntryNode({
+  normal,
+  position,
+  hovered,
+  visible,
+  onSelect,
+}: {
+  normal: THREE.Vector3;
+  position: THREE.Vector3;
+  hovered: boolean;
+  visible: boolean;
+  onSelect: (targetId: string) => void;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  const coreMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
+  const haloMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const ringMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const labelRef = useRef<HTMLDivElement>(null);
-  const opacityRef = useRef(0);
+  const visibilityRef = useRef(0);
   const { camera } = useThree();
-  const position = useMemo(
-    () => latLonToVector3(48.2, 11.2, 2.28),
-    [],
-  );
-  const normal = useMemo(() => position.clone().normalize(), [position]);
   const cameraDirection = useMemo(() => new THREE.Vector3(), []);
+  const quaternion = useMemo(() => tangentQuaternion(normal), [normal]);
 
   useFrame((_, delta) => {
-    if (!labelRef.current) return;
     cameraDirection.copy(camera.position).normalize();
-    const visible = normal.dot(cameraDirection) > 0.25 && !hide;
-    opacityRef.current = THREE.MathUtils.damp(
-      opacityRef.current,
-      visible ? 1 : 0,
-      5,
+    const horizon = EARTH_RADIUS / Math.max(camera.position.length(), 0.001);
+    const frontFacing = normal.dot(cameraDirection) > horizon + 0.012;
+    const target = visible && frontFacing ? 1 : 0;
+    visibilityRef.current = THREE.MathUtils.damp(
+      visibilityRef.current,
+      target,
+      target > visibilityRef.current ? 5.5 : 8,
       delta,
     );
-    labelRef.current.style.opacity = opacityRef.current.toFixed(3);
+    const value = visibilityRef.current;
+    const energy = hovered ? 0.66 : 0.24;
+    if (groupRef.current) {
+      groupRef.current.visible = value > 0.004;
+      groupRef.current.scale.setScalar(0.98 + energy * 0.08);
+    }
+    if (coreMaterialRef.current) {
+      coreMaterialRef.current.opacity = value * (0.65 + energy * 0.25);
+      coreMaterialRef.current.emissiveIntensity = 0.62 + energy * 0.85;
+    }
+    if (haloMaterialRef.current) {
+      haloMaterialRef.current.opacity = value * (0.04 + energy * 0.1);
+    }
+    if (ringMaterialRef.current) {
+      ringMaterialRef.current.opacity = value * (0.025 + energy * 0.07);
+    }
+    if (labelRef.current) {
+      labelRef.current.style.opacity = (value * (hovered ? 1 : 0.78)).toFixed(3);
+      labelRef.current.style.visibility = value < 0.015 ? "hidden" : "visible";
+      labelRef.current.style.pointerEvents = value > 0.2 ? "auto" : "none";
+    }
   });
 
   return (
-    <Html
-      position={position}
-      center
-      distanceFactor={7.8}
-      zIndexRange={[18, 1]}
-      style={{ pointerEvents: "none" }}
-    >
-      <div ref={labelRef} className={styles.regionLabel}>
-        <span>Europe</span>
-        <small>09 circuits · current R{String(currentRace.round).padStart(2, "0")}</small>
-      </div>
-    </Html>
+    <>
+      <group
+        ref={groupRef}
+        position={position}
+        quaternion={quaternion}
+        visible={false}
+      >
+        <mesh>
+          <sphereGeometry args={[0.024, 18, 14]} />
+          <meshStandardMaterial
+            ref={coreMaterialRef}
+            color="#e2c988"
+            emissive="#d8bd79"
+            emissiveIntensity={0.8}
+            roughness={0.3}
+            transparent
+            opacity={0}
+          />
+        </mesh>
+        <mesh position={[0, 0, 0.004]}>
+          <circleGeometry args={[0.044, 36]} />
+          <meshBasicMaterial
+            ref={haloMaterialRef}
+            color="#c4dcf0"
+            transparent
+            opacity={0}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+        <mesh position={[0, 0, 0.006]}>
+          <ringGeometry args={[0.045, 0.049, 40]} />
+          <meshBasicMaterial
+            ref={ringMaterialRef}
+            color="#e0c784"
+            transparent
+            opacity={0}
+            depthWrite={false}
+          />
+        </mesh>
+      </group>
+      <Html
+        position={position}
+        center
+        distanceFactor={7.6}
+        zIndexRange={[26, 3]}
+        style={{ pointerEvents: "auto" }}
+      >
+        <div ref={labelRef} className={styles.regionLabelAnchor}>
+          <span className={styles.regionLabelLine} aria-hidden="true" />
+          <button
+            type="button"
+            className={styles.regionLabel}
+            data-atlas-target={EUROPE_ENTRY_ID}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelect(EUROPE_ENTRY_ID);
+            }}
+          >
+            EUROPE SEASON <span aria-hidden="true">·</span> 9 ROUNDS
+          </button>
+        </div>
+      </Html>
+    </>
   );
 }
 
-function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | null; reducedMotion: boolean }) {
+function FocusParticles({
+  focusPosition,
+  level,
+  reducedMotion,
+}: {
+  focusPosition: THREE.Vector3 | null;
+  level: "hovered" | "selected" | null;
+  reducedMotion: boolean;
+}) {
   const groupRef = useRef<THREE.Group>(null);
   const materialRef = useRef<THREE.PointsMaterial>(null);
   const ringMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
   const strengthRef = useRef(0);
   const targetPosition = useMemo(() => new THREE.Vector3(), []);
   const targetQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  const count = 84;
+  const count = 40;
   const { geometry, radii, angles, heights, speeds } = useMemo(() => {
     const random = seededRandom(22610);
     const positions = new Float32Array(count * 3);
@@ -648,10 +860,10 @@ function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | 
     const bufferGeometry = new THREE.BufferGeometry();
 
     for (let index = 0; index < count; index += 1) {
-      localRadii[index] = 0.045 + random() * 0.19;
+      localRadii[index] = 0.018 + random() * 0.037;
       localAngles[index] = random() * Math.PI * 2;
-      localHeights[index] = (random() - 0.5) * 0.08;
-      localSpeeds[index] = 0.45 + random() * 1.1;
+      localHeights[index] = (random() - 0.5) * 0.026;
+      localSpeeds[index] = 0.32 + random() * 0.58;
     }
     bufferGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     return {
@@ -666,44 +878,42 @@ function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame(({ clock }, delta) => {
-    const targetStrength = focusRace ? 1 : 0;
+    const targetStrength = level === "selected" ? 1 : level === "hovered" ? 0.62 : 0;
     strengthRef.current = THREE.MathUtils.damp(
       strengthRef.current,
       targetStrength,
-      6,
+      targetStrength > strengthRef.current ? 5.5 : 7.5,
       delta,
     );
     const strength = strengthRef.current;
 
-    if (focusRace) {
-      targetPosition.copy(
-        latLonToVector3(focusRace.latitude, focusRace.longitude, NODE_RADIUS + 0.018),
-      );
+    if (focusPosition) {
+      targetPosition.copy(focusPosition).setLength(NODE_RADIUS + 0.012);
       targetQuaternion.copy(tangentQuaternion(targetPosition.clone().normalize()));
     }
 
     if (groupRef.current) {
-      groupRef.current.position.lerp(targetPosition, 1 - Math.exp(-delta * 10));
-      groupRef.current.quaternion.slerp(targetQuaternion, 1 - Math.exp(-delta * 10));
+      groupRef.current.position.lerp(targetPosition, 1 - Math.exp(-delta * 8));
+      groupRef.current.quaternion.slerp(targetQuaternion, 1 - Math.exp(-delta * 8));
       groupRef.current.visible = strength > 0.008;
     }
     if (materialRef.current) {
-      materialRef.current.opacity = strength * 0.7;
+      materialRef.current.opacity = strength * 0.2;
     }
     if (ringMaterialRef.current) {
-      ringMaterialRef.current.opacity = strength * 0.32;
+      ringMaterialRef.current.opacity = strength * 0.1;
     }
 
     const attribute = geometry.getAttribute("position") as THREE.BufferAttribute;
     const positions = attribute.array as Float32Array;
     const elapsed = reducedMotion ? 0 : clock.elapsedTime;
     for (let index = 0; index < count; index += 1) {
-      const convergence = THREE.MathUtils.lerp(1, 0.42, strength);
+      const convergence = THREE.MathUtils.lerp(1, 0.62, strength);
       const radius = radii[index] * convergence;
       const angle = angles[index] + elapsed * speeds[index] * (0.2 + strength * 0.75);
       positions[index * 3] = Math.cos(angle) * radius;
       positions[index * 3 + 1] = Math.sin(angle) * radius;
-      positions[index * 3 + 2] = heights[index] + Math.sin(angle * 2.3) * 0.012;
+      positions[index * 3 + 2] = heights[index] + Math.sin(angle * 2.3) * 0.004;
     }
     attribute.needsUpdate = true;
   });
@@ -714,17 +924,16 @@ function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | 
         <pointsMaterial
           ref={materialRef}
           color="#ffd993"
-          size={0.012}
+          size={0.0075}
           sizeAttenuation
           transparent
           opacity={0}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
-          toneMapped={false}
         />
       </points>
       <mesh position={[0, 0, -0.002]}>
-        <ringGeometry args={[0.12, 0.124, 64]} />
+        <ringGeometry args={[0.039, 0.043, 48]} />
         <meshBasicMaterial
           ref={ringMaterialRef}
           color="#95c9ff"
@@ -732,7 +941,6 @@ function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | 
           opacity={0}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
-          toneMapped={false}
         />
       </mesh>
     </group>
@@ -740,61 +948,85 @@ function FocusParticles({ focusRace, reducedMotion }: { focusRace: SeasonRace | 
 }
 
 function RaycastMagnet({
-  races,
-  onHoverRace,
-  onSelectRace,
+  targets,
+  resetKey,
+  onHoverTarget,
+  onSelectTarget,
 }: {
-  races: readonly SeasonRace[];
-  onHoverRace: (raceId: string | null) => void;
-  onSelectRace: (raceId: string | null) => void;
+  targets: readonly InteractiveTarget[];
+  resetKey: string;
+  onHoverTarget: (targetId: string | null) => void;
+  onSelectTarget: (targetId: string) => void;
 }) {
   const hitTargetRef = useRef<THREE.Mesh>(null);
   const { camera, gl, raycaster } = useThree();
   const pointerNdc = useRef(new THREE.Vector2(99, 99));
   const pointerInside = useRef(false);
   const pointerDown = useRef<{ x: number; y: number; at: number } | null>(null);
-  const nearestRaceId = useRef<string | null>(null);
-  const lastReportedRaceId = useRef<string | null>(null);
-  const raceVectors = useMemo(
-    () =>
-      races.map((race) => ({
-        race,
-        vector: latLonToVector3(race.latitude, race.longitude, 1),
-      })),
-    [races],
+  const draggingRef = useRef(false);
+  const stableIdRef = useRef<string | null>(null);
+  const stableSinceRef = useRef(0);
+  const pendingIdRef = useRef<string | null>(null);
+  const pendingSinceRef = useRef(0);
+  const missSinceRef = useRef<number | null>(null);
+  const lastReportedIdRef = useRef<string | null>(null);
+  const suspendUntilRef = useRef(0);
+  const targetMap = useMemo(
+    () => new Map(targets.map((target) => [target.id, target])),
+    [targets],
   );
 
-  const resolveNearestRace = useCallback(() => {
+  const acquireRadius = useCallback(() => {
+    const mapped = THREE.MathUtils.mapLinear(
+      camera.position.length(),
+      CAMERA_NEAR_DISTANCE,
+      CAMERA_FAR_DISTANCE,
+      3.2,
+      5.5,
+    );
+    return THREE.MathUtils.clamp(mapped, 3.2, 5.5);
+  }, [camera]);
+
+  const reportTarget = useCallback(
+    (targetId: string | null) => {
+      if (lastReportedIdRef.current === targetId) return;
+      lastReportedIdRef.current = targetId;
+      onHoverTarget(targetId);
+    },
+    [onHoverTarget],
+  );
+
+  const resolveNearestTarget = useCallback(() => {
     if (!hitTargetRef.current) return null;
 
     raycaster.setFromCamera(pointerNdc.current, camera);
     const hit = raycaster.intersectObject(hitTargetRef.current, false)[0];
-    let closestId: string | null = null;
+    if (!hit) return null;
 
-    if (hit) {
-      const surfaceVector = hit.point.clone().normalize();
-      let closestDistance = Number.POSITIVE_INFINITY;
-      for (const entry of raceVectors) {
-        const distance = angularDistanceDegrees(surfaceVector, entry.vector);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestId = entry.race.id;
-        }
+    const surface = hit.point.clone().normalize();
+    const cameraDirection = camera.position.clone().normalize();
+    const horizon = EARTH_RADIUS / Math.max(camera.position.length(), 0.001);
+    let closest: { id: string; distance: number; surface: THREE.Vector3 } | null = null;
+
+    for (const target of targets) {
+      if (target.normal.dot(cameraDirection) <= horizon + 0.008) continue;
+      const distance = angularDistanceDegrees(surface, target.normal);
+      if (!closest || distance < closest.distance) {
+        closest = { id: target.id, distance, surface };
       }
-      const cameraDistance = camera.position.length();
-      const magneticRadius = THREE.MathUtils.mapLinear(
-        cameraDistance,
-        CAMERA_NEAR_DISTANCE,
-        CAMERA_FAR_DISTANCE,
-        7.5,
-        13.5,
-      );
-      if (closestDistance > magneticRadius) closestId = null;
     }
 
-    nearestRaceId.current = closestId;
-    return closestId;
-  }, [camera, raceVectors, raycaster]);
+    return closest;
+  }, [camera, raycaster, targets]);
+
+  useEffect(() => {
+    stableIdRef.current = null;
+    stableSinceRef.current = 0;
+    pendingIdRef.current = null;
+    missSinceRef.current = null;
+    suspendUntilRef.current = performance.now() + 420;
+    reportTarget(null);
+  }, [reportTarget, resetKey]);
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -807,33 +1039,44 @@ function RaycastMagnet({
       pointerInside.current = true;
     };
     const handleEnter = (event: PointerEvent) => updatePointer(event);
-    const handleMove = (event: PointerEvent) => updatePointer(event);
+    const handleMove = (event: PointerEvent) => {
+      updatePointer(event);
+      const start = pointerDown.current;
+      if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) {
+        draggingRef.current = true;
+      }
+    };
     const handleLeave = () => {
       pointerInside.current = false;
       pointerDown.current = null;
-      nearestRaceId.current = null;
-      lastReportedRaceId.current = null;
-      onHoverRace(null);
+      draggingRef.current = false;
       canvas.style.cursor = "grab";
     };
     const handleDown = (event: PointerEvent) => {
       updatePointer(event);
       pointerDown.current = { x: event.clientX, y: event.clientY, at: performance.now() };
+      draggingRef.current = false;
       canvas.style.cursor = "grabbing";
     };
     const handleUp = (event: PointerEvent) => {
       updatePointer(event);
       const start = pointerDown.current;
+      const wasDragging = draggingRef.current;
       pointerDown.current = null;
-      const closestId = resolveNearestRace();
+      draggingRef.current = false;
+      const closest = resolveNearestTarget();
       const travel = start
         ? Math.hypot(event.clientX - start.x, event.clientY - start.y)
         : Number.POSITIVE_INFINITY;
       const elapsed = start ? performance.now() - start.at : Number.POSITIVE_INFINITY;
-      if (travel < 9 && elapsed < 520 && closestId) {
-        onSelectRace(closestId);
+      const tappedTarget =
+        closest && closest.distance <= acquireRadius() * 1.08
+          ? closest.id
+          : stableIdRef.current;
+      if (!wasDragging && travel < 9 && elapsed < 520 && tappedTarget) {
+        onSelectTarget(tappedTarget);
       }
-      canvas.style.cursor = closestId ? "pointer" : "grab";
+      canvas.style.cursor = tappedTarget ? "pointer" : "grab";
     };
 
     canvas.addEventListener("pointerenter", handleEnter);
@@ -853,17 +1096,79 @@ function RaycastMagnet({
       canvas.removeEventListener("pointercancel", handleLeave);
       canvas.style.cursor = "";
     };
-  }, [gl, onHoverRace, onSelectRace, resolveNearestRace]);
+  }, [acquireRadius, gl, onSelectTarget, resolveNearestTarget]);
 
   useFrame(() => {
-    if (!hitTargetRef.current || !pointerInside.current) return;
-    const closestId = resolveNearestRace();
-    if (closestId !== lastReportedRaceId.current) {
-      lastReportedRaceId.current = closestId;
-      onHoverRace(closestId);
+    const now = performance.now();
+    if (!hitTargetRef.current || now < suspendUntilRef.current) return;
+    if (draggingRef.current) return;
+
+    const closest = pointerInside.current ? resolveNearestTarget() : null;
+    const acquire = acquireRadius();
+    const release = acquire * 1.45;
+    const stableId = stableIdRef.current;
+    const stableTarget = stableId ? targetMap.get(stableId) : null;
+    const stableDistance =
+      closest && stableTarget
+        ? angularDistanceDegrees(closest.surface, stableTarget.normal)
+        : Number.POSITIVE_INFINITY;
+    const stableAge = now - stableSinceRef.current;
+
+    if (!stableId || !stableTarget) {
+      if (closest && closest.distance <= acquire) {
+        if (pendingIdRef.current !== closest.id) {
+          pendingIdRef.current = closest.id;
+          pendingSinceRef.current = now;
+        } else if (now - pendingSinceRef.current >= 90) {
+          stableIdRef.current = closest.id;
+          stableSinceRef.current = now;
+          pendingIdRef.current = null;
+          missSinceRef.current = null;
+          reportTarget(closest.id);
+        }
+      } else {
+        pendingIdRef.current = null;
+      }
+    } else if (closest?.id === stableId && closest.distance <= release) {
+      pendingIdRef.current = null;
+      missSinceRef.current = null;
+    } else if (closest && closest.distance <= acquire) {
+      const switchMargin = Math.min(0.65, acquire * 0.15);
+      const hasClearAdvantage =
+        stableDistance > release || stableDistance - closest.distance >= switchMargin;
+      if (hasClearAdvantage && stableAge >= 220) {
+        if (pendingIdRef.current !== closest.id) {
+          pendingIdRef.current = closest.id;
+          pendingSinceRef.current = now;
+        } else if (now - pendingSinceRef.current >= 110) {
+          stableIdRef.current = closest.id;
+          stableSinceRef.current = now;
+          pendingIdRef.current = null;
+          missSinceRef.current = null;
+          reportTarget(closest.id);
+        }
+      } else {
+        pendingIdRef.current = null;
+      }
+      missSinceRef.current = null;
+    } else {
+      pendingIdRef.current = null;
+      const remainsInsideRelease =
+        closest !== null && stableDistance <= release;
+      if (remainsInsideRelease) {
+        missSinceRef.current = null;
+      } else if (missSinceRef.current === null) {
+        missSinceRef.current = now;
+      } else if (stableAge >= 220 && now - missSinceRef.current >= 180) {
+        stableIdRef.current = null;
+        stableSinceRef.current = 0;
+        missSinceRef.current = null;
+        reportTarget(null);
+      }
     }
+
     if (!pointerDown.current) {
-      gl.domElement.style.cursor = closestId ? "pointer" : "grab";
+      gl.domElement.style.cursor = stableIdRef.current ? "pointer" : "grab";
     }
   });
 
@@ -881,12 +1186,18 @@ function RaycastMagnet({
 }
 
 function AtlasControls({
-  hoveredRace,
+  viewMode,
+  navigationVersion,
+  hoveredTargetId,
   selectedRace,
+  europeNormal,
   reducedMotion,
 }: {
-  hoveredRace: SeasonRace | null;
+  viewMode: AtlasViewMode;
+  navigationVersion: number;
+  hoveredTargetId: string | null;
   selectedRace: SeasonRace | null;
+  europeNormal: THREE.Vector3;
   reducedMotion: boolean;
 }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -894,47 +1205,109 @@ function AtlasControls({
   const interactingRef = useRef(false);
   const autoRotateSpeedRef = useRef(0);
   const idleCooldownRef = useRef(0);
-  const flightTargetRef = useRef(new THREE.Vector3());
-  const flyingRef = useRef(false);
+  const flightRef = useRef<{
+    fromDirection: THREE.Vector3;
+    toDirection: THREE.Vector3;
+    fromDistance: number;
+    toDistance: number;
+    fromTarget: THREE.Vector3;
+    rotation: THREE.Quaternion;
+    elapsed: number;
+    duration: number;
+  } | null>(null);
   const hoverBaseDistanceRef = useRef<number | null>(null);
   const hoverDistanceTargetRef = useRef<number | null>(null);
+  const zeroTarget = useMemo(() => new THREE.Vector3(), []);
+  const frameDirection = useMemo(() => new THREE.Vector3(), []);
+  const frameRotation = useMemo(() => new THREE.Quaternion(), []);
+
+  const modeRange =
+    viewMode === "global"
+      ? { min: CAMERA_NEAR_DISTANCE, max: CAMERA_FAR_DISTANCE }
+      : viewMode === "europe-focus"
+        ? { min: 4.55, max: 6.4 }
+        : { min: 4.25, max: 5.85 };
 
   useEffect(() => {
-    if (!selectedRace) {
-      flyingRef.current = false;
-      return;
+    const controls = controlsRef.current;
+    const homeNormal = latLonToVector3(31, 5, 1).normalize();
+    const desiredNormal =
+      viewMode === "global"
+        ? homeNormal
+        : viewMode === "europe-focus"
+          ? europeNormal
+          : selectedRace
+            ? latLonToVector3(
+                selectedRace.latitude,
+                selectedRace.longitude,
+                1,
+              ).normalize()
+            : europeNormal;
+    const desiredDistance =
+      viewMode === "global" ? 7.45 : viewMode === "europe-focus" ? 5.08 : 4.58;
+
+    if (controls) {
+      controls.minDistance = modeRange.min;
+      controls.maxDistance = modeRange.max;
     }
-    flightTargetRef.current.copy(
-      latLonToVector3(selectedRace.latitude, selectedRace.longitude, 5.15),
-    );
+    hoverBaseDistanceRef.current = null;
+    hoverDistanceTargetRef.current = null;
+    interactingRef.current = false;
+    autoRotateSpeedRef.current = 0;
+    idleCooldownRef.current = viewMode === "global" ? 1.15 : 0;
+
     if (reducedMotion) {
-      camera.position.copy(flightTargetRef.current);
-      controlsRef.current?.update();
-      flyingRef.current = false;
+      camera.position.copy(desiredNormal).multiplyScalar(desiredDistance);
+      controls?.target.copy(zeroTarget);
+      controls?.update();
+      flightRef.current = null;
     } else {
-      flyingRef.current = true;
+      const fromDirection = camera.position.clone().normalize();
+      flightRef.current = {
+        fromDirection,
+        toDirection: desiredNormal.clone(),
+        fromDistance: camera.position.length(),
+        toDistance: desiredDistance,
+        fromTarget: controls?.target.clone() ?? zeroTarget.clone(),
+        rotation: new THREE.Quaternion().setFromUnitVectors(
+          fromDirection,
+          desiredNormal,
+        ),
+        elapsed: 0,
+        duration: viewMode === "global" ? 1.35 : 1.18,
+      };
     }
-  }, [camera, reducedMotion, selectedRace]);
+  }, [
+    camera,
+    europeNormal,
+    modeRange.max,
+    modeRange.min,
+    navigationVersion,
+    reducedMotion,
+    selectedRace,
+    viewMode,
+    zeroTarget,
+  ]);
 
   useEffect(() => {
-    if (selectedRace) {
+    if (viewMode !== "global" || flightRef.current) {
       hoverBaseDistanceRef.current = null;
       hoverDistanceTargetRef.current = null;
       return;
     }
 
-    if (hoveredRace) {
+    if (hoveredTargetId) {
       if (hoverBaseDistanceRef.current === null) {
         hoverBaseDistanceRef.current = camera.position.length();
       }
       hoverDistanceTargetRef.current = Math.max(
         CAMERA_NEAR_DISTANCE,
-        hoverBaseDistanceRef.current - 0.24,
+        hoverBaseDistanceRef.current - 0.1,
       );
     } else if (hoverBaseDistanceRef.current !== null) {
       hoverDistanceTargetRef.current = hoverBaseDistanceRef.current;
     }
-  }, [camera, hoveredRace, selectedRace]);
+  }, [camera, hoveredTargetId, navigationVersion, viewMode]);
 
   useFrame((_, delta) => {
     const controls = controlsRef.current;
@@ -943,8 +1316,12 @@ function AtlasControls({
     idleCooldownRef.current = Math.max(0, idleCooldownRef.current - delta);
     const waitingForIdle = idleCooldownRef.current > 0;
     const shouldPause =
-      reducedMotion || interactingRef.current || waitingForIdle || Boolean(selectedRace);
-    const desiredAutoSpeed = shouldPause ? 0 : hoveredRace ? 0.07 : 0.2;
+      reducedMotion ||
+      interactingRef.current ||
+      waitingForIdle ||
+      Boolean(flightRef.current) ||
+      viewMode !== "global";
+    const desiredAutoSpeed = shouldPause ? 0 : hoveredTargetId ? 0.055 : 0.19;
     autoRotateSpeedRef.current = THREE.MathUtils.damp(
       autoRotateSpeedRef.current,
       desiredAutoSpeed,
@@ -954,18 +1331,35 @@ function AtlasControls({
     controls.autoRotate = !reducedMotion;
     controls.autoRotateSpeed = autoRotateSpeedRef.current;
 
-    if (flyingRef.current && selectedRace && !interactingRef.current) {
-      camera.position.lerp(
-        flightTargetRef.current,
-        1 - Math.exp(-delta * 1.85),
-      );
-      if (camera.position.distanceTo(flightTargetRef.current) < 0.018) {
-        flyingRef.current = false;
-      }
+    const flight = flightRef.current;
+    if (flight && !interactingRef.current) {
+      flight.elapsed = Math.min(flight.duration, flight.elapsed + delta);
+      const linearProgress = flight.elapsed / flight.duration;
+      const progress =
+        linearProgress < 0.5
+          ? 4 * linearProgress * linearProgress * linearProgress
+          : 1 - Math.pow(-2 * linearProgress + 2, 3) / 2;
+      frameRotation.identity().slerp(flight.rotation, progress);
+      frameDirection
+        .copy(flight.fromDirection)
+        .applyQuaternion(frameRotation)
+        .normalize();
+      camera.position
+        .copy(frameDirection)
+        .multiplyScalar(
+          THREE.MathUtils.lerp(
+            flight.fromDistance,
+            flight.toDistance,
+            progress,
+          ),
+        );
+      controls.target.lerpVectors(flight.fromTarget, zeroTarget, progress);
+      controls.update();
+      if (linearProgress >= 1) flightRef.current = null;
     } else if (
       hoverDistanceTargetRef.current !== null &&
       !interactingRef.current &&
-      !selectedRace &&
+      viewMode === "global" &&
       !reducedMotion
     ) {
       const currentDistance = camera.position.length();
@@ -977,7 +1371,7 @@ function AtlasControls({
       );
       camera.position.normalize().multiplyScalar(nextDistance);
       if (
-        !hoveredRace &&
+        !hoveredTargetId &&
         Math.abs(nextDistance - hoverDistanceTargetRef.current) < 0.006
       ) {
         hoverBaseDistanceRef.current = null;
@@ -995,13 +1389,15 @@ function AtlasControls({
       dampingFactor={0.065}
       rotateSpeed={0.42}
       zoomSpeed={0.65}
-      minDistance={CAMERA_NEAR_DISTANCE}
-      maxDistance={CAMERA_FAR_DISTANCE}
+      minDistance={modeRange.min}
+      maxDistance={modeRange.max}
       minPolarAngle={0.12}
       maxPolarAngle={Math.PI - 0.12}
       onStart={() => {
         interactingRef.current = true;
-        flyingRef.current = false;
+        flightRef.current = null;
+        hoverBaseDistanceRef.current = null;
+        hoverDistanceTargetRef.current = null;
         autoRotateSpeedRef.current = 0;
         if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0;
         idleCooldownRef.current = 2.4;
@@ -1017,7 +1413,7 @@ function AtlasControls({
 function SubtleBloom({ enabled }: { enabled: boolean }) {
   const { size } = useThree();
   const pass = useMemo(
-    () => new UnrealBloomPass(new THREE.Vector2(1, 1), 0.44, 0.52, 0.76),
+    () => new UnrealBloomPass(new THREE.Vector2(1, 1), 0.26, 0.34, 0.92),
     [],
   );
 
@@ -1038,16 +1434,78 @@ function SubtleBloom({ enabled }: { enabled: boolean }) {
 
 function AtlasScene({
   races,
+  hoveredTargetId,
   hoveredRace,
   selectedRace,
   currentRace,
+  viewMode,
+  navigationVersion,
   reducedMotion,
   compact,
-  onHoverRace,
-  onSelectRace,
+  onHoverTarget,
+  onSelectTarget,
 }: SceneProps) {
-  const activeFocusRace = selectedRace ?? hoveredRace;
-  const europeFocused = selectedRace?.region === EUROPE_REGION;
+  const stationAnchors = useMemo<StationAnchor[]>(
+    () =>
+      races.map((race) => {
+        const position = latLonToVector3(
+          race.latitude,
+          race.longitude,
+          NODE_RADIUS,
+        );
+        return {
+          race,
+          position,
+          normal: position.clone().normalize(),
+          labelOffset:
+            EUROPE_LABEL_OFFSETS[race.id] ??
+            DEFAULT_LABEL_OFFSETS[race.id] ??
+            [58, -20],
+        };
+      }),
+    [races],
+  );
+  const anchorMap = useMemo(
+    () => new Map(stationAnchors.map((anchor) => [anchor.race.id, anchor])),
+    [stationAnchors],
+  );
+  const europeAnchors = useMemo(
+    () =>
+      stationAnchors.filter(
+        (anchor) => anchor.race.region === EUROPE_REGION,
+      ),
+    [stationAnchors],
+  );
+  const europeNormal = useMemo(() => {
+    const result = new THREE.Vector3();
+    for (const anchor of europeAnchors) result.add(anchor.normal);
+    return result.normalize();
+  }, [europeAnchors]);
+  const europeEntry = useMemo<InteractiveTarget>(
+    () => ({
+      id: EUROPE_ENTRY_ID,
+      kind: "region",
+      normal: europeNormal,
+      position: europeNormal.clone().multiplyScalar(NODE_RADIUS),
+    }),
+    [europeNormal],
+  );
+  const isEuropeContext =
+    viewMode === "europe-focus" ||
+    (viewMode === "station-focus" &&
+      selectedRace?.region === EUROPE_REGION);
+  const activeFocusAnchor = selectedRace
+    ? anchorMap.get(selectedRace.id) ?? null
+    : hoveredTargetId === EUROPE_ENTRY_ID
+      ? europeEntry
+      : hoveredRace
+        ? anchorMap.get(hoveredRace.id) ?? null
+        : null;
+  const focusLevel = selectedRace
+    ? "selected"
+    : activeFocusAnchor
+      ? "hovered"
+      : null;
   const nearbyRaceIds = useMemo(() => {
     if (!hoveredRace) return new Set<string>();
     const hoveredVector = latLonToVector3(
@@ -1059,53 +1517,141 @@ function AtlasScene({
       races
         .filter((race) => {
           const raceVector = latLonToVector3(race.latitude, race.longitude, 1);
-          return angularDistanceDegrees(hoveredVector, raceVector) < 11.5;
+          return (
+            race.region === hoveredRace.region &&
+            angularDistanceDegrees(hoveredVector, raceVector) < 8.5
+          );
         })
         .map((race) => race.id),
     );
   }, [hoveredRace, races]);
+  const interactiveTargets = useMemo<InteractiveTarget[]>(() => {
+    if (viewMode === "global") {
+      return [
+        ...stationAnchors
+          .filter((anchor) => anchor.race.region !== EUROPE_REGION)
+          .map((anchor) => ({
+            id: anchor.race.id,
+            kind: "station" as const,
+            normal: anchor.normal,
+            position: anchor.position,
+          })),
+        europeEntry,
+      ];
+    }
+    if (isEuropeContext) {
+      return europeAnchors.map((anchor) => ({
+        id: anchor.race.id,
+        kind: "station" as const,
+        normal: anchor.normal,
+        position: anchor.position,
+      }));
+    }
+    return stationAnchors
+      .filter((anchor) => anchor.race.region !== EUROPE_REGION)
+      .map((anchor) => ({
+        id: anchor.race.id,
+        kind: "station" as const,
+        normal: anchor.normal,
+        position: anchor.position,
+      }));
+  }, [
+    europeAnchors,
+    europeEntry,
+    isEuropeContext,
+    stationAnchors,
+    viewMode,
+  ]);
 
   return (
     <>
       <color attach="background" args={["#01040a"]} />
       <fog attach="fog" args={["#01040a", 15, 39]} />
-      <ambientLight intensity={0.08} />
-      <directionalLight position={[4, 3, 2]} intensity={0.32} color="#a9ccf4" />
+      <ambientLight intensity={0.14} />
+      <directionalLight position={[4, 3, 2]} intensity={0.28} color="#a9ccf4" />
       <StarField compact={compact} reducedMotion={reducedMotion} />
-      <EarthSystem focusRace={activeFocusRace} reducedMotion={reducedMotion} />
-      {races.map((race) => {
-        const hovered = hoveredRace?.id === race.id;
+      <EarthSystem
+        focusNormal={activeFocusAnchor?.normal ?? null}
+        focusLevel={focusLevel === "selected" ? 0.58 : focusLevel ? 0.32 : 0}
+        reducedMotion={reducedMotion}
+      />
+      <EuropePlate active={isEuropeContext} reducedMotion={reducedMotion} />
+      {stationAnchors.map((anchor) => {
+        const { race } = anchor;
+        const hovered = hoveredTargetId === race.id;
         const selected = selectedRace?.id === race.id;
         const current = currentRace.id === race.id;
-        const showLabel =
-          current ||
-          hovered ||
-          selected ||
-          nearbyRaceIds.has(race.id) ||
-          (europeFocused && race.region === EUROPE_REGION);
+        const visibility =
+          viewMode === "global"
+            ? race.region === EUROPE_REGION
+              ? 0
+              : 1
+            : isEuropeContext
+              ? race.region === EUROPE_REGION
+                ? 1
+                : 0
+              : selected
+                ? 1
+                : race.region === EUROPE_REGION
+                  ? 0
+                  : 0.16;
+        const nodeState: NodeState = selected
+          ? "selected"
+          : hovered
+            ? "hovered"
+            : current && visibility > 0.5
+              ? "current"
+              : "idle";
+        const showLabel = isEuropeContext
+          ? race.region === EUROPE_REGION
+          : visibility > 0 &&
+            (hovered || selected || current || nearbyRaceIds.has(race.id));
+        const labelSelectable =
+          visibility > 0.2 && (isEuropeContext || hovered || selected);
 
         return (
           <RaceNode
             key={race.id}
-            race={race}
-            hovered={hovered}
-            selected={selected}
-            current={current}
+            anchor={anchor}
+            state={nodeState}
+            visibility={visibility}
             showLabel={showLabel}
+            labelSelectable={labelSelectable}
+            revealDelay={
+              viewMode === "europe-focus" && race.region === EUROPE_REGION
+                ? 0.34 + (race.round % 3) * 0.04
+                : 0
+            }
+            revealVersion={navigationVersion}
             reducedMotion={reducedMotion}
+            onSelect={onSelectTarget}
           />
         );
       })}
-      <RegionLabel currentRace={currentRace} hide={Boolean(hoveredRace || selectedRace)} />
-      <FocusParticles focusRace={activeFocusRace} reducedMotion={reducedMotion} />
+      <EuropeEntryNode
+        normal={europeEntry.normal}
+        position={europeEntry.position}
+        hovered={hoveredTargetId === EUROPE_ENTRY_ID}
+        visible={viewMode === "global"}
+        onSelect={onSelectTarget}
+      />
+      <FocusParticles
+        focusPosition={activeFocusAnchor?.position ?? null}
+        level={focusLevel}
+        reducedMotion={reducedMotion}
+      />
       <RaycastMagnet
-        races={races}
-        onHoverRace={onHoverRace}
-        onSelectRace={onSelectRace}
+        targets={interactiveTargets}
+        resetKey={`${viewMode}:${navigationVersion}`}
+        onHoverTarget={onHoverTarget}
+        onSelectTarget={onSelectTarget}
       />
       <AtlasControls
-        hoveredRace={hoveredRace}
+        viewMode={viewMode}
+        navigationVersion={navigationVersion}
+        hoveredTargetId={hoveredTargetId}
         selectedRace={selectedRace}
+        europeNormal={europeNormal}
         reducedMotion={reducedMotion}
       />
       <SubtleBloom enabled={!compact && !reducedMotion} />

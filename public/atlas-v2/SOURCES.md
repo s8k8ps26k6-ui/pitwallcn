@@ -9,6 +9,11 @@ concept artwork is not used as geographic source material.
   https://earthobservatory.nasa.gov/images/79765/night-lights-2012-map
 - `earth-clouds.jpg` — NASA Visible Earth global cloud composite:
   https://visibleearth.nasa.gov/images/57747/blue-marble-clouds
+- `src/lib/atlas/europe-50m.json` — Europe continent feature extracted from
+  Natural Earth 1:50m Geography Regions Polygons, version 5.1.2 (public domain):
+  https://github.com/nvkelso/natural-earth-vector/blob/v5.1.2/geojson/ne_50m_geography_regions_polys.geojson
+
+Natural Earth terms: https://www.naturalearthdata.com/about/terms-of-use/
 
 ## Calendar and coordinates
 

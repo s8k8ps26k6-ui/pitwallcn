@@ -121,6 +121,38 @@
   letter-spacing: 0.28em;
 }
 
+.backToGlobe {
+  position: absolute;
+  z-index: 12;
+  top: clamp(154px, 19vh, 190px);
+  left: clamp(24px, 5vw, 78px);
+  appearance: none;
+  padding: 10px 0;
+  border: 0;
+  color: rgba(196, 216, 232, 0.82);
+  font: 500 9px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.21em;
+  text-transform: uppercase;
+  background: transparent;
+  cursor: pointer;
+  transition: color 180ms ease, text-shadow 180ms ease;
+}
+
+.backToGlobe span {
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--atlas-gold);
+  font-size: 13px;
+  transform: translateY(1px);
+}
+
+.backToGlobe:hover,
+.backToGlobe:focus-visible {
+  color: #f0f5f9;
+  outline: none;
+  text-shadow: 0 0 14px rgba(126, 181, 226, 0.42);
+}
+
 .focusPanel {
   position: absolute;
   z-index: 9;
@@ -319,42 +351,82 @@
   animation: atlas-scroll-scan 2.2s ease-in-out infinite;
 }
 
-.raceLabel {
+.raceLabelAnchor {
   --atlas-label-x: 58px;
   --atlas-label-y: -20px;
+  --atlas-leader-length: 62px;
+  --atlas-leader-angle: 0rad;
   position: relative;
-  display: grid;
-  grid-template-columns: 54px auto auto;
-  align-items: center;
-  gap: 7px;
-  min-width: 124px;
-  transform: translate(var(--atlas-label-x), var(--atlas-label-y));
+  width: 0;
+  height: 0;
   color: rgba(184, 208, 226, 0.78);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 7px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  white-space: nowrap;
   will-change: opacity;
 }
 
 .raceLabelLine {
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 0;
   display: block;
+  width: var(--atlas-leader-length);
   height: 1px;
-  background: linear-gradient(90deg, rgba(157, 194, 221, 0.08), rgba(157, 194, 221, 0.62));
+  transform: rotate(var(--atlas-leader-angle));
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, rgba(157, 194, 221, 0.68), rgba(157, 194, 221, 0.14));
 }
 
+.raceLabelLine::before,
 .raceLabelLine::after {
   position: absolute;
-  right: -2px;
   top: -1px;
   width: 3px;
   height: 3px;
   border-radius: 50%;
   content: "";
+}
+
+.raceLabelLine::before {
+  left: -1px;
   background: #c8dceb;
   box-shadow: 0 0 7px rgba(147, 204, 247, 0.7);
+}
+
+.raceLabelLine::after {
+  right: -1px;
+  background: rgba(157, 194, 221, 0.42);
+}
+
+.raceLabelBody {
+  position: absolute;
+  left: var(--atlas-label-x);
+  top: var(--atlas-label-y);
+  display: flex;
+  gap: 7px;
+  align-items: baseline;
+  appearance: none;
+  padding: 3px 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  white-space: nowrap;
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.raceLabelLeft .raceLabelBody {
+  transform: translate(-100%, -50%);
+}
+
+.raceLabelBody:focus-visible {
+  outline: 1px solid rgba(185, 215, 238, 0.34);
+  outline-offset: 4px;
 }
 
 .raceLabelName {
@@ -372,33 +444,67 @@
 }
 
 .raceLabelActive .raceLabelLine {
-  background: linear-gradient(90deg, rgba(227, 196, 124, 0.06), rgba(227, 196, 124, 0.78));
+  background: linear-gradient(90deg, rgba(227, 196, 124, 0.8), rgba(227, 196, 124, 0.12));
 }
 
-.raceLabelActive .raceLabelLine::after {
+.raceLabelActive .raceLabelLine::before {
   background: #ffe4a2;
   box-shadow: 0 0 9px rgba(238, 200, 112, 0.9);
 }
 
-.regionLabel {
-  display: grid;
-  gap: 4px;
-  min-width: 126px;
-  padding-left: 14px;
-  border-left: 1px solid rgba(217, 192, 132, 0.5);
-  color: #e4cc91;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  transform: translate(82px, -54px);
+.regionLabelAnchor {
+  position: relative;
+  width: 0;
+  height: 0;
   will-change: opacity;
 }
 
-.regionLabel small {
-  color: #5f768a;
-  font-size: 6px;
-  letter-spacing: 0.16em;
+.regionLabelLine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 70px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(222, 198, 139, 0.72), rgba(131, 169, 198, 0.12));
+  transform: rotate(-0.55rad);
+  transform-origin: 0 50%;
+}
+
+.regionLabelLine::before {
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  content: "";
+  background: #e6cf94;
+  box-shadow: 0 0 8px rgba(220, 191, 116, 0.58);
+}
+
+.regionLabel {
+  position: absolute;
+  left: 62px;
+  top: -43px;
+  appearance: none;
+  min-width: max-content;
+  padding: 5px 0 5px 12px;
+  border: 0;
+  border-left: 1px solid rgba(217, 192, 132, 0.5);
+  color: #e4cc91;
+  font: 500 8px/1.3 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: transparent;
+  cursor: pointer;
+}
+
+.regionLabel:hover,
+.regionLabel:focus-visible {
+  color: #f5dda1;
+  outline: none;
+  text-shadow: 0 0 12px rgba(224, 194, 119, 0.45);
 }
 
 .loadingState {
@@ -501,6 +607,12 @@
     display: none;
   }
 
+  .backToGlobe {
+    top: 112px;
+    left: 20px;
+    font-size: 8px;
+  }
+
   .focusPanel {
     right: 20px;
     bottom: 74px;
@@ -557,7 +669,8 @@
   }
 
   .scrollPrompt,
-  .raceLabel,
+  .raceLabelAnchor,
+  .backToGlobe,
   .focusFooter button {
     transition: none;
   }

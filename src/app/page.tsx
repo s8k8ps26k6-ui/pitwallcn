@@ -1,4 +1,4 @@
-import { CinematicHomepage } from "@/components/cinematic-homepage";
+import { ImmersiveHomepage } from "@/components/immersive-homepage";
 import { getScheduleCalendar } from "@/lib/f1-service";
 
 function formatDateRange(startIso: string, endIso: string) {
@@ -22,7 +22,7 @@ export default async function Home() {
 
   return (
     <main>
-      <CinematicHomepage
+      <ImmersiveHomepage
         nextRace={nextRace}
         sourceLabel={getScheduleSourceLabel(source)}
         dateRange={formatDateRange(nextRace.startDate, nextRace.endDate)}

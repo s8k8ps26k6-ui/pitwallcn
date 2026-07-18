@@ -348,3 +348,29 @@ npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
 - `src/components/site-shell.tsx` 是混合所有权：必须保留整份用户文件和当前 Atlas 判断行，但不能把整份未跟踪文件错误归为 Atlas 新文件。
 
 恢复开发时先重新阅读本节和 `git status`；禁止 checkout/reset/clean，禁止覆盖首页，禁止删除上述文件。
+
+## 14. 2026-07-18 交互稳定化与线上预览检查点
+
+本轮基于 `b6481dd192830a97398385b6c071f5de4cf0c267` 完成以下修复：
+
+- 磁吸 raycast 改为单一可见目标状态机，加入进入/退出迟滞、90–110ms 获取/切换稳定时间、220ms 最短保持时间与 180ms 释放延迟；相邻节点直接平滑切换，不再先回到 `null`。
+- 节点视觉明确分为 `idle / current / hovered / selected`，限制光晕、粒子、emissive 与 Bloom 峰值；普通节点不再高频脉冲。
+- 导航状态明确为 `global → europe-focus → station-focus`；全球视图隐藏欧洲 9 个独立节点，只保留 `EUROPE SEASON · 9 ROUNDS` 入口。
+- 欧洲模式使用 Natural Earth 1:50m 公共领域真实地理要素生成贴合球面曲率的轻微抬升板块；欧洲 9 站仍从统一 2026 赛历数据按真实经纬度生成。
+- 节点、标签与引导线由同一个 station id / `StationAnchor` 绑定，每帧按相机重新投影并隐藏背面标签。
+- 任意非全球状态固定显示 `← BACK TO GLOBE`；按钮与 Esc 都会清除 hover/selection、覆盖当前相机 tween，并平滑恢复全球相机、缩放范围与自动旋转。
+- 夜面提高最低 albedo，降低城市光、云层、大气边缘与局部聚焦亮度，避免北美夜面不可读及区域过曝。
+
+新增数据与来源：
+
+- `src/lib/atlas/europe-50m.json`：从 Natural Earth 1:50m Geography Regions Polygons v5.1.2 提取的 Europe continent feature。
+- `src/components/atlas-v2/europe-plate.tsx`：运行时将真实经纬度多边形三角化、曲面细分并贴合地球球面。
+- 来源与公共领域条款已补充到 `public/atlas-v2/SOURCES.md`。
+
+发布前的唯一验证：
+
+- `npx.cmd tsc --noEmit --pretty false`：通过，0 错误。
+- `npm.cmd run build`：通过；Next.js 15.5.19 成功编译、类型/ESLint 阶段通过并生成全部 15 个静态页面，`/atlas-v2` 为静态路由。Windows 本机 SWC 原生模块出现一次文件占用警告，但 Next fallback 完成了成功构建。
+- 按用户最新指令停止 headless Edge、本地 WebGL 与截图探针；没有把临时脚本、截图或测试输出加入提交，也不在本文宣称未完成的自动化触控验收。
+
+自包含发布范围说明：第 13 节记录的首页/外壳源码原先属于用户既有未提交修改；本轮用户明确要求推送后的干净检出可以完成全仓 TypeScript 与 production build。因此发布检查点需要一并保存 `layout.tsx → site-shell.tsx` 以及 `page.tsx → immersive-homepage.tsx → scene-background.tsx / home-smooth-scroll.tsx` 的完整依赖闭包，并保留对应 package、全局样式、Tailwind 与旧组件删除状态。QA 目录、日志、参考 PNG、`output/` 和真实 `.env` 仍全部排除。
