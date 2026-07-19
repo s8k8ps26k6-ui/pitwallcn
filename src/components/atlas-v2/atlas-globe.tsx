@@ -1843,16 +1843,32 @@ function ViewportSync({ compact }: { compact: boolean }) {
   const { camera, gl, size } = useThree();
 
   useEffect(() => {
-    const pixelRatio = Math.min(
-      window.devicePixelRatio || 1,
-      compact ? 1.25 : 1.7,
-    );
-    gl.setPixelRatio(pixelRatio);
-    gl.setSize(size.width, size.height, false);
-    if (camera instanceof THREE.PerspectiveCamera) {
-      camera.aspect = size.width / Math.max(size.height, 1);
-      camera.updateProjectionMatrix();
-    }
+    const syncViewport = (width = size.width, height = size.height) => {
+      const pixelRatio = Math.min(
+        window.devicePixelRatio || 1,
+        compact ? 1.25 : 1.7,
+      );
+      gl.setPixelRatio(pixelRatio);
+      gl.setSize(width, height, false);
+      if (camera instanceof THREE.PerspectiveCamera) {
+        camera.aspect = width / Math.max(height, 1);
+        camera.updateProjectionMatrix();
+      }
+    };
+    syncViewport();
+    let resizeFrame = 0;
+    const onOrientationChange = () => {
+      window.cancelAnimationFrame(resizeFrame);
+      resizeFrame = window.requestAnimationFrame(() => {
+        const rect = gl.domElement.getBoundingClientRect();
+        syncViewport(Math.round(rect.width), Math.round(rect.height));
+      });
+    };
+    window.addEventListener("orientationchange", onOrientationChange);
+    return () => {
+      window.cancelAnimationFrame(resizeFrame);
+      window.removeEventListener("orientationchange", onOrientationChange);
+    };
   }, [camera, compact, gl, size.height, size.width]);
 
   return null;

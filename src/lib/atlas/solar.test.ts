@@ -58,3 +58,24 @@ test("UTC solar direction broadly reverses after twelve hours", () => {
     false,
   );
 });
+
+test("UTC 2026-07-19 16:09 places the Americas in daylight and East Asia at night", () => {
+  const referenceUtc = new Date("2026-07-19T16:09:00.000Z");
+
+  assert.equal(
+    solar.isLocationInDaylight(40.7128, -74.006, referenceUtc),
+    true,
+  );
+  assert.equal(
+    solar.isLocationInDaylight(34.0522, -118.2437, referenceUtc),
+    true,
+  );
+  assert.equal(
+    solar.isLocationInDaylight(39.9042, 116.4074, referenceUtc),
+    false,
+  );
+  assert.equal(
+    solar.isLocationInDaylight(1.3521, 103.8198, referenceUtc),
+    false,
+  );
+});
