@@ -44,8 +44,8 @@
   z-index: 2;
   pointer-events: none;
   background:
-    radial-gradient(circle at 48% 48%, transparent 35%, rgba(1, 4, 10, 0.19) 65%, rgba(1, 4, 10, 0.74) 100%),
-    linear-gradient(90deg, rgba(1, 4, 10, 0.38), transparent 26%, transparent 72%, rgba(1, 4, 10, 0.42));
+    radial-gradient(circle at 48% 48%, transparent 43%, rgba(1, 4, 10, 0.10) 70%, rgba(1, 4, 10, 0.54) 100%),
+    linear-gradient(90deg, rgba(1, 4, 10, 0.24), transparent 28%, transparent 72%, rgba(1, 4, 10, 0.28));
 }
 
 .grain {
