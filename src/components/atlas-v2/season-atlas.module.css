@@ -43,6 +43,7 @@
 .vignette {
   z-index: 2;
   pointer-events: none;
+  opacity: var(--atlas-vignette-strength, 0.72);
   background:
     radial-gradient(circle at 48% 48%, transparent 43%, rgba(1, 4, 10, 0.10) 70%, rgba(1, 4, 10, 0.54) 100%),
     linear-gradient(90deg, rgba(1, 4, 10, 0.24), transparent 28%, transparent 72%, rgba(1, 4, 10, 0.28));
@@ -51,7 +52,7 @@
 .grain {
   z-index: 3;
   pointer-events: none;
-  opacity: 0.17;
+  opacity: calc(0.17 * var(--atlas-grid-opacity, 0));
   mix-blend-mode: screen;
   background-image:
     radial-gradient(circle at 20% 30%, rgba(151, 193, 226, 0.26) 0 0.5px, transparent 0.8px),
@@ -628,6 +629,10 @@
 }
 
 @media (max-width: 720px) {
+  .grain {
+    display: none;
+  }
+
   .root {
     min-height: 112dvh;
   }

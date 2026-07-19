@@ -28,6 +28,7 @@ import {
   type AtlasLabelOffset,
 } from "@/lib/atlas/visibility";
 import { getSolarDirection } from "@/lib/atlas/solar";
+import { ATLAS_RENDER_DEFAULTS } from "@/lib/atlas/render-settings";
 import type { SeasonRace } from "@/lib/atlas/season-2026";
 import { EuropePlate } from "./europe-plate";
 import styles from "./season-atlas.module.css";
@@ -177,6 +178,7 @@ const EARTH_VERTEX_SHADER = /* glsl */ `
 `;
 
 const EARTH_FRAGMENT_SHADER = /* glsl */ `
+  #include <tonemapping_pars_fragment>
   #include <colorspace_pars_fragment>
 
   uniform sampler2D uDayMap;
@@ -184,6 +186,11 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uLightDirection;
   uniform vec3 uFocusPoint;
   uniform float uFocusStrength;
+  uniform float uNightSurfaceFloor;
+  uniform float uDaylightStrength;
+  uniform float uSaturation;
+  uniform float uCityLightsIntensity;
+  uniform float uDayFactorDebug;
 
   varying vec2 vUv;
   varying vec3 vWorldNormal;
@@ -199,19 +206,21 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
     float daylight = smoothstep(-0.22, 0.32, sun);
     float nightSide = 1.0 - smoothstep(-0.16, 0.22, sun);
 
-    vec3 daySample = sRGBTransferEOTF(texture2D(uDayMap, vUv).rgb);
+    // The day texture is stored as SRGBColorSpace. WebGL decodes it on sample,
+    // so decoding it here again would incorrectly crush the natural albedo.
+    vec3 daySample = texture2D(uDayMap, vUv).rgb;
     vec3 nightSample = texture2D(uNightMap, vUv).rgb;
     float nightLuma = atlasLuminance(nightSample);
     float cityMask = smoothstep(0.13, 0.62, nightLuma);
 
     float terrainLuma = atlasLuminance(daySample);
     float terrainRoughness = smoothstep(0.05, 0.78, terrainLuma);
-    vec3 naturalAlbedo = mix(daySample, vec3(terrainLuma), 0.055);
+    vec3 naturalAlbedo = mix(daySample, vec3(terrainLuma), 1.0 - uSaturation);
     vec3 dayColor = naturalAlbedo;
-    dayColor *= 0.72 + max(sun, 0.0) * 0.28;
+    dayColor *= (0.72 + max(sun, 0.0) * 0.28) * uDaylightStrength;
     dayColor *= mix(0.94, 1.02, terrainRoughness);
 
-    vec3 nightBase = naturalAlbedo * 0.145;
+    vec3 nightBase = naturalAlbedo * uNightSurfaceFloor;
     nightBase += vec3(0.006, 0.008, 0.011) * (0.44 + 0.56 * max(normal.y, 0.0));
     vec3 cityColor = mix(
       vec3(0.70, 0.58, 0.38),
@@ -219,7 +228,7 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
       smoothstep(0.25, 0.90, nightLuma)
     );
     vec3 color = mix(nightBase, dayColor, daylight);
-    color += cityColor * cityMask * nightSide * 0.42;
+    color += cityColor * cityMask * nightSide * uCityLightsIntensity;
 
     float focusDot = max(dot(normalize(vObjectPosition), normalize(uFocusPoint)), 0.0);
     float localFocus = pow(focusDot, 96.0) * uFocusStrength;
@@ -229,7 +238,10 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
     float polarShade = smoothstep(0.0, 0.95, abs(normal.y));
     color += vec3(0.018, 0.020, 0.024) * polarShade * 0.15;
 
+    if (uDayFactorDebug > 0.5) color = vec3(daylight);
+
     gl_FragColor = vec4(color, 1.0);
+    #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
 `;
@@ -247,6 +259,7 @@ const CLOUD_VERTEX_SHADER = /* glsl */ `
 
 const CLOUD_FRAGMENT_SHADER = /* glsl */ `
   uniform sampler2D uCloudMap;
+  uniform float uCloudOpacity;
   varying vec2 vUv;
   varying vec3 vNormalView;
 
@@ -254,7 +267,7 @@ const CLOUD_FRAGMENT_SHADER = /* glsl */ `
     vec3 sampleColor = texture2D(uCloudMap, vUv).rgb;
     float density = smoothstep(0.38, 0.82, dot(sampleColor, vec3(0.3333)));
     float rim = pow(1.0 - max(vNormalView.z, 0.0), 2.2);
-    float alpha = density * (0.048 + rim * 0.042);
+    float alpha = density * (0.048 + rim * 0.042) * uCloudOpacity;
     gl_FragColor = vec4(vec3(0.90, 0.92, 0.94), alpha);
   }
 `;
@@ -269,12 +282,13 @@ const ATMOSPHERE_VERTEX_SHADER = /* glsl */ `
 `;
 
 const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
+  uniform float uAtmosphereAlpha;
   varying vec3 vNormalView;
 
   void main() {
     float fresnel = pow(1.0 - abs(vNormalView.z), 6.4);
     vec3 color = mix(vec3(0.035, 0.08, 0.15), vec3(0.13, 0.28, 0.52), fresnel);
-    gl_FragColor = vec4(color, fresnel * 0.075);
+    gl_FragColor = vec4(color, fresnel * 0.075 * uAtmosphereAlpha);
   }
 `;
 
@@ -455,13 +469,28 @@ function EarthSystem({
       uLightDirection: { value: sunDirection },
       uFocusPoint: { value: new THREE.Vector3(1, 0, 0) },
       uFocusStrength: { value: 0 },
+      uNightSurfaceFloor: { value: ATLAS_RENDER_DEFAULTS.nightSurfaceFloor },
+      uDaylightStrength: { value: ATLAS_RENDER_DEFAULTS.daylightStrength },
+      uSaturation: { value: ATLAS_RENDER_DEFAULTS.saturation },
+      uCityLightsIntensity: { value: ATLAS_RENDER_DEFAULTS.cityLightsIntensity },
+      uDayFactorDebug: { value: 0 },
     }),
     [dayMap, nightMap, sunDirection],
   );
 
   const cloudUniforms = useMemo(
-    () => ({ uCloudMap: { value: cloudMap } }),
+    () => ({
+      uCloudMap: { value: cloudMap },
+      uCloudOpacity: { value: ATLAS_RENDER_DEFAULTS.cloudsOpacity },
+    }),
     [cloudMap],
+  );
+
+  const atmosphereUniforms = useMemo(
+    () => ({
+      uAtmosphereAlpha: { value: ATLAS_RENDER_DEFAULTS.atmosphereAlpha },
+    }),
+    [],
   );
 
   useFrame((_, delta) => {
@@ -493,6 +522,7 @@ function EarthSystem({
       <mesh>
         <sphereGeometry args={[EARTH_RADIUS, compact ? 96 : 192, compact ? 72 : 144]} />
         <shaderMaterial
+          toneMapped
           ref={earthMaterialRef}
           uniforms={earthUniforms}
           vertexShader={EARTH_VERTEX_SHADER}
@@ -513,6 +543,7 @@ function EarthSystem({
       <mesh scale={1.018} renderOrder={1}>
         <sphereGeometry args={[EARTH_RADIUS, compact ? 64 : 128, compact ? 48 : 96]} />
         <shaderMaterial
+          uniforms={atmosphereUniforms}
           vertexShader={ATMOSPHERE_VERTEX_SHADER}
           fragmentShader={ATMOSPHERE_FRAGMENT_SHADER}
           transparent
@@ -1790,6 +1821,17 @@ function ViewportSync({ compact }: { compact: boolean }) {
   return null;
 }
 
+function RendererCalibration() {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    gl.toneMappingExposure = ATLAS_RENDER_DEFAULTS.exposure;
+  }, [gl]);
+
+  return null;
+}
+
 function AtlasScene({
   races,
   hoveredTargetId,
@@ -1920,6 +1962,7 @@ function AtlasScene({
       <color attach="background" args={["#01040a"]} />
       <fog attach="fog" args={["#01040a", 15, 39]} />
       <ViewportSync compact={compact} />
+      <RendererCalibration />
       <ambientLight intensity={0.14} />
       <directionalLight position={[4, 3, 2]} intensity={0.28} color="#a9ccf4" />
       <StarField compact={compact} reducedMotion={reducedMotion} />
@@ -2036,7 +2079,7 @@ export function AtlasGlobe(props: AtlasGlobeProps) {
         alpha: false,
         powerPreference: "high-performance",
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.06,
+        toneMappingExposure: ATLAS_RENDER_DEFAULTS.exposure,
       }}
       onCreated={({ gl }) => {
         gl.outputColorSpace = THREE.SRGBColorSpace;
