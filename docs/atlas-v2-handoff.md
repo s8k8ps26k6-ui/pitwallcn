@@ -268,6 +268,54 @@ npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
 
 结束服务器：在启动服务器的终端按 `Ctrl+C`。归档时没有进程监听端口 3000。
 
+## 10A. Atlas render finishing — 2026-07-20
+
+### Daylight root cause and correction
+
+- The solar coordinate system was already correct: `getSolarDirection()` and `latLonToVector3()` both use the same static world coordinates, and OrbitControls moves the camera rather than rotating the Earth mesh. At `2026-07-19T16:09:00.000Z`, the reference test confirms New York / Los Angeles are day-side while Beijing / Singapore are night-side.
+- The real surface-color failure was a second sRGB-to-linear conversion in `src/components/atlas-v2/atlas-globe.tsx`. `earth-day*.png` is correctly configured as `THREE.SRGBColorSpace`, so WebGL already returns a linear sample; the shader additionally called `sRGBTransferEOTF(...)`, crushing the day albedo and making the terminator appear visually ineffective. The duplicate conversion is removed.
+- The Earth shader now uses ACES Filmic tone mapping, a 0.28 night-surface floor, a 0.94 saturation mix, neutral cloud color, restrained warm city lights, and a thin atmosphere. The day/night mix remains driven by the actual world-space solar dot product; camera movement does not move daylight geographically.
+
+### Grid source and removal
+
+- The screen-wide point grid came from `.grain` in `src/components/atlas-v2/season-atlas.module.css`: two `radial-gradient(...)` layers with `background-size: 7px 7px, 9px 9px`, `mix-blend-mode: screen`, and `z-index: 3` placed above the canvas.
+- Production sets that layer to `opacity: calc(0.17 * var(--atlas-grid-opacity, 0))`, so it is off by default rather than hidden under a dark overlay. The same selector is `display: none` under the mobile breakpoint.
+
+### Production render defaults
+
+`src/lib/atlas/render-settings.ts` owns the production constants:
+
+```text
+exposure: 1.08
+nightSurfaceFloor: 0.28
+daylightStrength: 1.00
+saturation: 0.94
+cityLightsIntensity: 0.38
+cloudsOpacity: 0.80
+atmosphereAlpha: 0.72
+bloomStrength: 0.08
+vignetteStrength: 0.72
+gridOverlay: false
+```
+
+### Preview/development calibration panel
+
+- `src/components/atlas-v2/atlas-debug-panel.tsx` is lazy loaded only when both conditions are true: `NEXT_PUBLIC_ATLAS_DEBUG=1` and `/atlas-v2?atlasDebug=1` is requested. A normal `/atlas-v2` response does not render its DOM or request its dynamic code chunk.
+- The control panel is session-only. It does not use a database, local storage, or any persisted state. It can change exposure, night floor, daylight, saturation, city lights, clouds, atmosphere, bloom, vignette, grid overlay, live/fixed UTC, and day-factor grayscale; Reset restores the constants above and Copy Settings serializes the current session values.
+- Keep `NEXT_PUBLIC_ATLAS_DEBUG` unset for the Vercel Production environment. Set it only in Preview/development when a calibration URL is explicitly needed.
+
+### Mobile/performance status and remaining human review
+
+- Existing Atlas DPR limits remain `1.25` for compact/coarse-pointer screens and `1.7` for desktop. Orientation changes now resync renderer dimensions and perspective aspect from the canvas bounds; the existing projection helpers still hide back-facing and safe-viewport-outside markers, labels, and leaders rather than pinning them to an edge.
+- No browser automation, headless Edge, screenshot probe, or new QA script was used in this pass. Static and pure-code verification cannot certify subjective color, Bloom, Safari safe-area behavior, or touch feel. Review these on iPhone Preview at 390x844, 430x932, and 844x390 before changing production defaults again.
+
+### Final verification — 2026-07-20
+
+- `node --test src/lib/atlas/solar.test.ts`: passed 3/3. The new 16:09 UTC reference asserts that New York and Los Angeles are day-side while Beijing and Singapore are night-side.
+- `npx.cmd tsc --noEmit --pretty false --incremental false`: passed with exit code 0.
+- `npm.cmd run lint`: passed with exit code 0.
+- `npm.cmd run build`: passed with exit code 0. Next.js 15.5.19 compiled and generated all 15 pages; `/atlas-v2` is static at 324 kB (427 kB First Load JS).
+
 ## 11. 地图、纹理和参考素材
 
 ### 11.1 仓库内真实地球纹理
