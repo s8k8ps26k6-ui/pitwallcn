@@ -61,6 +61,94 @@
   mask-image: linear-gradient(to bottom, transparent, black 14%, black 86%, transparent);
 }
 
+.debugPanel {
+  position: absolute;
+  z-index: 20;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  width: min(276px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid rgba(174, 208, 238, 0.28);
+  background: rgba(2, 8, 17, 0.9);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.32);
+  color: #dbe9f6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.debugHeader,
+.debugRange > span,
+.debugToggle,
+.debugDate,
+.debugActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.debugHeader {
+  margin-bottom: 10px;
+  color: #f0d38a;
+}
+
+.debugHeader small {
+  color: #71879b;
+  font-size: 8px;
+}
+
+.debugRange {
+  display: block;
+  margin: 8px 0;
+}
+
+.debugRange output {
+  color: #f0d38a;
+  font-variant-numeric: tabular-nums;
+}
+
+.debugRange input {
+  width: 100%;
+  accent-color: #e2c27c;
+}
+
+.debugToggle,
+.debugDate {
+  min-height: 25px;
+  border-top: 1px solid rgba(174, 208, 238, 0.1);
+}
+
+.debugToggle input {
+  accent-color: #e2c27c;
+}
+
+.debugDate input {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #dbe9f6;
+  font: inherit;
+  font-size: 9px;
+}
+
+.debugActions {
+  margin-top: 10px;
+}
+
+.debugActions button {
+  border: 1px solid rgba(226, 194, 124, 0.42);
+  background: transparent;
+  color: #f0d38a;
+  padding: 7px 8px;
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.07em;
+}
+
 .frameLines {
   z-index: 4;
   pointer-events: none;
@@ -631,6 +719,13 @@
 @media (max-width: 720px) {
   .grain {
     display: none;
+  }
+
+  .debugPanel {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    width: min(250px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
   }
 
   .root {

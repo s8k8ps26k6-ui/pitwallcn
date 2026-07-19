@@ -8,6 +8,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import dynamic from "next/dynamic";
 import {
   AtlasGlobe,
   EUROPE_ENTRY_ID,
@@ -19,7 +20,16 @@ import {
   type SeasonSelectionPhase,
   type SeasonRace,
 } from "@/lib/atlas/season-2026";
+import {
+  ATLAS_RENDER_DEFAULTS,
+  type AtlasRenderSettings,
+} from "@/lib/atlas/render-settings";
 import styles from "./season-atlas.module.css";
+
+const AtlasDebugPanel = dynamic(
+  () => import("./atlas-debug-panel").then((module) => module.AtlasDebugPanel),
+  { ssr: false },
+);
 
 export type AtlasScrollStage = "global-core" | "season-data-reserved";
 
@@ -143,10 +153,21 @@ export function SeasonAtlas() {
   const [navigationVersion, setNavigationVersion] = useState(0);
   const [autoFocusVersion, setAutoFocusVersion] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [renderSettings, setRenderSettings] = useState<AtlasRenderSettings>(
+    ATLAS_RENDER_DEFAULTS,
+  );
+  const [debugEnabled, setDebugEnabled] = useState(false);
   const webglState = useWebGLState();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const compact = useMediaQuery("(max-width: 720px), (pointer: coarse)");
   const documentVisible = useDocumentVisibility();
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_ATLAS_DEBUG !== "1") return;
+    setDebugEnabled(
+      new URLSearchParams(window.location.search).get("atlasDebug") === "1",
+    );
+  }, []);
 
   const hoveredRace = useMemo(
     () => races.find((race) => race.id === hoveredTargetId) ?? null,
@@ -242,6 +263,8 @@ export function SeasonAtlas() {
 
   const rootStyle = {
     "--atlas-scroll-progress": scrollProgress.toFixed(3),
+    "--atlas-vignette-strength": renderSettings.vignetteStrength.toFixed(2),
+    "--atlas-grid-opacity": renderSettings.gridOverlay ? "1" : "0",
   } as CSSProperties;
 
   return (
@@ -273,6 +296,7 @@ export function SeasonAtlas() {
               reducedMotion={reducedMotion}
               compact={compact}
               active={documentVisible}
+              renderSettings={renderSettings}
               onHoverTarget={handleHoverTarget}
               onSelectTarget={handleSelectTarget}
               onSceneReady={handleSceneReady}
@@ -292,6 +316,12 @@ export function SeasonAtlas() {
         <div className={styles.vignette} aria-hidden="true" />
         <div className={styles.grain} aria-hidden="true" />
         <div className={styles.frameLines} aria-hidden="true" />
+        {debugEnabled ? (
+          <AtlasDebugPanel
+            settings={renderSettings}
+            onChange={setRenderSettings}
+          />
+        ) : null}
 
         <header className={styles.identity}>
           <span className={styles.identityRule} aria-hidden="true" />

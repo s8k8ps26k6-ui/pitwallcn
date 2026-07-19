@@ -28,7 +28,10 @@ import {
   type AtlasLabelOffset,
 } from "@/lib/atlas/visibility";
 import { getSolarDirection } from "@/lib/atlas/solar";
-import { ATLAS_RENDER_DEFAULTS } from "@/lib/atlas/render-settings";
+import {
+  ATLAS_RENDER_DEFAULTS,
+  type AtlasRenderSettings,
+} from "@/lib/atlas/render-settings";
 import type { SeasonRace } from "@/lib/atlas/season-2026";
 import { EuropePlate } from "./europe-plate";
 import styles from "./season-atlas.module.css";
@@ -49,6 +52,7 @@ type AtlasGlobeProps = {
   reducedMotion: boolean;
   compact: boolean;
   active: boolean;
+  renderSettings: AtlasRenderSettings;
   onHoverTarget: (targetId: string | null) => void;
   onSelectTarget: (targetId: string) => void;
   onSceneReady: () => void;
@@ -419,14 +423,18 @@ function EarthSystem({
   focusLevel,
   reducedMotion,
   compact,
+  renderSettings,
 }: {
   focusNormal: THREE.Vector3 | null;
   focusLevel: number;
   reducedMotion: boolean;
   compact: boolean;
+  renderSettings: AtlasRenderSettings;
 }) {
   const cloudRef = useRef<THREE.Mesh>(null);
   const earthMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const cloudMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const atmosphereMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const [dayMap, nightMap, cloudMap] = useTexture([
     compact ? "/atlas-v2/earth-day.png" : "/atlas-v2/earth-day-8192.png",
     "/atlas-v2/earth-night.jpg",
@@ -449,18 +457,28 @@ function EarthSystem({
   }, [cloudMap, dayMap, gl, nightMap]);
 
   useEffect(() => {
-    const updateSunDirection = () => sunDirection.copy(getSolarDirection());
-    const interval = window.setInterval(updateSunDirection, 45_000);
+    const updateSunDirection = () => {
+      const fixedDate = new Date(renderSettings.fixedUtc);
+      const sourceDate =
+        renderSettings.timeMode === "fixed" && !Number.isNaN(fixedDate.getTime())
+          ? fixedDate
+          : new Date();
+      sunDirection.copy(getSolarDirection(sourceDate));
+    };
+    const interval =
+      renderSettings.timeMode === "live"
+        ? window.setInterval(updateSunDirection, 45_000)
+        : null;
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") updateSunDirection();
     };
     updateSunDirection();
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
-      window.clearInterval(interval);
+      if (interval) window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [sunDirection]);
+  }, [renderSettings.fixedUtc, renderSettings.timeMode, sunDirection]);
 
   const earthUniforms = useMemo(
     () => ({
@@ -515,6 +533,19 @@ function EarthSystem({
       1 - Math.exp(-delta * 5),
     );
     material.uniforms.uFocusPoint.value.normalize();
+    material.uniforms.uNightSurfaceFloor.value = renderSettings.nightSurfaceFloor;
+    material.uniforms.uDaylightStrength.value = renderSettings.daylightStrength;
+    material.uniforms.uSaturation.value = renderSettings.saturation;
+    material.uniforms.uCityLightsIntensity.value = renderSettings.cityLightsIntensity;
+    material.uniforms.uDayFactorDebug.value = renderSettings.dayFactorDebug ? 1 : 0;
+
+    if (cloudMaterialRef.current) {
+      cloudMaterialRef.current.uniforms.uCloudOpacity.value = renderSettings.cloudsOpacity;
+    }
+    if (atmosphereMaterialRef.current) {
+      atmosphereMaterialRef.current.uniforms.uAtmosphereAlpha.value =
+        renderSettings.atmosphereAlpha;
+    }
   });
 
   return (
@@ -532,6 +563,7 @@ function EarthSystem({
       <mesh ref={cloudRef} scale={1.0085} renderOrder={2}>
         <sphereGeometry args={[EARTH_RADIUS, compact ? 64 : 128, compact ? 48 : 96]} />
         <shaderMaterial
+          ref={cloudMaterialRef}
           uniforms={cloudUniforms}
           vertexShader={CLOUD_VERTEX_SHADER}
           fragmentShader={CLOUD_FRAGMENT_SHADER}
@@ -543,6 +575,7 @@ function EarthSystem({
       <mesh scale={1.018} renderOrder={1}>
         <sphereGeometry args={[EARTH_RADIUS, compact ? 64 : 128, compact ? 48 : 96]} />
         <shaderMaterial
+          ref={atmosphereMaterialRef}
           uniforms={atmosphereUniforms}
           vertexShader={ATMOSPHERE_VERTEX_SHADER}
           fragmentShader={ATMOSPHERE_FRAGMENT_SHADER}
@@ -1780,7 +1813,7 @@ function AtlasControls({
   );
 }
 
-function SubtleBloom({ enabled }: { enabled: boolean }) {
+function SubtleBloom({ enabled, strength }: { enabled: boolean; strength: number }) {
   const { size } = useThree();
   const pass = useMemo(
     () => new UnrealBloomPass(new THREE.Vector2(1, 1), 0.12, 0.22, 1.22),
@@ -1790,6 +1823,10 @@ function SubtleBloom({ enabled }: { enabled: boolean }) {
   useEffect(() => {
     pass.setSize(size.width, size.height);
   }, [pass, size]);
+
+  useEffect(() => {
+    pass.strength = strength;
+  }, [pass, strength]);
 
   useEffect(() => () => pass.dispose(), [pass]);
 
@@ -1821,13 +1858,13 @@ function ViewportSync({ compact }: { compact: boolean }) {
   return null;
 }
 
-function RendererCalibration() {
+function RendererCalibration({ exposure }: { exposure: number }) {
   const { gl } = useThree();
 
   useEffect(() => {
     gl.toneMapping = THREE.ACESFilmicToneMapping;
-    gl.toneMappingExposure = ATLAS_RENDER_DEFAULTS.exposure;
-  }, [gl]);
+    gl.toneMappingExposure = exposure;
+  }, [exposure, gl]);
 
   return null;
 }
@@ -1844,6 +1881,7 @@ function AtlasScene({
   navigationVersion,
   reducedMotion,
   compact,
+  renderSettings,
   onHoverTarget,
   onSelectTarget,
   onSceneReady,
@@ -1962,7 +2000,7 @@ function AtlasScene({
       <color attach="background" args={["#01040a"]} />
       <fog attach="fog" args={["#01040a", 15, 39]} />
       <ViewportSync compact={compact} />
-      <RendererCalibration />
+      <RendererCalibration exposure={renderSettings.exposure} />
       <ambientLight intensity={0.14} />
       <directionalLight position={[4, 3, 2]} intensity={0.28} color="#a9ccf4" />
       <StarField compact={compact} reducedMotion={reducedMotion} />
@@ -1971,6 +2009,7 @@ function AtlasScene({
         focusLevel={focusLevel === "selected" ? 0.58 : focusLevel ? 0.32 : 0}
         reducedMotion={reducedMotion}
         compact={compact}
+        renderSettings={renderSettings}
       />
       <EuropePlate active={isEuropeContext} reducedMotion={reducedMotion} />
       {stationAnchors.map((anchor) => {
@@ -2055,7 +2094,10 @@ function AtlasScene({
         reducedMotion={reducedMotion}
         compact={compact}
       />
-      <SubtleBloom enabled={!compact && !reducedMotion} />
+      <SubtleBloom
+        enabled={!compact && !reducedMotion}
+        strength={renderSettings.bloomStrength}
+      />
     </>
   );
 }
