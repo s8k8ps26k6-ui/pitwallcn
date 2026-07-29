@@ -664,8 +664,8 @@ function RaceLabel({
         : emphasis === "hovered"
           ? 0.92
           : emphasis === "current"
-            ? 0.52
-            : 0.22;
+            ? 0.78
+            : 0.42;
     const target = show && placement ? emphasisOpacity : 0;
     opacityRef.current = THREE.MathUtils.damp(
       opacityRef.current,
@@ -2052,7 +2052,9 @@ function AtlasScene({
             : current && visibility > 0.5
               ? "current"
               : "idle";
-        const showLabel = visibility > 0 && (hovered || selected);
+        // Keep every visible circuit identifiable; current/hovered/selected
+        // states only change emphasis, not whether its label exists.
+        const showLabel = visibility > 0;
         const labelSelectable = showLabel && visibility > 0.2;
 
         return (
