@@ -182,9 +182,6 @@ const EARTH_VERTEX_SHADER = /* glsl */ `
 `;
 
 const EARTH_FRAGMENT_SHADER = /* glsl */ `
-  #include <tonemapping_pars_fragment>
-  #include <colorspace_pars_fragment>
-
   uniform sampler2D uDayMap;
   uniform sampler2D uNightMap;
   uniform vec3 uLightDirection;
@@ -208,7 +205,8 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
     vec3 normal = normalize(vWorldNormal);
     float sun = dot(normal, normalize(uLightDirection));
     float daylight = smoothstep(-0.22, 0.32, sun);
-    float nightSide = 1.0 - smoothstep(-0.16, 0.22, sun);
+    // Fade city lights out at sunrise, before the surface is visibly daylight.
+    float nightSide = 1.0 - smoothstep(-0.22, -0.02, sun);
 
     // The day texture is stored as SRGBColorSpace. WebGL decodes it on sample,
     // so decoding it here again would incorrectly crush the natural albedo.
