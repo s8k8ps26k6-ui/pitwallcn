@@ -434,3 +434,42 @@ gridOverlay: false
 - 按用户最新指令停止 headless Edge、本地 WebGL 与截图探针；没有把临时脚本、截图或测试输出加入提交，也不在本文宣称未完成的自动化触控验收。
 
 自包含发布范围说明：第 13 节记录的首页/外壳源码原先属于用户既有未提交修改；本轮用户明确要求推送后的干净检出可以完成全仓 TypeScript 与 production build。因此发布检查点需要一并保存 `layout.tsx → site-shell.tsx` 以及 `page.tsx → immersive-homepage.tsx → scene-background.tsx / home-smooth-scroll.tsx` 的完整依赖闭包，并保留对应 package、全局样式、Tailwind 与旧组件删除状态。QA 目录、日志、参考 PNG、`output/` 和真实 `.env` 仍全部排除。
+
+## 15. 最新交接 — 2026-07-29
+
+### 当前状态
+
+`/atlas-v2` 的主地球、昼夜纹理、云层、大气、赛站节点、赛事信息和 Preview 调试面板均已可用。用户已确认主地球不再呈现“云球/黑球”，当前工作重点是站点识别性，而不是继续调整地球贴图或渲染参数。
+
+### 本轮已提交的修复
+
+| Commit | 内容 |
+| --- | --- |
+| `2f4f7e95` | 移除主地球 fragment shader 中手工重复注入的 `tonemapping_pars_fragment` 和 `colorspace_pars_fragment`；Three.js 会在 `toneMapped` 材质中自动注入这些声明。该修复消除了 `LinearTransferOETF`、`sRGBTransferOETF`、`toneMappingExposure` 与各 Tone Mapping 函数的重复定义。与此同时，城市灯光淡出范围改为日出前完成，避免白昼面仍显示夜景灯光。 |
+| `4a3287ea` | 所有当前可见的赛站标签默认显示，不再仅在 hover/selected 时出现；当前站点标签不透明度提高到 `0.78`，普通站点为 `0.42`，hover/selected 仍具有更强强调。 |
+
+涉及代码仅为 `src/components/atlas-v2/atlas-globe.tsx`。没有改动地球贴图、校准默认参数、云层、大气、Bloom、相机控制、节点坐标或赛事 UI。
+
+### 验证与部署
+
+- `npm.cmd run build` 于 2026-07-29 通过，`/atlas-v2` 仍为静态路由。
+- 本机构建期间可能出现 `api.openf1.org` 连接超时日志；构建退出码仍为 0，和 Atlas 渲染无关。
+- Shader 修复及城市灯光修复曾部署到 Preview：`https://pitwallcn-2kly3g5t6-s8k8ps26k6-uis-projects.vercel.app/atlas-v2?atlasDebug=1`。
+- 标签默认显示的提交已完成本地构建，但 Vercel CLI 两次在等待远端部署状态时超时，未能确认其 Preview URL。需要在网络恢复后重新部署并人工验收：
+
+```powershell
+Set-Location 'E:\GridDeltaSandbox\pitwallcn'
+npx.cmd vercel deploy --yes
+```
+
+不要加 `--prod`。调试面板仅使用 Preview/development 环境的 `NEXT_PUBLIC_ATLAS_DEBUG=1`；不要把该变量加入 Production。
+
+### 下一位维护者应先做的事
+
+1. 部署 `4a3287ea` 所在分支的 Preview。
+2. 打开 `/atlas-v2?atlasDebug=1`，确认普通赛站标签在前景球面默认可读、当前站点明显更亮，且 hover/selected 仍正常。
+3. 若标签密度需要继续微调，只调整 `RaceLabel` 的 `emphasisOpacity` 或标签布局策略；不要重新隐藏默认标签，也不要借机改动主地球 shader、贴图或相机系统。
+
+### 工作区保护
+
+当前仍存在用户已有且未归属于 Atlas 提交的 `.gitignore` 修改、`.playwright-cli/`、`output/`、开发服务器日志和若干审阅 PNG。继续工作时不得执行 `git reset --hard`、`git clean` 或批量暂存；只暂存明确属于当前任务的文件。
