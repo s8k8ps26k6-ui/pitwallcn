@@ -11,6 +11,9 @@ export type SeasonSelectionPhase = "current" | "next" | "off-season";
 
 export type SeasonRace = {
   id: string;
+  /** Stable links into the event and circuit registries. */
+  eventId?: string;
+  circuitId?: string;
   round: number;
   name: string;
   country: string;
@@ -403,6 +406,8 @@ export function getSeason2026(now = new Date()): SeasonRace[] {
 
   return RACE_DEFINITIONS.map((race) => ({
     ...race,
+    eventId: `${race.id}-gp-2026`,
+    circuitId: race.id,
     status:
       endOfRaceWeekend(race.endDate) < timestamp
         ? "completed"

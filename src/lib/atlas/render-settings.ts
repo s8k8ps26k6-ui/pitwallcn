@@ -14,6 +14,7 @@ export type AtlasRenderSettings = {
   timeMode: AtlasTimeMode;
   fixedUtc: string;
   dayFactorDebug: boolean;
+  dayTextureDebug: boolean;
 };
 
 /**
@@ -34,6 +35,7 @@ export const ATLAS_RENDER_DEFAULTS: AtlasRenderSettings = {
   timeMode: "live",
   fixedUtc: "2026-07-19T16:09:00.000Z",
   dayFactorDebug: false,
+  dayTextureDebug: false,
 };
 
 export function getAtlasFixedUtcInputValue(utcValue: string) {

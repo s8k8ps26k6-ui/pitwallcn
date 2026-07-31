@@ -8,6 +8,11 @@ export type SolarSubpoint = {
   longitude: number;
 };
 
+export type SolarState = SolarSubpoint & {
+  utc: string;
+  direction: readonly [number, number, number];
+};
+
 function normalizeLongitude(longitude: number) {
   return ((longitude + 180) % 360 + 360) % 360 - 180;
 }
@@ -55,6 +60,22 @@ export function getSolarDirection(date = new Date()) {
     subpoint.longitude,
     1,
   ).normalize();
+}
+
+export function getSolarState(date = new Date()): SolarState {
+  const subpoint = getSolarSubpoint(date);
+  const direction = latLonToVector3(
+    subpoint.latitude,
+    subpoint.longitude,
+    1,
+  ).normalize();
+
+  return {
+    latitude: subpoint.latitude,
+    longitude: subpoint.longitude,
+    utc: date.toISOString(),
+    direction: [direction.x, direction.y, direction.z],
+  };
 }
 
 export function isLocationInDaylight(

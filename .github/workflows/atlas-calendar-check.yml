@@ -1,0 +1,43 @@
+name: Atlas calendar check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 1 * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check structured 2026 calendar source
+        id: calendar
+        run: node scripts/atlas-calendar-check.mjs
+        continue-on-error: true
+
+      - name: Upload candidate report
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-calendar-report
+          path: output/atlas-calendar/
+
+      - name: Prepare candidate branch and draft PR
+        if: steps.calendar.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="automation/atlas-calendar-${{ github.run_id }}"
+          git checkout -b "$branch"
+          git add output/atlas-calendar/
+          git commit -m "chore: record atlas calendar candidate" || true
+          git push --set-upstream origin "$branch"
+          gh pr create --draft --base "${{ github.ref_name }}" --head "$branch" \
+            --title "chore: review Atlas calendar candidate" \
+            --body "Automated candidate only. Review official sources before merging."

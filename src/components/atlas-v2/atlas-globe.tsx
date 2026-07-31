@@ -192,6 +192,7 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
   uniform float uSaturation;
   uniform float uCityLightsIntensity;
   uniform float uDayFactorDebug;
+  uniform float uDayTextureDebug;
 
   varying vec2 vUv;
   varying vec3 vWorldNormal;
@@ -217,6 +218,13 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
 
     float terrainLuma = atlasLuminance(daySample);
     float terrainRoughness = smoothstep(0.05, 0.78, terrainLuma);
+
+    if (uDayTextureDebug > 0.5) {
+      gl_FragColor = vec4(daySample, 1.0);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+      return;
+    }
     vec3 naturalAlbedo = mix(daySample, vec3(terrainLuma), 1.0 - uSaturation);
     vec3 dayColor = naturalAlbedo;
     dayColor *= (0.72 + max(sun, 0.0) * 0.28) * uDaylightStrength;
@@ -251,10 +259,12 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
 const CLOUD_VERTEX_SHADER = /* glsl */ `
   varying vec2 vUv;
   varying vec3 vNormalView;
+  varying vec3 vWorldNormal;
 
   void main() {
     vUv = uv;
     vNormalView = normalize(normalMatrix * normal);
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
@@ -262,35 +272,44 @@ const CLOUD_VERTEX_SHADER = /* glsl */ `
 const CLOUD_FRAGMENT_SHADER = /* glsl */ `
   uniform sampler2D uCloudMap;
   uniform float uCloudOpacity;
+  uniform vec3 uLightDirection;
   varying vec2 vUv;
   varying vec3 vNormalView;
+  varying vec3 vWorldNormal;
 
   void main() {
     vec3 sampleColor = texture2D(uCloudMap, vUv).rgb;
     float density = smoothstep(0.38, 0.82, dot(sampleColor, vec3(0.3333)));
     float rim = pow(1.0 - max(vNormalView.z, 0.0), 2.2);
-    float alpha = density * (0.048 + rim * 0.042) * uCloudOpacity;
+    float daylight = smoothstep(-0.18, 0.26, dot(normalize(vWorldNormal), normalize(uLightDirection)));
+    float alpha = density * (0.032 + rim * 0.034) * (0.72 + daylight * 0.28) * uCloudOpacity;
     gl_FragColor = vec4(vec3(0.90, 0.92, 0.94), alpha);
   }
 `;
 
 const ATMOSPHERE_VERTEX_SHADER = /* glsl */ `
   varying vec3 vNormalView;
+  varying vec3 vWorldNormal;
 
   void main() {
     vNormalView = normalize(normalMatrix * normal);
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
 
 const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
   uniform float uAtmosphereAlpha;
+  uniform vec3 uLightDirection;
   varying vec3 vNormalView;
+  varying vec3 vWorldNormal;
 
   void main() {
     float fresnel = pow(1.0 - abs(vNormalView.z), 6.4);
-    vec3 color = mix(vec3(0.035, 0.08, 0.15), vec3(0.13, 0.28, 0.52), fresnel);
-    gl_FragColor = vec4(color, fresnel * 0.075 * uAtmosphereAlpha);
+    float daylight = smoothstep(-0.35, 0.45, dot(normalize(vWorldNormal), normalize(uLightDirection)));
+    vec3 color = mix(vec3(0.025, 0.05, 0.09), vec3(0.08, 0.18, 0.34), fresnel);
+    color *= 0.72 + daylight * 0.28;
+    gl_FragColor = vec4(color, fresnel * 0.052 * uAtmosphereAlpha);
   }
 `;
 
@@ -421,12 +440,16 @@ function EarthSystem({
   focusLevel,
   reducedMotion,
   compact,
+  highDetail,
+  refreshToken,
   renderSettings,
 }: {
   focusNormal: THREE.Vector3 | null;
   focusLevel: number;
   reducedMotion: boolean;
   compact: boolean;
+  highDetail: boolean;
+  refreshToken: number;
   renderSettings: AtlasRenderSettings;
 }) {
   const cloudRef = useRef<THREE.Mesh>(null);
@@ -434,7 +457,9 @@ function EarthSystem({
   const cloudMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const atmosphereMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const [dayMap, nightMap, cloudMap] = useTexture([
-    compact ? "/atlas-v2/earth-day.png" : "/atlas-v2/earth-day-8192.png",
+    compact || !highDetail
+      ? "/atlas-v2/earth-day.png"
+      : "/atlas-v2/earth-day-8192.png",
     "/atlas-v2/earth-night.jpg",
     "/atlas-v2/earth-clouds.jpg",
   ]);
@@ -445,13 +470,15 @@ function EarthSystem({
   useEffect(() => {
     const maxAnisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
     dayMap.colorSpace = THREE.SRGBColorSpace;
-    for (const texture of [nightMap, cloudMap]) {
-      texture.colorSpace = THREE.NoColorSpace;
+    nightMap.colorSpace = THREE.SRGBColorSpace;
+    cloudMap.colorSpace = THREE.SRGBColorSpace;
+    for (const texture of [dayMap, nightMap, cloudMap]) {
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = true;
       texture.anisotropy = maxAnisotropy;
       texture.needsUpdate = true;
     }
-    dayMap.anisotropy = maxAnisotropy;
-    dayMap.needsUpdate = true;
   }, [cloudMap, dayMap, gl, nightMap]);
 
   useEffect(() => {
@@ -476,7 +503,7 @@ function EarthSystem({
       if (interval) window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [renderSettings.fixedUtc, renderSettings.timeMode, sunDirection]);
+  }, [refreshToken, renderSettings.fixedUtc, renderSettings.timeMode, sunDirection]);
 
   const earthUniforms = useMemo(
     () => ({
@@ -490,6 +517,7 @@ function EarthSystem({
       uSaturation: { value: ATLAS_RENDER_DEFAULTS.saturation },
       uCityLightsIntensity: { value: ATLAS_RENDER_DEFAULTS.cityLightsIntensity },
       uDayFactorDebug: { value: 0 },
+      uDayTextureDebug: { value: 0 },
     }),
     [dayMap, nightMap, sunDirection],
   );
@@ -498,15 +526,17 @@ function EarthSystem({
     () => ({
       uCloudMap: { value: cloudMap },
       uCloudOpacity: { value: ATLAS_RENDER_DEFAULTS.cloudsOpacity },
+      uLightDirection: { value: sunDirection },
     }),
-    [cloudMap],
+    [cloudMap, sunDirection],
   );
 
   const atmosphereUniforms = useMemo(
     () => ({
       uAtmosphereAlpha: { value: ATLAS_RENDER_DEFAULTS.atmosphereAlpha },
+      uLightDirection: { value: sunDirection },
     }),
-    [],
+    [sunDirection],
   );
 
   useFrame((_, delta) => {
@@ -536,6 +566,7 @@ function EarthSystem({
     material.uniforms.uSaturation.value = renderSettings.saturation;
     material.uniforms.uCityLightsIntensity.value = renderSettings.cityLightsIntensity;
     material.uniforms.uDayFactorDebug.value = renderSettings.dayFactorDebug ? 1 : 0;
+    material.uniforms.uDayTextureDebug.value = renderSettings.dayTextureDebug ? 1 : 0;
 
     if (cloudMaterialRef.current) {
       cloudMaterialRef.current.uniforms.uCloudOpacity.value = renderSettings.cloudsOpacity;
@@ -714,6 +745,8 @@ function RaceLabel({
         } ${offsetX < 0 ? styles.raceLabelLeft : ""}`}
         style={customStyle}
         data-atlas-station-label={anchor.race.id}
+        data-atlas-event-id={anchor.race.eventId ?? `${anchor.race.id}-gp-2026`}
+        data-atlas-circuit-id={anchor.race.circuitId ?? anchor.race.id}
         data-atlas-region={anchor.race.region}
       >
         <span className={styles.raceLabelLine} aria-hidden="true" />
@@ -2023,6 +2056,8 @@ function AtlasScene({
         focusLevel={focusLevel === "selected" ? 0.58 : focusLevel ? 0.32 : 0}
         reducedMotion={reducedMotion}
         compact={compact}
+        highDetail={isEuropeContext}
+        refreshToken={autoFocusVersion}
         renderSettings={renderSettings}
       />
       <EuropePlate active={isEuropeContext} reducedMotion={reducedMotion} />

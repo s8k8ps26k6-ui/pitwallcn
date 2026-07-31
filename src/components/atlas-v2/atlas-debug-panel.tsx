@@ -7,11 +7,13 @@ import {
   toAtlasFixedUtc,
   type AtlasRenderSettings,
 } from "@/lib/atlas/render-settings";
+import type { SolarState } from "@/lib/atlas/solar";
 import styles from "./season-atlas.module.css";
 
 type AtlasDebugPanelProps = {
   settings: AtlasRenderSettings;
   onChange: (next: AtlasRenderSettings) => void;
+  solarState: SolarState;
 };
 
 type RangeControlProps = {
@@ -66,7 +68,7 @@ function RangeControl({
   );
 }
 
-export function AtlasDebugPanel({ settings, onChange }: AtlasDebugPanelProps) {
+export function AtlasDebugPanel({ settings, onChange, solarState }: AtlasDebugPanelProps) {
   const copySettings = useCallback(async () => {
     const payload = JSON.stringify(settings, null, 2);
 
@@ -83,6 +85,17 @@ export function AtlasDebugPanel({ settings, onChange }: AtlasDebugPanelProps) {
       <div className={styles.debugHeader}>
         <span>ATLAS CALIBRATION</span>
         <small>SESSION ONLY</small>
+      </div>
+
+      <div className={styles.debugSolar}>
+        <span>UTC</span>
+        <output>{solarState.utc.replace("T", " ").replace(".000Z", "Z")}</output>
+        <span>SUBPOINT</span>
+        <output>
+          {solarState.latitude.toFixed(2)}° {solarState.latitude >= 0 ? "N" : "S"} / {Math.abs(solarState.longitude).toFixed(2)}° {solarState.longitude >= 0 ? "E" : "W"}
+        </output>
+        <span>DIRECTION</span>
+        <output>{solarState.direction.map((value) => value.toFixed(3)).join(" / ")}</output>
       </div>
 
       <RangeControl label="Exposure" setting="exposure" min={0.7} max={1.35} step={0.01} settings={settings} onChange={onChange} />
@@ -109,6 +122,14 @@ export function AtlasDebugPanel({ settings, onChange }: AtlasDebugPanelProps) {
           type="checkbox"
           checked={settings.dayFactorDebug}
           onChange={(event) => onChange({ ...settings, dayFactorDebug: event.target.checked })}
+        />
+      </label>
+      <label className={styles.debugToggle}>
+        <span>Day texture only</span>
+        <input
+          type="checkbox"
+          checked={settings.dayTextureDebug}
+          onChange={(event) => onChange({ ...settings, dayTextureDebug: event.target.checked })}
         />
       </label>
       <label className={styles.debugToggle}>

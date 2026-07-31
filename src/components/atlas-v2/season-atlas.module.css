@@ -101,6 +101,26 @@
   font-size: 8px;
 }
 
+.debugSolar {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 8px;
+  margin: 8px 0 12px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(174, 208, 238, 0.12);
+  border-bottom: 1px solid rgba(174, 208, 238, 0.12);
+  color: #71879b;
+  font-size: 8px;
+}
+
+.debugSolar output {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #dbe9f6;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .debugRange {
   display: block;
   margin: 8px 0;
@@ -278,13 +298,27 @@
   z-index: 9;
   right: clamp(28px, 5vw, 82px);
   bottom: clamp(54px, 9vh, 100px);
-  width: clamp(280px, 22vw, 350px);
+  width: clamp(292px, 22vw, 338px);
   padding: 6px 0 5px 28px;
   border-left: 1px solid rgba(172, 205, 229, 0.46);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   text-transform: uppercase;
   background: linear-gradient(90deg, rgba(2, 7, 15, 0.46), rgba(2, 7, 15, 0));
   filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.4));
+}
+
+.focusToggle {
+  display: none;
+  appearance: none;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  color: #d9bd7a;
+  font: 7px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: transparent;
+  cursor: pointer;
 }
 
 .focusPanel::before,
@@ -770,17 +804,25 @@
     background: linear-gradient(90deg, rgba(2, 7, 15, 0.72), rgba(2, 7, 15, 0.18));
   }
 
+  .focusToggle {
+    display: block;
+  }
+
+  .focusPanel:not(.focusPanelExpanded) .focusMeta,
+  .focusPanel:not(.focusPanelExpanded) .focusRule,
+  .focusPanel:not(.focusPanelExpanded) .focusCircuit,
+  .focusPanel:not(.focusPanelExpanded) .focusFooter > span:first-child {
+    display: none;
+  }
+
+  .focusPanel:not(.focusPanelExpanded) .focusFooter {
+    margin-top: 6px;
+  }
+
   .focusPanel h2 {
     max-width: 100%;
     font-size: 18px;
     overflow-wrap: anywhere;
-  }
-
-  .focusMeta,
-  .focusRule,
-  .focusCircuit,
-  .focusFooter > span:first-child {
-    display: none;
   }
 
   .focusFooter {
@@ -837,9 +879,13 @@
     right: calc(env(safe-area-inset-right) + 18px);
     bottom: calc(env(safe-area-inset-bottom) + 56px);
     left: calc(env(safe-area-inset-left) + 18px);
-    max-height: min(31dvh, 252px);
+    max-height: min(38dvh, 310px);
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  .focusPanelExpanded {
+    max-height: min(58dvh, 460px);
   }
 
   .focusKicker,
@@ -925,6 +971,10 @@
     padding: 4px 0 4px 15px;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  .focusPanelExpanded {
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 68px);
   }
 
   .focusKicker,

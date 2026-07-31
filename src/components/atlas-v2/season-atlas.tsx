@@ -24,6 +24,10 @@ import {
   ATLAS_RENDER_DEFAULTS,
   type AtlasRenderSettings,
 } from "@/lib/atlas/render-settings";
+import { getSolarState } from "@/lib/atlas/solar";
+import {
+  getCircuitForRace,
+} from "@/lib/atlas/circuit-registry";
 import styles from "./season-atlas.module.css";
 
 const AtlasDebugPanel = dynamic(
@@ -157,10 +161,19 @@ export function SeasonAtlas() {
     ATLAS_RENDER_DEFAULTS,
   );
   const [debugEnabled, setDebugEnabled] = useState(false);
+  const [focusExpanded, setFocusExpanded] = useState(false);
   const webglState = useWebGLState();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const compact = useMediaQuery("(max-width: 720px), (pointer: coarse)");
   const documentVisible = useDocumentVisibility();
+  const solarState = useMemo(() => {
+    const fixed = new Date(renderSettings.fixedUtc);
+    const sourceDate =
+      renderSettings.timeMode === "fixed" && !Number.isNaN(fixed.getTime())
+        ? fixed
+        : now;
+    return getSolarState(sourceDate);
+  }, [now, renderSettings.fixedUtc, renderSettings.timeMode]);
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_ATLAS_DEBUG !== "1") return;
@@ -178,6 +191,10 @@ export function SeasonAtlas() {
     [races, selectedRaceId],
   );
   const focusedRace = selectedRace ?? hoveredRace ?? currentRace;
+  const focusedCircuit = useMemo(
+    () => getCircuitForRace(focusedRace, races),
+    [focusedRace, races],
+  );
   const showEuropeSummary =
     viewMode === "europe-focus" && !selectedRace && !hoveredRace;
   const scrollStage: AtlasScrollStage =
@@ -192,6 +209,7 @@ export function SeasonAtlas() {
       setHoveredTargetId(null);
       setNavigationVersion((version) => version + 1);
       if (targetId === EUROPE_ENTRY_ID) {
+        setFocusExpanded(false);
         setSelectedRaceId(
           currentRace.region === "EUROPE" ? currentRace.id : null,
         );
@@ -199,6 +217,7 @@ export function SeasonAtlas() {
         return;
       }
       setSelectedRaceId(targetId);
+      setFocusExpanded(true);
       setViewMode("station-focus");
     },
     [currentRace.id, currentRace.region],
@@ -207,6 +226,7 @@ export function SeasonAtlas() {
   const handleBackToGlobe = useCallback(() => {
     setHoveredTargetId(null);
     setSelectedRaceId(null);
+    setFocusExpanded(false);
     setViewMode("global");
     setNavigationVersion((version) => version + 1);
   }, []);
@@ -214,6 +234,7 @@ export function SeasonAtlas() {
   const handleReturnToCurrentRace = useCallback(() => {
     setHoveredTargetId(null);
     setSelectedRaceId(null);
+    setFocusExpanded(false);
     setViewMode("global");
     setNavigationVersion((version) => version + 1);
     setAutoFocusVersion((version) => version + 1);
@@ -320,6 +341,7 @@ export function SeasonAtlas() {
           <AtlasDebugPanel
             settings={renderSettings}
             onChange={setRenderSettings}
+            solarState={solarState}
           />
         ) : null}
 
@@ -350,7 +372,19 @@ export function SeasonAtlas() {
           <span aria-hidden="true">↺</span> RETURN TO CURRENT RACE
         </button>
 
-        <aside className={styles.focusPanel} aria-live="polite">
+        <aside
+          className={`${styles.focusPanel} ${focusExpanded ? styles.focusPanelExpanded : ""}`}
+          aria-live="polite"
+          data-atlas-focus-panel={focusExpanded ? "expanded" : "collapsed"}
+        >
+          <button
+            type="button"
+            className={styles.focusToggle}
+            onClick={() => setFocusExpanded((expanded) => !expanded)}
+            aria-expanded={focusExpanded}
+          >
+            {focusExpanded ? "COLLAPSE PROFILE" : "EXPAND RACE PROFILE"}
+          </button>
           {showEuropeSummary ? (
             <>
               <div className={styles.focusKicker}>
@@ -418,12 +452,33 @@ export function SeasonAtlas() {
                     {focusedRace.longitude >= 0 ? "E" : "W"}
                   </dd>
                 </div>
+                <div>
+                  <dt>NEXT SESSION</dt>
+                  <dd>{focusedRace.isSprint ? "SPRINT / RACE TIMETABLE" : "RACE TIMETABLE"}</dd>
+                </div>
+                <div>
+                  <dt>LOCAL TIME</dt>
+                  <dd>{focusedCircuit?.timeZone ?? "TIMEZONE NOT PROVIDED"}</dd>
+                </div>
+                <div>
+                  <dt>TRACK</dt>
+                  <dd>
+                    {focusedCircuit?.lengthKm
+                      ? `${focusedCircuit.lengthKm.toFixed(3)} KM · ${focusedCircuit.laps ?? "—"} LAPS`
+                      : "TRACK METRICS NOT PROVIDED"}
+                  </dd>
+                </div>
               </dl>
               <div className={styles.focusFooter}>
                 <span>
                   {focusedRace.isSprint ? "SPRINT WEEKEND" : "GRAND PRIX WEEKEND"}
                 </span>
                 <span>{selectedRace ? "STATION LOCKED" : "AUTO RACE FOCUS"}</span>
+                {selectedRace ? (
+                  <button type="button" onClick={() => setFocusExpanded(true)}>
+                    ENTER RACE WEEK CONTROL →
+                  </button>
+                ) : null}
               </div>
             </>
           )}
