@@ -97,5 +97,6 @@ export function getCircuitForRace(
   race: SeasonRace,
   races: readonly SeasonRace[],
 ) {
-  return getCircuitRegistry2026(races).find((circuit) => circuit.id === race.id);
+  const circuitId = race.circuitId ?? race.id;
+  return getCircuitRegistry2026(races).find((circuit) => circuit.id === circuitId);
 }

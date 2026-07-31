@@ -442,6 +442,7 @@ function EarthSystem({
   compact,
   highDetail,
   refreshToken,
+  debugDayTexture,
   renderSettings,
 }: {
   focusNormal: THREE.Vector3 | null;
@@ -450,6 +451,7 @@ function EarthSystem({
   compact: boolean;
   highDetail: boolean;
   refreshToken: number;
+  debugDayTexture: boolean;
   renderSettings: AtlasRenderSettings;
 }) {
   const cloudRef = useRef<THREE.Mesh>(null);
@@ -543,6 +545,7 @@ function EarthSystem({
     if (cloudRef.current && !reducedMotion) {
       cloudRef.current.rotation.y += delta * 0.0035;
     }
+    if (cloudRef.current) cloudRef.current.visible = !debugDayTexture;
 
     const material = earthMaterialRef.current;
     if (!material) return;
@@ -601,7 +604,7 @@ function EarthSystem({
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-      <mesh scale={1.018} renderOrder={1}>
+      <mesh scale={1.018} renderOrder={1} visible={!debugDayTexture}>
         <sphereGeometry args={[EARTH_RADIUS, compact ? 64 : 128, compact ? 48 : 96]} />
         <shaderMaterial
           ref={atmosphereMaterialRef}
@@ -875,9 +878,9 @@ function RaceNode({
     const visibilityValue = visibilityRef.current;
     const targetCorePixels = compact
       ? state === "selected"
-        ? 15
+        ? 16
         : state === "current"
-          ? 14
+          ? 15
           : state === "hovered"
             ? 13
             : 8.5
@@ -940,6 +943,7 @@ function RaceNode({
         ref={groupRef}
         position={anchor.position}
         quaternion={quaternion}
+        renderOrder={5}
         visible={false}
       >
         <mesh>
@@ -2058,6 +2062,7 @@ function AtlasScene({
         compact={compact}
         highDetail={isEuropeContext}
         refreshToken={autoFocusVersion}
+        debugDayTexture={renderSettings.dayTextureDebug}
         renderSettings={renderSettings}
       />
       <EuropePlate active={isEuropeContext} reducedMotion={reducedMotion} />
@@ -2146,7 +2151,7 @@ function AtlasScene({
         compact={compact}
       />
       <SubtleBloom
-        enabled={!compact && !reducedMotion}
+        enabled={!compact && !reducedMotion && !renderSettings.dayTextureDebug}
         strength={renderSettings.bloomStrength}
       />
     </>

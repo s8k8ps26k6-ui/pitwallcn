@@ -25,6 +25,7 @@ import {
   type AtlasRenderSettings,
 } from "@/lib/atlas/render-settings";
 import { getSolarState } from "@/lib/atlas/solar";
+import { getSeasonCalendarEntries2026 } from "@/lib/atlas/events-2026";
 import {
   getCircuitForRace,
 } from "@/lib/atlas/circuit-registry";
@@ -129,6 +130,19 @@ function formatRaceDates(race: SeasonRace) {
     : `${startDay} ${month}–${endDay} ${endMonth}`;
 }
 
+function formatLocalRaceStart(race: SeasonRace, timeZone: string | undefined) {
+  if (!timeZone) return "LOCAL TIME NOT PROVIDED";
+  const parsed = new Date(`${race.startDate}T12:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return "LOCAL TIME NOT PROVIDED";
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    timeZone,
+  })
+    .format(parsed)
+    .toUpperCase();
+}
+
 function statusLabel(
   phase: SeasonSelectionPhase,
   selected: boolean,
@@ -194,6 +208,10 @@ export function SeasonAtlas() {
   const focusedCircuit = useMemo(
     () => getCircuitForRace(focusedRace, races),
     [focusedRace, races],
+  );
+  const calendarEntries = useMemo(
+    () => getSeasonCalendarEntries2026(races),
+    [races],
   );
   const showEuropeSummary =
     viewMode === "europe-focus" && !selectedRace && !hoveredRace;
@@ -295,6 +313,7 @@ export function SeasonAtlas() {
       style={rootStyle}
       data-atlas-scroll-stage={scrollStage}
       data-atlas-node-count={races.length}
+      data-atlas-calendar-entry-count={calendarEntries.length}
       data-atlas-mode={viewMode}
       data-atlas-hover-target={hoveredTargetId ?? ""}
       data-atlas-selected-station={selectedRaceId ?? ""}
@@ -458,7 +477,9 @@ export function SeasonAtlas() {
                 </div>
                 <div>
                   <dt>LOCAL TIME</dt>
-                  <dd>{focusedCircuit?.timeZone ?? "TIMEZONE NOT PROVIDED"}</dd>
+                  <dd>
+                    {formatLocalRaceStart(focusedRace, focusedCircuit?.timeZone)} · {focusedCircuit?.timeZone ?? "TIMEZONE NOT PROVIDED"}
+                  </dd>
                 </div>
                 <div>
                   <dt>TRACK</dt>

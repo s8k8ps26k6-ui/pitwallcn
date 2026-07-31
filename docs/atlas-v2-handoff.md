@@ -473,3 +473,23 @@ npx.cmd vercel deploy --yes
 ### 工作区保护
 
 当前仍存在用户已有且未归属于 Atlas 提交的 `.gitignore` 修改、`.playwright-cli/`、`output/`、开发服务器日志和若干审阅 PNG。继续工作时不得执行 `git reset --hard`、`git clean` 或批量暂存；只暂存明确属于当前任务的文件。
+
+## Atlas V2 continuation checkpoint — 2026-08-01
+
+The earlier sections are legacy-encoded. This English addendum is authoritative for the current checkpoint.
+
+- UTC solar state is calculated in `src/lib/atlas/solar.ts`; it refreshes every 45 seconds, on visibility recovery, and on return-to-current focus. Day factor, night lights, clouds, and atmosphere share the same `latLonToVector3` world-space direction.
+- `?atlasDebug=1` (Preview only when `NEXT_PUBLIC_ATLAS_DEBUG=1`) exposes UTC, solar subpoint, normalized direction, a day-factor grayscale switch, and a day-texture-only switch. The latter disables clouds, atmosphere, and bloom for direct albedo diagnosis. Settings are session-only.
+- Global rendering uses the 2K NASA Blue Marble texture; Europe focus promotes the existing 8K texture. Photographic textures use sRGB color space, mipmaps, linear filtering, and capped anisotropy. No new dependency was added.
+- Added the typed circuit registry and event/calendar association layer: `src/lib/atlas/circuit-registry.ts` and `src/lib/atlas/events-2026.ts`. Calendar entries carry `eventId` and `circuitId`; registry statuses support active, reserve, inactive, historic, and retired. Unknown metrics/outlines remain explicitly unavailable instead of being invented.
+- Added monthly structured-data monitoring at `scripts/atlas-calendar-check.mjs` and `.github/workflows/atlas-calendar-check.yml`. It uses bounded retries, writes a candidate report, and only creates an independent draft PR when changes are detected. Source failures leave the current calendar intact.
+- LOCKED FOCUS now uses the registry for timezone and verified length/lap data, indicates next-session timetable availability, keeps stable event/circuit identifiers, and supports mobile collapse/expand.
+
+Verification for this checkpoint:
+
+- `node --test --experimental-strip-types src/lib/atlas/solar.test.ts` — passed (4 tests, including fixed `2026-07-19T16:09:00Z` Americas/Asia reference).
+- `npx.cmd tsc --noEmit --incremental false` — passed.
+- `npm.cmd run lint` — passed.
+- `npm.cmd run build` — passed; `/atlas-v2` generated successfully.
+
+Remaining manual work: verify albedo-only and grayscale debug states, high-resolution Europe promotion, and LOCKED FOCUS placement once in a real desktop and 390×844 Preview. The user-owned `.gitignore`, screenshots, logs, `output/`, and `.playwright-cli/` remain outside Atlas commits and must not be overwritten or deleted.

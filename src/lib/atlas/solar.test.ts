@@ -30,6 +30,12 @@ function loadTsModule(
       longitude: number,
       date: Date,
     ) => boolean;
+    getSolarState: (date: Date) => {
+      latitude: number;
+      longitude: number;
+      utc: string;
+      direction: readonly [number, number, number];
+    };
   };
 }
 
@@ -78,4 +84,12 @@ test("UTC 2026-07-19 16:09 places the Americas in daylight and East Asia at nigh
     solar.isLocationInDaylight(1.3521, 103.8198, referenceUtc),
     false,
   );
+});
+
+test("solar state direction uses the same geographic coordinate frame", () => {
+  const state = solar.getSolarState(new Date("2026-07-19T16:09:00.000Z"));
+  assert.equal(state.utc, "2026-07-19T16:09:00.000Z");
+  assert.ok(state.longitude < -55 && state.longitude > -70);
+  const length = Math.hypot(...state.direction);
+  assert.ok(Math.abs(length - 1) < 1e-6);
 });
