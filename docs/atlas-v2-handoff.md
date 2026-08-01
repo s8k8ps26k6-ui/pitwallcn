@@ -587,3 +587,5 @@ Validation for this change:
 Latest local runtime change is intentionally limited to `src/components/atlas-v2/atlas-globe.tsx`; the handoff update is this document. User-owned `.gitignore`, `.playwright-cli/`, logs, screenshots, and `output/` remain untouched and excluded from Atlas commits.
 
 Preview for commit `01e19676`: `https://pitwallcn-e4805608k-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready). Debug view: append `?atlasDebug=1`.
+
+The LOCKED FOCUS Session field no longer reuses a past confirmed Session as a future “next” Session. When no confirmed future timestamp exists, it now reports `SESSION TIMETABLE NOT CONFIRMED` and keeps local-time output unavailable rather than implying a schedule.

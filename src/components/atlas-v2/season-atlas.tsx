@@ -162,17 +162,11 @@ function formatLocalRaceStart(
 
 function getNextSession(entry: SeasonCalendarEntry, now: Date) {
   const nowMs = now.getTime();
-  return (
-    entry.sessions.find((session) => {
-      if (!session.isTimeConfirmed) return false;
-      const startMs = Date.parse(session.startTime);
-      return Number.isFinite(startMs) && startMs >= nowMs;
-    }) ??
-    [...entry.sessions]
-      .reverse()
-      .find((session) => session.isTimeConfirmed) ??
-    null
-  );
+  return entry.sessions.find((session) => {
+    if (!session.isTimeConfirmed) return false;
+    const startMs = Date.parse(session.startTime);
+    return Number.isFinite(startMs) && startMs >= nowMs;
+  }) ?? null;
 }
 
 function formatSessionTime(iso: string, timeZone: string | undefined) {
@@ -612,10 +606,7 @@ export function SeasonAtlas() {
                 <div>
                   <dt>NEXT SESSION</dt>
                   <dd>
-                    {nextSession?.name ??
-                      (focusedRace.isSprint
-                        ? "SPRINT / RACE TIMETABLE"
-                        : "RACE TIMETABLE")}
+                    {nextSession?.name ?? "SESSION TIMETABLE NOT CONFIRMED"}
                     {nextSession ? (
                       <small>
                         {formatSessionTime(
