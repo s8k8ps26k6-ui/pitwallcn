@@ -557,3 +557,5 @@ The subsequent handoff-only commit is `6b01bc6a` (`docs: refresh atlas handoff p
 The monitor now emits explicit `replacement`, `added-remote`, and optional `status` change records when structured sources expose circuit/status fields. Existing date, end-date, round, location, circuit, sprint-format, and confirmed Session-time comparisons remain unchanged. The offline suite now has seven tests, including replacement/status and unmatched-remote cases.
 
 The UTC suite now has five tests, adding fixed-hour June/December solstice declination coverage alongside the existing day/night and coordinate-frame assertions.
+
+Latest Preview for checkpoint `74d73e8e`: `https://pitwallcn-953ts2oi3-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Vercel status Ready, target Preview). Debug view: append `?atlasDebug=1`.
