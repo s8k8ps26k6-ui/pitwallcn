@@ -511,4 +511,6 @@ Known limits remain explicit: no circuit outline is rendered when verified outli
 
 The monthly calendar monitor was also tightened in the follow-up: it now fetches OpenF1 meetings and sessions with the same bounded retry policy, compares ordered rounds, locations, start/end dates, circuit names, and confirmed local Session times, and keeps the fallback behavior when either source is unavailable. Candidate changes remain report-only on an independent draft branch.
 
+`scripts/atlas-calendar-overrides.json` is the explicit project-manual layer and currently contains no overrides. When populated after review, those values take precedence for comparison without silently changing the rendered season source; uncertain or rumored changes must remain out of the file.
+
 Verified circuit traces are now available for all 22 active 2026 entries in `src/lib/atlas/circuit-outlines-2026.ts`. They are normalized centerline polylines derived from the public MIT-licensed `bacinger/f1-circuits` GeoJSON source; the registry preserves the source URL and `lastVerified` date, and LOCKED FOCUS renders the trace without inventing geometry when a future circuit is missing.

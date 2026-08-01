@@ -29,7 +29,7 @@ async function fetchJson(url) {
 
 function parseCurrentCalendar(source) {
   const records = [];
-  const pattern = /id:\s*"([^"]+)"[\s\S]*?round:\s*(\d+)[\s\S]*?name:\s*"([^"]+)"[\s\S]*?country:\s*"([^"]+)"[\s\S]*?city:\s*"([^"]+)"[\s\S]*?circuitName:\s*"([^"]+)"[\s\S]*?startDate:\s*"(\d{4}-\d{2}-\d{2})"[\s\S]*?endDate:\s*"(\d{4}-\d{2}-\d{2})"/g;
+  const pattern = /id:\s*"([^"]+)"[\s\S]*?round:\s*(\d+)[\s\S]*?name:\s*"([^"]+)"[\s\S]*?country:\s*"([^"]+)"[\s\S]*?city:\s*"([^"]+)"[\s\S]*?circuitName:\s*"([^"]+)"[\s\S]*?startDate:\s*"(\d{4}-\d{2}-\d{2})"[\s\S]*?endDate:\s*"(\d{4}-\d{2}-\d{2})"[\s\S]*?isSprint:\s*(true|false)/g;
   for (const match of source.matchAll(pattern)) {
     records.push({
       id: match[1],
@@ -40,6 +40,7 @@ function parseCurrentCalendar(source) {
       circuitName: match[6],
       startDate: match[7],
       endDate: match[8],
+      isSprint: match[9] === "true",
     });
   }
   return records.sort((a, b) => a.round - b.round);
@@ -103,6 +104,9 @@ function normalizeRemote(row, index, sessionsByMeeting) {
     startDate: row.date_start?.slice(0, 10) ?? "",
     endDate: row.date_end?.slice(0, 10) ?? "",
     status: "active",
+    isSprint: (sessionsByMeeting.get(meetingKey) ?? []).some((session) =>
+      /sprint/i.test(session.session_name ?? ""),
+    ),
     sessions: (sessionsByMeeting.get(meetingKey) ?? []).map((session) => ({
       name: session.session_name ?? "",
       startTime: session.date_start ?? "",
@@ -118,6 +122,9 @@ function canonical(value) {
 
 const source = await readFile("src/lib/atlas/season-2026.ts", "utf8");
 const current = parseCurrentCalendar(source);
+const overrideSource = await readFile("scripts/atlas-calendar-overrides.json", "utf8");
+const manualOverrides = JSON.parse(overrideSource).overrides ?? [];
+const overrideById = new Map(manualOverrides.map((override) => [override.id, override]));
 const localSessionSource = await readFile("src/lib/race-calendar.ts", "utf8");
 const localSessions = parseLocalSessionCalendar(localSessionSource);
 for (const race of current) {
@@ -154,7 +161,8 @@ if (sourceStatus === "ok") {
   if (remote.length !== current.length) {
     changes.push({ type: "count", current: current.length, remote: remote.length });
   }
-  for (const [index, race] of current.entries()) {
+  for (const [index, currentRace] of current.entries()) {
+    const race = { ...currentRace, ...(overrideById.get(currentRace.id) ?? {}) };
     const remoteRace =
       remote.find((item) => item.name === race.name) ?? remote[index];
     if (!remoteRace) {
@@ -182,6 +190,9 @@ if (sourceStatus === "ok") {
       !canonical(race.circuitName).includes(canonical(remoteRace.circuitName))
     ) {
       changes.push({ type: "circuit", race, remote: remoteRace });
+    }
+    if (remoteRace.isSprint !== race.isSprint) {
+      changes.push({ type: "sprint-format", race, remote: remoteRace });
     }
     const localSessionsForRace = race.sessions ?? [];
     const remoteSessions = remoteRace.sessions ?? [];

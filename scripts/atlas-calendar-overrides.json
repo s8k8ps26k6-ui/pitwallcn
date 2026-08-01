@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "description": "Reviewed project-level overrides. Keep uncertain or rumored changes out of this file.",
+  "overrides": []
+}
