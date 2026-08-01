@@ -561,3 +561,5 @@ The UTC suite now has five tests, adding fixed-hour June/December solstice decli
 Latest Preview for checkpoint `74d73e8e`: `https://pitwallcn-953ts2oi3-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Vercel status Ready, target Preview). Debug view: append `?atlasDebug=1`.
 
 LOCKED FOCUS now refuses to display unconfirmed fallback Session times. It shows `LOCAL TIME NOT CONFIRMED` until a verified Session timestamp exists, so missing schedule data is not replaced with an invented noon time.
+
+Latest Preview for runtime checkpoint `5e0a4886`: `https://pitwallcn-g9vic8e4m-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready, target Preview). Debug view: append `?atlasDebug=1`.
