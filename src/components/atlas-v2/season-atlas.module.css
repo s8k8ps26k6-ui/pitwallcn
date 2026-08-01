@@ -427,6 +427,14 @@
   letter-spacing: 0.1em;
 }
 
+.focusMeta dd small {
+  display: block;
+  margin-top: 3px;
+  color: #60788d;
+  font-size: 7px;
+  letter-spacing: 0.08em;
+}
+
 .focusFooter {
   margin-top: 17px;
   padding-top: 11px;

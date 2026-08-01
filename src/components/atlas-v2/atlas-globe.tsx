@@ -8,6 +8,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
 } from "react";
 import * as THREE from "three";
@@ -455,14 +456,17 @@ function EarthSystem({
   const earthMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const cloudMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const atmosphereMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const [highDetailDayMap, setHighDetailDayMap] = useState<THREE.Texture | null>(
+    null,
+  );
+  const { gl } = useThree();
   const [dayMap, nightMap, cloudMap] = useTexture([
-    compact || !highDetail
-      ? "/atlas-v2/earth-day.png"
-      : "/atlas-v2/earth-day-8192.png",
+    "/atlas-v2/earth-day.png",
     "/atlas-v2/earth-night.jpg",
     "/atlas-v2/earth-clouds.jpg",
   ]);
-  const { gl } = useThree();
+  const canUseHighDetail =
+    !compact && highDetail && gl.capabilities.maxTextureSize >= 8192;
   const focusTarget = useMemo(() => new THREE.Vector3(1, 0, 0), []);
   const sunDirection = useMemo(() => getSolarDirection(), []);
 
@@ -479,6 +483,50 @@ function EarthSystem({
       texture.needsUpdate = true;
     }
   }, [cloudMap, dayMap, gl, nightMap]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!canUseHighDetail) {
+      setHighDetailDayMap((previous) => {
+        previous?.dispose();
+        return null;
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      "/atlas-v2/earth-day-8192.png",
+      (texture) => {
+        if (cancelled) {
+          texture.dispose();
+          return;
+        }
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = true;
+        texture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+        texture.needsUpdate = true;
+        setHighDetailDayMap((previous) => {
+          previous?.dispose();
+          return texture;
+        });
+      },
+      undefined,
+      () => {
+        // Keep the already-rendered 2K albedo when optional promotion fails.
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canUseHighDetail, gl]);
+
+  const activeDayMap = highDetailDayMap ?? dayMap;
 
   useEffect(() => {
     const updateSunDirection = () => {
@@ -506,7 +554,7 @@ function EarthSystem({
 
   const earthUniforms = useMemo(
     () => ({
-      uDayMap: { value: dayMap },
+      uDayMap: { value: activeDayMap },
       uNightMap: { value: nightMap },
       uLightDirection: { value: sunDirection },
       uFocusPoint: { value: new THREE.Vector3(1, 0, 0) },
@@ -518,7 +566,7 @@ function EarthSystem({
       uDayFactorDebug: { value: 0 },
       uDayTextureDebug: { value: 0 },
     }),
-    [dayMap, nightMap, sunDirection],
+    [activeDayMap, nightMap, sunDirection],
   );
 
   const cloudUniforms = useMemo(

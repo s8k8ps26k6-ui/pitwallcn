@@ -493,3 +493,18 @@ Verification for this checkpoint:
 - `npm.cmd run build` — passed; `/atlas-v2` generated successfully.
 
 Remaining manual work: verify albedo-only and grayscale debug states, high-resolution Europe promotion, and LOCKED FOCUS placement once in a real desktop and 390×844 Preview. The user-owned `.gitignore`, screenshots, logs, `output/`, and `.playwright-cli/` remain outside Atlas commits and must not be overwritten or deleted.
+
+## Atlas V2 continuation — 2026-08-01 session and texture follow-up
+
+- `src/lib/atlas/events-2026.ts` now exposes the Session timetable alongside each event and season-calendar entry. It maps the existing verified local 2026 calendar by stable circuit aliases (`madrid` and `sao-paulo` included) and preserves `isTimeConfirmed` instead of fabricating times.
+- `season-atlas.tsx` uses the matching event id to show the next upcoming (or last completed) Session and its local time in LOCKED FOCUS. The existing timezone and circuit metric fields remain unchanged.
+- The earth always renders the 2K albedo first. On non-compact hardware whose `maxTextureSize` is at least 8192, Europe focus asynchronously promotes the albedo to `earth-day-8192.png`; loader failure keeps the 2K texture in place. Mobile/coarse-pointer views never request the 8K asset.
+- `atlas-globe.tsx` retains a single final Three.js tone-mapping/color-space output path; no manual built-in tone-mapping or transfer functions were added.
+
+Validation after this follow-up:
+
+- `npx.cmd tsc --noEmit --incremental false` — passed.
+- `npm.cmd run lint` — passed.
+- `npm.cmd run build` — passed; `/atlas-v2` generated successfully. The build emitted non-fatal OpenF1 network `ECONNRESET` logs from unrelated server data helpers; exit code remained 0.
+
+Known limits remain explicit: no circuit outline is rendered when verified outline geometry is unavailable, and real-device visual confirmation of the 2K→8K promotion, albedo-only debug mode, and compact LOCKED FOCUS still belongs to manual Preview review.

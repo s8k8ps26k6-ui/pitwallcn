@@ -25,7 +25,10 @@ import {
   type AtlasRenderSettings,
 } from "@/lib/atlas/render-settings";
 import { getSolarState } from "@/lib/atlas/solar";
-import { getSeasonCalendarEntries2026 } from "@/lib/atlas/events-2026";
+import {
+  getSeasonCalendarEntries2026,
+  type SeasonCalendarEntry,
+} from "@/lib/atlas/events-2026";
 import {
   getCircuitForRace,
 } from "@/lib/atlas/circuit-registry";
@@ -130,16 +133,49 @@ function formatRaceDates(race: SeasonRace) {
     : `${startDay} ${month}–${endDay} ${endMonth}`;
 }
 
-function formatLocalRaceStart(race: SeasonRace, timeZone: string | undefined) {
+function formatLocalRaceStart(
+  race: SeasonRace,
+  timeZone: string | undefined,
+  sessionStartTime?: string,
+) {
   if (!timeZone) return "LOCAL TIME NOT PROVIDED";
-  const parsed = new Date(`${race.startDate}T12:00:00Z`);
+  const parsed = new Date(
+    sessionStartTime ?? `${race.startDate}T12:00:00Z`,
+  );
   if (Number.isNaN(parsed.getTime())) return "LOCAL TIME NOT PROVIDED";
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
     timeZone,
   })
     .format(parsed)
+    .toUpperCase();
+}
+
+function getNextSession(entry: SeasonCalendarEntry, now: Date) {
+  const nowMs = now.getTime();
+  return (
+    entry.sessions.find((session) => {
+      const startMs = Date.parse(session.startTime);
+      return Number.isFinite(startMs) && startMs >= nowMs;
+    }) ?? entry.sessions.at(-1) ?? null
+  );
+}
+
+function formatSessionTime(iso: string, timeZone: string | undefined) {
+  if (!timeZone) return "LOCAL TIME NOT PROVIDED";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "LOCAL TIME NOT PROVIDED";
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone,
+  })
+    .format(date)
     .toUpperCase();
 }
 
@@ -212,6 +248,20 @@ export function SeasonAtlas() {
   const calendarEntries = useMemo(
     () => getSeasonCalendarEntries2026(races),
     [races],
+  );
+  const focusedCalendarEntry = useMemo(
+    () =>
+      calendarEntries.find(
+        (entry) =>
+          entry.eventId ===
+          (focusedRace.eventId ?? `${focusedRace.id}-gp-2026`),
+      ) ?? null,
+    [calendarEntries, focusedRace.eventId, focusedRace.id],
+  );
+  const nextSession = useMemo(
+    () =>
+      focusedCalendarEntry ? getNextSession(focusedCalendarEntry, now) : null,
+    [focusedCalendarEntry, now],
   );
   const showEuropeSummary =
     viewMode === "europe-focus" && !selectedRace && !hoveredRace;
@@ -473,12 +523,29 @@ export function SeasonAtlas() {
                 </div>
                 <div>
                   <dt>NEXT SESSION</dt>
-                  <dd>{focusedRace.isSprint ? "SPRINT / RACE TIMETABLE" : "RACE TIMETABLE"}</dd>
+                  <dd>
+                    {nextSession?.name ??
+                      (focusedRace.isSprint
+                        ? "SPRINT / RACE TIMETABLE"
+                        : "RACE TIMETABLE")}
+                    {nextSession ? (
+                      <small>
+                        {formatSessionTime(
+                          nextSession.startTime,
+                          focusedCircuit?.timeZone,
+                        )}
+                      </small>
+                    ) : null}
+                  </dd>
                 </div>
                 <div>
                   <dt>LOCAL TIME</dt>
                   <dd>
-                    {formatLocalRaceStart(focusedRace, focusedCircuit?.timeZone)} · {focusedCircuit?.timeZone ?? "TIMEZONE NOT PROVIDED"}
+                    {formatLocalRaceStart(
+                      focusedRace,
+                      focusedCircuit?.timeZone,
+                      nextSession?.startTime,
+                    )} · {focusedCircuit?.timeZone ?? "TIMEZONE NOT PROVIDED"}
                   </dd>
                 </div>
                 <div>
