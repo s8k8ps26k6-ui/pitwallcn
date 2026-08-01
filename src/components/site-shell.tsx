@@ -15,7 +15,11 @@ const navItems = [
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHomepage = pathname === "/";
-  const isImmersiveRoute = isHomepage || pathname.startsWith("/atlas-v2");
+  const isImmersiveRoute =
+    isHomepage ||
+    pathname.startsWith("/atlas-v2") ||
+    pathname.startsWith("/schedule") ||
+    pathname.startsWith("/races/");
 
   if (isImmersiveRoute) {
     return <div className="min-h-screen bg-gdBg text-gdText">{children}</div>;

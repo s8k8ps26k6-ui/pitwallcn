@@ -5,7 +5,13 @@ export type AtlasRegion =
   | "EURASIA"
   | "MIDDLE_EAST";
 
-export type RaceStatus = "completed" | "current" | "upcoming";
+export type RaceStatus =
+  | "completed"
+  | "current"
+  | "upcoming"
+  | "cancelled"
+  | "rescheduled"
+  | "replacement";
 
 export type SeasonSelectionPhase = "current" | "next" | "off-season";
 
