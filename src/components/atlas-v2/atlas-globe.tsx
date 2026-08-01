@@ -218,35 +218,32 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
 
     float terrainLuma = atlasLuminance(daySample);
     float terrainRoughness = smoothstep(0.05, 0.78, terrainLuma);
+    vec3 color = daySample;
 
-    if (uDayTextureDebug > 0.5) {
-      gl_FragColor = vec4(daySample, 1.0);
-      #include <tonemapping_fragment>
-      #include <colorspace_fragment>
-      return;
+    if (uDayTextureDebug <= 0.5) {
+      vec3 naturalAlbedo = mix(daySample, vec3(terrainLuma), 1.0 - uSaturation);
+      vec3 dayColor = naturalAlbedo;
+      dayColor *= (0.72 + max(sun, 0.0) * 0.28) * uDaylightStrength;
+      dayColor *= mix(0.94, 1.02, terrainRoughness);
+
+      vec3 nightBase = naturalAlbedo * uNightSurfaceFloor;
+      nightBase += vec3(0.006, 0.008, 0.011) * (0.44 + 0.56 * max(normal.y, 0.0));
+      vec3 cityColor = mix(
+        vec3(0.70, 0.58, 0.38),
+        vec3(1.18, 0.96, 0.66),
+        smoothstep(0.25, 0.90, nightLuma)
+      );
+      color = mix(nightBase, dayColor, daylight);
+      color += cityColor * cityMask * nightSide * uCityLightsIntensity;
+
+      float focusDot = max(dot(normalize(vObjectPosition), normalize(uFocusPoint)), 0.0);
+      float localFocus = pow(focusDot, 96.0) * uFocusStrength;
+      color += vec3(0.055, 0.075, 0.095) * localFocus * 0.16;
+      color += vec3(0.34, 0.27, 0.15) * localFocus * localFocus * 0.10;
+
+      float polarShade = smoothstep(0.0, 0.95, abs(normal.y));
+      color += vec3(0.018, 0.020, 0.024) * polarShade * 0.15;
     }
-    vec3 naturalAlbedo = mix(daySample, vec3(terrainLuma), 1.0 - uSaturation);
-    vec3 dayColor = naturalAlbedo;
-    dayColor *= (0.72 + max(sun, 0.0) * 0.28) * uDaylightStrength;
-    dayColor *= mix(0.94, 1.02, terrainRoughness);
-
-    vec3 nightBase = naturalAlbedo * uNightSurfaceFloor;
-    nightBase += vec3(0.006, 0.008, 0.011) * (0.44 + 0.56 * max(normal.y, 0.0));
-    vec3 cityColor = mix(
-      vec3(0.70, 0.58, 0.38),
-      vec3(1.18, 0.96, 0.66),
-      smoothstep(0.25, 0.90, nightLuma)
-    );
-    vec3 color = mix(nightBase, dayColor, daylight);
-    color += cityColor * cityMask * nightSide * uCityLightsIntensity;
-
-    float focusDot = max(dot(normalize(vObjectPosition), normalize(uFocusPoint)), 0.0);
-    float localFocus = pow(focusDot, 96.0) * uFocusStrength;
-    color += vec3(0.055, 0.075, 0.095) * localFocus * 0.16;
-    color += vec3(0.34, 0.27, 0.15) * localFocus * localFocus * 0.10;
-
-    float polarShade = smoothstep(0.0, 0.95, abs(normal.y));
-    color += vec3(0.018, 0.020, 0.024) * polarShade * 0.15;
 
     if (uDayFactorDebug > 0.5) color = vec3(daylight);
 
