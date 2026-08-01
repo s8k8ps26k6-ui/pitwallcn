@@ -571,3 +571,17 @@ Latest Preview for checkpoint `b4b37f02`: `https://pitwallcn-l77a41b54-s8k8ps26k
 Added separate session-persistent favorites for event IDs and circuit IDs (`src/lib/atlas/favorites.ts`). LOCKED FOCUS exposes subtle EVENT and CIRCUIT star controls; storage access is guarded for SSR/private browsing and does not affect globe rendering.
 
 Latest Preview for runtime checkpoint `382a85da`: `https://pitwallcn-j66cuj09q-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready, target Preview). Debug view: append `?atlasDebug=1`.
+
+## Atlas V2 continuation — shared solar scene light
+
+The scene-level directional light is now driven by the same UTC solar vector as the Earth, cloud, and atmosphere shaders. `src/components/atlas-v2/atlas-globe.tsx` owns one `useAtlasSolarDirection` hook (45-second live refresh, fixed-UTC debug mode, visibility recovery, and focus refresh) and feeds that vector to the material uniforms and `SolarDirectionalLight`. This removes the previous fixed `[4, 3, 2]` art light from the Atlas scene; it was not used by the Earth fragment shader, but could make markers/plates disagree with the real terminator.
+
+The historical dark-globe root cause remains documented: earlier code double-decoded the sRGB day map and applied a blue albedo multiplier; the shader also had duplicate terminal tone/color-space paths in an earlier diagnostic branch. Current code keeps one Three.js-managed terminal path and does not define built-in tone-mapping or transfer functions manually.
+
+Validation for this change:
+
+- `npx.cmd tsc --noEmit --incremental false` passed.
+- UTC solar tests passed (5/5); calendar monitor tests passed (7/7); season/visibility/favorites tests passed (9/9).
+- Real-device WebGL, touch, Bloom, label placement, and high-resolution promotion still require manual Preview verification; no headless browser or screenshot probe was used.
+
+Latest local runtime change is intentionally limited to `src/components/atlas-v2/atlas-globe.tsx`; the handoff update is this document. User-owned `.gitignore`, `.playwright-cli/`, logs, screenshots, and `output/` remain untouched and excluded from Atlas commits.

@@ -449,13 +449,65 @@ function StarField({ compact, reducedMotion }: { compact: boolean; reducedMotion
   );
 }
 
+function useAtlasSolarDirection(
+  renderSettings: AtlasRenderSettings,
+  refreshToken: number,
+) {
+  const direction = useMemo(() => getSolarDirection(), []);
+
+  useEffect(() => {
+    const update = () => {
+      const fixedDate = new Date(renderSettings.fixedUtc);
+      const sourceDate =
+        renderSettings.timeMode === "fixed" && !Number.isNaN(fixedDate.getTime())
+          ? fixedDate
+          : new Date();
+      direction.copy(getSolarDirection(sourceDate));
+    };
+
+    update();
+    const interval =
+      renderSettings.timeMode === "live"
+        ? window.setInterval(update, 45_000)
+        : null;
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") update();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      if (interval) window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [direction, refreshToken, renderSettings.fixedUtc, renderSettings.timeMode]);
+
+  return direction;
+}
+
+function SolarDirectionalLight({ sunDirection }: { sunDirection: THREE.Vector3 }) {
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+
+  useFrame(() => {
+    if (!lightRef.current) return;
+    lightRef.current.position.copy(sunDirection).multiplyScalar(8);
+  });
+
+  return (
+    <directionalLight
+      ref={lightRef}
+      intensity={0.28}
+      color="#a9ccf4"
+      castShadow={false}
+    />
+  );
+}
+
 function EarthSystem({
   focusNormal,
   focusLevel,
   reducedMotion,
   compact,
   highDetail,
-  refreshToken,
+  sunDirection,
   debugDayTexture,
   renderSettings,
 }: {
@@ -464,7 +516,7 @@ function EarthSystem({
   reducedMotion: boolean;
   compact: boolean;
   highDetail: boolean;
-  refreshToken: number;
+  sunDirection: THREE.Vector3;
   debugDayTexture: boolean;
   renderSettings: AtlasRenderSettings;
 }) {
@@ -485,8 +537,6 @@ function EarthSystem({
   const canUseHighDetail =
     !compact && highDetail && gl.capabilities.maxTextureSize >= 8192;
   const focusTarget = useMemo(() => new THREE.Vector3(1, 0, 0), []);
-  const sunDirection = useMemo(() => getSolarDirection(), []);
-
   useEffect(() => {
     const maxAnisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
     dayMap.colorSpace = THREE.SRGBColorSpace;
@@ -550,30 +600,6 @@ function EarthSystem({
   );
 
   const activeDayMap = highDetailDayMap ?? dayMap;
-
-  useEffect(() => {
-    const updateSunDirection = () => {
-      const fixedDate = new Date(renderSettings.fixedUtc);
-      const sourceDate =
-        renderSettings.timeMode === "fixed" && !Number.isNaN(fixedDate.getTime())
-          ? fixedDate
-          : new Date();
-      sunDirection.copy(getSolarDirection(sourceDate));
-    };
-    const interval =
-      renderSettings.timeMode === "live"
-        ? window.setInterval(updateSunDirection, 45_000)
-        : null;
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") updateSunDirection();
-    };
-    updateSunDirection();
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    return () => {
-      if (interval) window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, [refreshToken, renderSettings.fixedUtc, renderSettings.timeMode, sunDirection]);
 
   const earthUniforms = useMemo(
     () => ({
@@ -2063,6 +2089,7 @@ function AtlasScene({
     viewMode === "global" && currentRace.region === EUROPE_REGION
       ? europeEntry
       : anchorMap.get(currentRace.id) ?? null;
+  const solarDirection = useAtlasSolarDirection(renderSettings, autoFocusVersion);
   const activeFocusAnchor = selectedRace
     ? anchorMap.get(selectedRace.id) ?? null
     : hoveredTargetId === EUROPE_ENTRY_ID
@@ -2126,7 +2153,7 @@ function AtlasScene({
       <ViewportSync compact={compact} />
       <RendererCalibration exposure={renderSettings.exposure} />
       <ambientLight intensity={0.14} />
-      <directionalLight position={[4, 3, 2]} intensity={0.28} color="#a9ccf4" />
+      <SolarDirectionalLight sunDirection={solarDirection} />
       <StarField compact={compact} reducedMotion={reducedMotion} />
       <EarthSystem
         focusNormal={activeFocusAnchor?.normal ?? null}
@@ -2134,7 +2161,7 @@ function AtlasScene({
         reducedMotion={reducedMotion}
         compact={compact}
         highDetail={isEuropeContext}
-        refreshToken={autoFocusVersion}
+        sunDirection={solarDirection}
         debugDayTexture={renderSettings.dayTextureDebug}
         renderSettings={renderSettings}
       />
