@@ -586,6 +586,8 @@ Validation for this change:
 
 Latest local runtime change is intentionally limited to `src/components/atlas-v2/atlas-globe.tsx`; the handoff update is this document. User-owned `.gitignore`, `.playwright-cli/`, logs, screenshots, and `output/` remain untouched and excluded from Atlas commits.
 
-Preview for runtime commit `12fa1353`: `https://pitwallcn-rjvju5hhj-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready). Debug view: append `?atlasDebug=1`.
+Preview for runtime commit `12fa1353`: `https://pitwallcn-2aoanaawq-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready). Debug view: append `?atlasDebug=1`.
+
+Vercel CLI confirmed `NEXT_PUBLIC_ATLAS_DEBUG` already exists for the Preview target; the attempted add was rejected as a duplicate. Production was not changed. The redeployed Preview therefore supports the calibration query URL.
 
 The LOCKED FOCUS Session field no longer reuses a past confirmed Session as a future “next” Session. When no confirmed future timestamp exists, it now reports `SESSION TIMETABLE NOT CONFIRMED` and keeps local-time output unavailable rather than implying a schedule.
