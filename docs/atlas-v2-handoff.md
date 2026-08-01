@@ -541,3 +541,11 @@ Validation for this continuation:
 - `npm.cmd run build` — passed; `/atlas-v2` generated successfully.
 
 Latest implementation checkpoint before this continuation: `d6f7e93c` (`fix: dispose promoted atlas texture on unmount`). This continuation is intentionally limited to the calendar monitor refactor/test and this handoff update. The user-owned dirty files listed in Section 13 remain untouched and are not part of the Atlas checkpoint.
+
+### Current handoff pointer
+
+- Current branch: `codex/velocity-at-dawn-homepage`
+- Latest checkpoint: `8ecb3699` (`test: make atlas calendar monitor deterministic`)
+- Preview deployment for that checkpoint: `https://pitwallcn-dowgs4lkk-s8k8ps26k6-uis-projects.vercel.app/atlas-v2`
+- Debug URL (Preview only): `https://pitwallcn-dowgs4lkk-s8k8ps26k6-uis-projects.vercel.app/atlas-v2?atlasDebug=1`
+- Vercel deployment status: Ready; target remains Preview.
