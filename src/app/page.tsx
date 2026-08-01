@@ -1,32 +1,10 @@
-import { ImmersiveHomepage } from "@/components/immersive-homepage";
-import { getScheduleCalendar } from "@/lib/f1-service";
-
-function formatDateRange(startIso: string, endIso: string) {
-  const formatter = new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: "Asia/Shanghai",
-  });
-  return `${formatter.format(new Date(startIso))} - ${formatter.format(new Date(endIso))}`;
-}
-
-function getScheduleSourceLabel(source: "local" | "local+openf1") {
-  return source === "local+openf1"
-    ? "Local calendar + OpenF1 sessions"
-    : "Local official calendar";
-}
+import { HomepageV3 } from "@/components/homepage-v3/homepage-v3";
+import { getCurrentSeasonRace } from "@/lib/atlas/race-detail";
 
 export default async function Home() {
-  const { nextRace, source } = await getScheduleCalendar();
+  const current = getCurrentSeasonRace();
 
   return (
-    <main>
-      <ImmersiveHomepage
-        nextRace={nextRace}
-        sourceLabel={getScheduleSourceLabel(source)}
-        dateRange={formatDateRange(nextRace.startDate, nextRace.endDate)}
-      />
-    </main>
+    <HomepageV3 race={current.race} phase={current.phase} />
   );
 }
