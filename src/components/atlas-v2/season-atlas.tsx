@@ -134,14 +134,11 @@ function formatRaceDates(race: SeasonRace) {
 }
 
 function formatLocalRaceStart(
-  race: SeasonRace,
   timeZone: string | undefined,
   sessionStartTime?: string,
 ) {
-  if (!timeZone) return "LOCAL TIME NOT PROVIDED";
-  const parsed = new Date(
-    sessionStartTime ?? `${race.startDate}T12:00:00Z`,
-  );
+  if (!timeZone || !sessionStartTime) return "LOCAL TIME NOT CONFIRMED";
+  const parsed = new Date(sessionStartTime);
   if (Number.isNaN(parsed.getTime())) return "LOCAL TIME NOT PROVIDED";
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
@@ -158,9 +155,14 @@ function getNextSession(entry: SeasonCalendarEntry, now: Date) {
   const nowMs = now.getTime();
   return (
     entry.sessions.find((session) => {
+      if (!session.isTimeConfirmed) return false;
       const startMs = Date.parse(session.startTime);
       return Number.isFinite(startMs) && startMs >= nowMs;
-    }) ?? entry.sessions.at(-1) ?? null
+    }) ??
+    [...entry.sessions]
+      .reverse()
+      .find((session) => session.isTimeConfirmed) ??
+    null
   );
 }
 
@@ -569,7 +571,6 @@ export function SeasonAtlas() {
                   <dt>LOCAL TIME</dt>
                   <dd>
                     {formatLocalRaceStart(
-                      focusedRace,
                       focusedCircuit?.timeZone,
                       nextSession?.startTime,
                     )} · {focusedCircuit?.timeZone ?? "TIMEZONE NOT PROVIDED"}
