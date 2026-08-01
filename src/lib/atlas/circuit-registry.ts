@@ -1,4 +1,9 @@
 import type { AtlasRegion, SeasonRace } from "./season-2026";
+import {
+  CIRCUIT_OUTLINE_LAST_VERIFIED,
+  CIRCUIT_OUTLINE_SOURCE,
+  CIRCUIT_OUTLINES_2026,
+} from "./circuit-outlines-2026";
 
 export type CircuitStatus =
   | "active"
@@ -75,12 +80,16 @@ function createCircuitEntry(race: SeasonRace): CircuitRegistryEntry {
     latitude: race.latitude,
     longitude: race.longitude,
     timeZone: override.timeZone ?? "UTC",
-    outline: override.outline,
+    outline: override.outline ?? CIRCUIT_OUTLINES_2026[race.id],
     lengthKm: override.lengthKm,
     laps: override.laps,
     status: override.status ?? "active",
-    source: "2026 F1 calendar + circuit registry verification",
-    lastVerified: "2026-07-26",
+    source: override.outline
+      ? "2026 F1 calendar + circuit registry verification"
+      : `${CIRCUIT_OUTLINE_SOURCE} · MIT license; calendar fields separately verified`,
+    lastVerified: override.outline
+      ? "2026-07-26"
+      : CIRCUIT_OUTLINE_LAST_VERIFIED,
   };
 }
 

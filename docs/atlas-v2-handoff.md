@@ -510,3 +510,5 @@ Validation after this follow-up:
 Known limits remain explicit: no circuit outline is rendered when verified outline geometry is unavailable, and real-device visual confirmation of the 2K→8K promotion, albedo-only debug mode, and compact LOCKED FOCUS still belongs to manual Preview review.
 
 The monthly calendar monitor was also tightened in the follow-up: it now fetches OpenF1 meetings and sessions with the same bounded retry policy, compares ordered rounds, locations, start/end dates, circuit names, and confirmed local Session times, and keeps the fallback behavior when either source is unavailable. Candidate changes remain report-only on an independent draft branch.
+
+Verified circuit traces are now available for all 22 active 2026 entries in `src/lib/atlas/circuit-outlines-2026.ts`. They are normalized centerline polylines derived from the public MIT-licensed `bacinger/f1-circuits` GeoJSON source; the registry preserves the source URL and `lastVerified` date, and LOCKED FOCUS renders the trace without inventing geometry when a future circuit is missing.

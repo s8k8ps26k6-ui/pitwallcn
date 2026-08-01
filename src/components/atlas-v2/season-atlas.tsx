@@ -179,6 +179,29 @@ function formatSessionTime(iso: string, timeZone: string | undefined) {
     .toUpperCase();
 }
 
+function CircuitTrace({
+  outline,
+}: {
+  outline: readonly (readonly [number, number])[] | undefined;
+}) {
+  if (!outline?.length) {
+    return <span className={styles.focusTraceUnavailable}>OUTLINE NOT VERIFIED</span>;
+  }
+  const points = outline
+    .map(([x, y]) => `${(x * 100).toFixed(2)},${((1 - y) * 100).toFixed(2)}`)
+    .join(" ");
+  return (
+    <svg
+      className={styles.focusTraceSvg}
+      viewBox="0 0 100 100"
+      role="img"
+      aria-label="Circuit outline"
+    >
+      <polyline points={points} pathLength="1" />
+    </svg>
+  );
+}
+
 function statusLabel(
   phase: SeasonSelectionPhase,
   selected: boolean,
@@ -502,6 +525,10 @@ export function SeasonAtlas() {
               </div>
               <h2>{focusedRace.name}</h2>
               <p className={styles.focusCircuit}>{focusedRace.circuitName}</p>
+              <div className={styles.focusTrace}>
+                <span>TRACE</span>
+                <CircuitTrace outline={focusedCircuit?.outline} />
+              </div>
               <div className={styles.focusRule} aria-hidden="true" />
               <dl className={styles.focusMeta}>
                 <div>

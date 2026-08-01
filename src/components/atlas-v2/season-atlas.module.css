@@ -392,6 +392,37 @@
   letter-spacing: 0.16em;
 }
 
+.focusTrace {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 34px;
+  margin-top: 12px;
+  color: #435a6f;
+  font-size: 7px;
+  letter-spacing: 0.2em;
+}
+
+.focusTraceSvg {
+  width: 88px;
+  height: 34px;
+  overflow: visible;
+}
+
+.focusTraceSvg polyline {
+  fill: none;
+  stroke: rgba(221, 192, 124, 0.82);
+  stroke-width: 2.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.focusTraceUnavailable {
+  color: #526a80;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+}
+
 .focusRule {
   height: 1px;
   margin: 18px 0 14px;
