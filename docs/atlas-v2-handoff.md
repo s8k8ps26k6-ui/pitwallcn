@@ -549,3 +549,5 @@ Latest implementation checkpoint before this continuation: `d6f7e93c` (`fix: dis
 - Preview deployment for that checkpoint: `https://pitwallcn-dowgs4lkk-s8k8ps26k6-uis-projects.vercel.app/atlas-v2`
 - Debug URL (Preview only): `https://pitwallcn-dowgs4lkk-s8k8ps26k6-uis-projects.vercel.app/atlas-v2?atlasDebug=1`
 - Vercel deployment status: Ready; target remains Preview.
+
+The subsequent handoff-only commit is `6b01bc6a` (`docs: refresh atlas handoff pointer`). Its refreshed Preview is `https://pitwallcn-89d0eufv5-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready, target Preview); append `?atlasDebug=1` for the calibration view.
