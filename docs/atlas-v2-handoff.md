@@ -551,3 +551,9 @@ Latest implementation checkpoint before this continuation: `d6f7e93c` (`fix: dis
 - Vercel deployment status: Ready; target remains Preview.
 
 The subsequent handoff-only commit is `6b01bc6a` (`docs: refresh atlas handoff pointer`). Its refreshed Preview is `https://pitwallcn-89d0eufv5-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready, target Preview); append `?atlasDebug=1` for the calibration view.
+
+## Atlas V2 continuation — 2026-08-01 monitor coverage extension
+
+The monitor now emits explicit `replacement`, `added-remote`, and optional `status` change records when structured sources expose circuit/status fields. Existing date, end-date, round, location, circuit, sprint-format, and confirmed Session-time comparisons remain unchanged. The offline suite now has seven tests, including replacement/status and unmatched-remote cases.
+
+The UTC suite now has five tests, adding fixed-hour June/December solstice declination coverage alongside the existing day/night and coordinate-frame assertions.

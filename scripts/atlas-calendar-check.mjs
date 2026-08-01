@@ -95,6 +95,7 @@ function normalizeRemote(row, index, sessionsByMeeting) {
   const meetingKey = String(row.meeting_key ?? "");
   return {
     id: meetingKey,
+    circuitId: row.circuit_key == null ? "" : String(row.circuit_key),
     round: index + 1,
     name: row.meeting_name ?? "",
     officialName: row.meeting_official_name ?? "",
@@ -103,7 +104,7 @@ function normalizeRemote(row, index, sessionsByMeeting) {
     circuitName: row.circuit_short_name ?? row.circuit_name ?? "",
     startDate: row.date_start?.slice(0, 10) ?? "",
     endDate: row.date_end?.slice(0, 10) ?? "",
-    status: "active",
+    status: row.meeting_status ?? row.status ?? null,
     isSprint: (sessionsByMeeting.get(meetingKey) ?? []).some((session) =>
       /sprint/i.test(session.session_name ?? ""),
     ),
@@ -122,6 +123,7 @@ function canonical(value) {
 
 export function compareCalendars(current, remote, manualOverrides = []) {
   const changes = [];
+  const matchedRemoteIndexes = new Set();
   const overrideById = new Map(
     manualOverrides.map((override) => [override.id, override]),
   );
@@ -129,12 +131,18 @@ export function compareCalendars(current, remote, manualOverrides = []) {
     changes.push({ type: "count", current: current.length, remote: remote.length });
   }
   for (const [index, currentRace] of current.entries()) {
-    const race = { ...currentRace, ...(overrideById.get(currentRace.id) ?? {}) };
-    const remoteRace =
-      remote.find((item) => item.name === race.name) ?? remote[index];
+    const override = overrideById.get(currentRace.id) ?? {};
+    const race = { ...currentRace, ...override };
+    const exactRemoteIndex = remote.findIndex((item) => item.name === race.name);
+    const remoteIndex = exactRemoteIndex >= 0 ? exactRemoteIndex : index;
+    const remoteRace = remote[remoteIndex];
     if (!remoteRace) {
       changes.push({ type: "missing-remote", race });
       continue;
+    }
+    matchedRemoteIndexes.add(remoteIndex);
+    if (remoteRace.name && remoteRace.name !== race.name) {
+      changes.push({ type: "replacement", race, remote: remoteRace });
     }
     if (remoteRace.round !== race.round) {
       changes.push({ type: "round", race, remote: remoteRace });
@@ -161,6 +169,22 @@ export function compareCalendars(current, remote, manualOverrides = []) {
     if (remoteRace.isSprint !== race.isSprint) {
       changes.push({ type: "sprint-format", race, remote: remoteRace });
     }
+    const expectedStatus = override.calendarStatus ?? currentRace.calendarStatus;
+    if (remoteRace.status && expectedStatus && remoteRace.status !== expectedStatus) {
+      changes.push({
+        type: "status",
+        race,
+        remote: remoteRace,
+        expectedStatus,
+      });
+    }
+    if (
+      remoteRace.circuitId &&
+      race.circuitId &&
+      remoteRace.circuitId !== race.circuitId
+    ) {
+      changes.push({ type: "replacement", race, remote: remoteRace });
+    }
     const localSessionsForRace = race.sessions ?? [];
     const remoteSessions = remoteRace.sessions ?? [];
     for (const [sessionIndex, localSession] of localSessionsForRace.entries()) {
@@ -174,6 +198,11 @@ export function compareCalendars(current, remote, manualOverrides = []) {
           remote: remoteSession,
         });
       }
+    }
+  }
+  for (const [index, remoteRace] of remote.entries()) {
+    if (!matchedRemoteIndexes.has(index)) {
+      changes.push({ type: "added-remote", remote: remoteRace });
     }
   }
   return changes;

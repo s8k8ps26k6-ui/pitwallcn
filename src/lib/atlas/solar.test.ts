@@ -93,3 +93,12 @@ test("solar state direction uses the same geographic coordinate frame", () => {
   const length = Math.hypot(...state.direction);
   assert.ok(Math.abs(length - 1) < 1e-6);
 });
+
+test("solar subpoint follows seasonal declination at a fixed UTC hour", () => {
+  const juneSolstice = solar.getSolarState(new Date("2026-06-21T12:00:00.000Z"));
+  const decemberSolstice = solar.getSolarState(new Date("2026-12-21T12:00:00.000Z"));
+
+  assert.ok(juneSolstice.latitude > 20);
+  assert.ok(decemberSolstice.latitude < -20);
+  assert.ok(juneSolstice.latitude - decemberSolstice.latitude > 40);
+});

@@ -14,6 +14,8 @@ function race(overrides = {}) {
     country: "Belgium",
     city: "Spa-Francorchamps",
     circuitName: "Circuit de Spa-Francorchamps",
+    circuitId: "spa",
+    calendarStatus: "active",
     startDate: "2026-07-17",
     endDate: "2026-07-19",
     isSprint: false,
@@ -62,6 +64,28 @@ test("manual override has precedence over a remote date difference", () => {
     [{ id: "belgium", startDate: "2026-07-24" }],
   );
   assert.equal(changes.some((change) => change.type === "date"), false);
+});
+
+test("replacement and status changes are explicit", () => {
+  const changes = compareCalendars(
+    [race()],
+    [race({
+      name: "Madrid Grand Prix",
+      circuitId: "madrid",
+      status: "cancelled",
+    })],
+  );
+  const types = changes.map((change) => change.type);
+  assert.ok(types.includes("replacement"));
+  assert.ok(types.includes("status"));
+});
+
+test("unmatched remote records are reported as additions", () => {
+  const changes = compareCalendars(
+    [race()],
+    [race(), { ...race(), id: "new-race", name: "New Grand Prix" }],
+  );
+  assert.ok(changes.some((change) => change.type === "added-remote"));
 });
 
 test("source failure keeps the last valid calendar and emits no candidate changes", () => {
