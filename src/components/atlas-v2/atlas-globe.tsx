@@ -475,6 +475,7 @@ function EarthSystem({
   const [highDetailDayMap, setHighDetailDayMap] = useState<THREE.Texture | null>(
     null,
   );
+  const highDetailDayMapRef = useRef<THREE.Texture | null>(null);
   const { gl } = useThree();
   const [dayMap, nightMap, cloudMap] = useTexture([
     "/atlas-v2/earth-day.png",
@@ -503,10 +504,9 @@ function EarthSystem({
   useEffect(() => {
     let cancelled = false;
     if (!canUseHighDetail) {
-      setHighDetailDayMap((previous) => {
-        previous?.dispose();
-        return null;
-      });
+      highDetailDayMapRef.current?.dispose();
+      highDetailDayMapRef.current = null;
+      setHighDetailDayMap(null);
       return () => {
         cancelled = true;
       };
@@ -526,10 +526,9 @@ function EarthSystem({
         texture.generateMipmaps = true;
         texture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
         texture.needsUpdate = true;
-        setHighDetailDayMap((previous) => {
-          previous?.dispose();
-          return texture;
-        });
+        highDetailDayMapRef.current?.dispose();
+        highDetailDayMapRef.current = texture;
+        setHighDetailDayMap(texture);
       },
       undefined,
       () => {
@@ -541,6 +540,14 @@ function EarthSystem({
       cancelled = true;
     };
   }, [canUseHighDetail, gl]);
+
+  useEffect(
+    () => () => {
+      highDetailDayMapRef.current?.dispose();
+      highDetailDayMapRef.current = null;
+    },
+    [],
+  );
 
   const activeDayMap = highDetailDayMap ?? dayMap;
 
