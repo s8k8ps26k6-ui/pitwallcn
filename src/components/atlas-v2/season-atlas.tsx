@@ -9,6 +9,9 @@ import {
   type CSSProperties,
 } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import type { Route } from "next";
+import { useSearchParams } from "next/navigation";
 import {
   AtlasGlobe,
   EUROPE_ENTRY_ID,
@@ -17,7 +20,6 @@ import {
 import {
   getSeason2026,
   getSeasonRaceSelection2026,
-  type SeasonSelectionPhase,
   type SeasonRace,
 } from "@/lib/atlas/season-2026";
 import {
@@ -32,6 +34,7 @@ import {
 import {
   getCircuitForRace,
 } from "@/lib/atlas/circuit-registry";
+import { getSessionLabel } from "@/lib/atlas/race-detail";
 import {
   EMPTY_ATLAS_FAVORITES,
   getAtlasStorage,
@@ -137,9 +140,11 @@ function formatRaceDates(race: SeasonRace) {
     .format(end)
     .toUpperCase();
 
-  return start.getUTCMonth() === end.getUTCMonth()
-    ? `${startDay}–${endDay} ${month}`
-    : `${startDay} ${month}–${endDay} ${endMonth}`;
+  const separator = "–";
+  if (start.getUTCMonth() === end.getUTCMonth()) {
+    return `${startDay}${separator}${endDay} ${month}`;
+  }
+  return `${startDay} ${month}${separator}${endDay} ${endMonth}`;
 }
 
 function formatLocalRaceStart(
@@ -208,11 +213,11 @@ function CircuitTrace({
 }
 
 function statusLabel(
-  phase: SeasonSelectionPhase,
+  phase: "current" | "next" | "off-season",
   selected: boolean,
   isAutomaticRace: boolean,
 ) {
-  if (selected) return "LOCKED FOCUS";
+  if (selected) return "STATION SELECTED";
   if (!isAutomaticRace) return "STATION PREVIEW";
   if (phase === "current") return "CURRENT RACE";
   if (phase === "next") return "NEXT RACE";
@@ -243,6 +248,7 @@ export function SeasonAtlas() {
   const [favorites, setFavorites] = useState<AtlasFavorites>(
     EMPTY_ATLAS_FAVORITES,
   );
+  const searchParams = useSearchParams();
   const webglState = useWebGLState();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const compact = useMediaQuery("(max-width: 720px), (pointer: coarse)");
@@ -298,19 +304,21 @@ export function SeasonAtlas() {
       focusedCalendarEntry ? getNextSession(focusedCalendarEntry, now) : null,
     [focusedCalendarEntry, now],
   );
+  const nextSessionIndex = nextSession
+    ? focusedCalendarEntry?.sessions.indexOf(nextSession) ?? -1
+    : -1;
   const focusedEventId = focusedRace.eventId ?? `${focusedRace.id}-gp-2026`;
   const eventIsFavorite = favorites.eventIds.includes(focusedEventId);
   const circuitIsFavorite = focusedCircuit
     ? favorites.circuitIds.includes(focusedCircuit.id)
     : false;
   const toggleEventFavorite = useCallback(() => {
-    const eventId = focusedRace.eventId ?? `${focusedRace.id}-gp-2026`;
     setFavorites((current) => {
-      const next = toggleFavoriteEvent(current, eventId);
+      const next = toggleFavoriteEvent(current, focusedEventId);
       writeAtlasFavorites(getAtlasStorage(), next);
       return next;
     });
-  }, [focusedRace.eventId, focusedRace.id]);
+  }, [focusedEventId]);
 
   const toggleCircuitFavorite = useCallback(() => {
     if (!focusedCircuit) return;
@@ -334,7 +342,6 @@ export function SeasonAtlas() {
       setHoveredTargetId(null);
       setNavigationVersion((version) => version + 1);
       if (targetId === EUROPE_ENTRY_ID) {
-        setFocusExpanded(false);
         setSelectedRaceId(
           currentRace.region === "EUROPE" ? currentRace.id : null,
         );
@@ -342,7 +349,6 @@ export function SeasonAtlas() {
         return;
       }
       setSelectedRaceId(targetId);
-      setFocusExpanded(true);
       setViewMode("station-focus");
     },
     [currentRace.id, currentRace.region],
@@ -351,7 +357,6 @@ export function SeasonAtlas() {
   const handleBackToGlobe = useCallback(() => {
     setHoveredTargetId(null);
     setSelectedRaceId(null);
-    setFocusExpanded(false);
     setViewMode("global");
     setNavigationVersion((version) => version + 1);
   }, []);
@@ -359,7 +364,6 @@ export function SeasonAtlas() {
   const handleReturnToCurrentRace = useCallback(() => {
     setHoveredTargetId(null);
     setSelectedRaceId(null);
-    setFocusExpanded(false);
     setViewMode("global");
     setNavigationVersion((version) => version + 1);
     setAutoFocusVersion((version) => version + 1);
@@ -376,6 +380,20 @@ export function SeasonAtlas() {
       setSelectedRaceId(currentRace.id);
     }
   }, [currentRace.id, currentRace.region, viewMode]);
+
+  useEffect(() => {
+    const station = searchParams.get("station");
+    if (!station) return;
+    const target = races.find(
+      (race) => race.id === station || race.eventId === station,
+    );
+    if (!target || selectedRaceId === target.id) return;
+
+    setHoveredTargetId(null);
+    setSelectedRaceId(target.id);
+    setViewMode("station-focus");
+    setNavigationVersion((version) => version + 1);
+  }, [races, searchParams, selectedRaceId]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -499,7 +517,7 @@ export function SeasonAtlas() {
         </button>
 
         <aside
-          className={`${styles.focusPanel} ${focusExpanded ? styles.focusPanelExpanded : ""}`}
+          className={`${styles.focusPanel} ${styles.focusPanelCompact} ${focusExpanded ? styles.focusPanelExpanded : ""}`}
           aria-live="polite"
           data-atlas-focus-panel={focusExpanded ? "expanded" : "collapsed"}
         >
@@ -551,7 +569,7 @@ export function SeasonAtlas() {
                     focusedRace.id === currentRace.id,
                   )}
                 </span>
-                <span>{focusedRace.region.replace("_", " ")}</span>
+                <span>{focusedRace.country}</span>
               </div>
               <div className={styles.focusRound}>
                 <span>ROUND</span>
@@ -606,7 +624,13 @@ export function SeasonAtlas() {
                 <div>
                   <dt>NEXT SESSION</dt>
                   <dd>
-                    {nextSession?.name ?? "SESSION TIMETABLE NOT CONFIRMED"}
+                    {nextSession
+                      ? getSessionLabel(
+                          nextSession,
+                          nextSessionIndex,
+                          focusedRace.isSprint,
+                        )
+                      : "SESSION TIMETABLE NOT CONFIRMED"}
                     {nextSession ? (
                       <small>
                         {formatSessionTime(
@@ -640,6 +664,12 @@ export function SeasonAtlas() {
                   {focusedRace.isSprint ? "SPRINT WEEKEND" : "GRAND PRIX WEEKEND"}
                 </span>
                 <span>{selectedRace ? "STATION LOCKED" : "AUTO RACE FOCUS"}</span>
+                <Link
+                  className={styles.focusEnter}
+                  href={`/races/2026/${focusedEventId}?from=atlas&station=${focusedRace.id}` as Route}
+                >
+                  ENTER RACE WEEK CONTROL ↗
+                </Link>
                 {selectedRace ? (
                   <button type="button" onClick={() => setFocusExpanded(true)}>
                     ENTER RACE WEEK CONTROL →
