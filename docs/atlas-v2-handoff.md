@@ -569,3 +569,5 @@ Added pure coverage for `season-2026.ts` and `visibility.ts`: 22-race/9-Europe i
 Latest Preview for checkpoint `b4b37f02`: `https://pitwallcn-l77a41b54-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready, target Preview). Debug view: append `?atlasDebug=1`.
 
 Added separate session-persistent favorites for event IDs and circuit IDs (`src/lib/atlas/favorites.ts`). LOCKED FOCUS exposes subtle EVENT and CIRCUIT star controls; storage access is guarded for SSR/private browsing and does not affect globe rendering.
+
+Latest Preview for runtime checkpoint `382a85da`: `https://pitwallcn-j66cuj09q-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready, target Preview). Debug view: append `?atlasDebug=1`.
