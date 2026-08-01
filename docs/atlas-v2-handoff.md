@@ -563,3 +563,5 @@ Latest Preview for checkpoint `74d73e8e`: `https://pitwallcn-953ts2oi3-s8k8ps26k
 LOCKED FOCUS now refuses to display unconfirmed fallback Session times. It shows `LOCAL TIME NOT CONFIRMED` until a verified Session timestamp exists, so missing schedule data is not replaced with an invented noon time.
 
 Latest Preview for runtime checkpoint `5e0a4886`: `https://pitwallcn-g9vic8e4m-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready, target Preview). Debug view: append `?atlasDebug=1`.
+
+Added pure coverage for `season-2026.ts` and `visibility.ts`: 22-race/9-Europe integrity, Belgium-weekend and post-weekend selection, pre/post-season boundaries, back-side projection, viewport bounds, and safe label placement. The new suite passes 6/6.
