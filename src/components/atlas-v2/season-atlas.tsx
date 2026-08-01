@@ -32,6 +32,15 @@ import {
 import {
   getCircuitForRace,
 } from "@/lib/atlas/circuit-registry";
+import {
+  EMPTY_ATLAS_FAVORITES,
+  getAtlasStorage,
+  readAtlasFavorites,
+  toggleFavoriteCircuit,
+  toggleFavoriteEvent,
+  writeAtlasFavorites,
+  type AtlasFavorites,
+} from "@/lib/atlas/favorites";
 import styles from "./season-atlas.module.css";
 
 const AtlasDebugPanel = dynamic(
@@ -237,6 +246,9 @@ export function SeasonAtlas() {
   );
   const [debugEnabled, setDebugEnabled] = useState(false);
   const [focusExpanded, setFocusExpanded] = useState(false);
+  const [favorites, setFavorites] = useState<AtlasFavorites>(
+    EMPTY_ATLAS_FAVORITES,
+  );
   const webglState = useWebGLState();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const compact = useMediaQuery("(max-width: 720px), (pointer: coarse)");
@@ -255,6 +267,10 @@ export function SeasonAtlas() {
     setDebugEnabled(
       new URLSearchParams(window.location.search).get("atlasDebug") === "1",
     );
+  }, []);
+
+  useEffect(() => {
+    setFavorites(readAtlasFavorites(getAtlasStorage()));
   }, []);
 
   const hoveredRace = useMemo(
@@ -288,6 +304,28 @@ export function SeasonAtlas() {
       focusedCalendarEntry ? getNextSession(focusedCalendarEntry, now) : null,
     [focusedCalendarEntry, now],
   );
+  const focusedEventId = focusedRace.eventId ?? `${focusedRace.id}-gp-2026`;
+  const eventIsFavorite = favorites.eventIds.includes(focusedEventId);
+  const circuitIsFavorite = focusedCircuit
+    ? favorites.circuitIds.includes(focusedCircuit.id)
+    : false;
+  const toggleEventFavorite = useCallback(() => {
+    const eventId = focusedRace.eventId ?? `${focusedRace.id}-gp-2026`;
+    setFavorites((current) => {
+      const next = toggleFavoriteEvent(current, eventId);
+      writeAtlasFavorites(getAtlasStorage(), next);
+      return next;
+    });
+  }, [focusedRace.eventId, focusedRace.id]);
+
+  const toggleCircuitFavorite = useCallback(() => {
+    if (!focusedCircuit) return;
+    setFavorites((current) => {
+      const next = toggleFavoriteCircuit(current, focusedCircuit.id);
+      writeAtlasFavorites(getAtlasStorage(), next);
+      return next;
+    });
+  }, [focusedCircuit]);
   const showEuropeSummary =
     viewMode === "europe-focus" && !selectedRace && !hoveredRace;
   const scrollStage: AtlasScrollStage =
@@ -530,6 +568,27 @@ export function SeasonAtlas() {
               <div className={styles.focusTrace}>
                 <span>TRACE</span>
                 <CircuitTrace outline={focusedCircuit?.outline} />
+              </div>
+              <div className={styles.focusFavorites} aria-label="Atlas favorites">
+                <button
+                  type="button"
+                  className={eventIsFavorite ? styles.favoriteActive : styles.favoriteButton}
+                  aria-pressed={eventIsFavorite}
+                  onClick={toggleEventFavorite}
+                >
+                  <span aria-hidden="true">{eventIsFavorite ? "★" : "☆"}</span>
+                  EVENT
+                </button>
+                <button
+                  type="button"
+                  className={circuitIsFavorite ? styles.favoriteActive : styles.favoriteButton}
+                  aria-pressed={circuitIsFavorite}
+                  onClick={toggleCircuitFavorite}
+                  disabled={!focusedCircuit}
+                >
+                  <span aria-hidden="true">{circuitIsFavorite ? "★" : "☆"}</span>
+                  CIRCUIT
+                </button>
               </div>
               <div className={styles.focusRule} aria-hidden="true" />
               <dl className={styles.focusMeta}>

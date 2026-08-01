@@ -423,6 +423,44 @@
   letter-spacing: 0.12em;
 }
 
+.focusFavorites {
+  display: flex;
+  gap: 14px;
+  margin-top: 9px;
+}
+
+.favoriteButton,
+.favoriteActive {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  color: #627b90;
+  font: 7px/1 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.16em;
+  background: transparent;
+  cursor: pointer;
+}
+
+.favoriteButton span,
+.favoriteActive span {
+  display: inline-block;
+  margin-right: 5px;
+  color: #728ca1;
+  font-size: 11px;
+  line-height: 0.7;
+  transform: translateY(1px);
+}
+
+.favoriteActive,
+.favoriteActive span {
+  color: var(--atlas-gold);
+}
+
+.favoriteButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
+
 .focusRule {
   height: 1px;
   margin: 18px 0 14px;
