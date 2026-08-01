@@ -518,3 +518,26 @@ Verified circuit traces are now available for all 22 active 2026 entries in `src
 Latest checkpoint: `bdce88d2` on `codex/velocity-at-dawn-homepage`. Preview is Ready at `https://pitwallcn-3twjltyjj-s8k8ps26k6-uis-projects.vercel.app/atlas-v2`; the Preview includes the trace, session, progressive texture, solar/debug, registry, and calendar-monitor changes. TypeScript, ESLint, production build, and the four UTC solar tests pass. Real-device touch/visual verification remains manual and was not claimed here.
 
 The latest material pass adds only a small day-texture luminance-gradient relief term (`uDayTexel`) for coastline/terrain readability. It does not add a fabricated normal map, change the albedo hue, or alter the shared UTC sun vector.
+
+## Atlas V2 continuation — 2026-08-01 calendar monitor testability
+
+The calendar monitor now keeps its network/output entry point behind a `main()` guard. `compareCalendars()` and `getCandidateChanges()` are exported pure functions, so change detection and source-failure fallback can be tested without contacting OpenF1 or writing to the user-owned `output/` directory. Manual overrides still take precedence for comparison only; a failed source returns no candidate changes and leaves the current calendar intact.
+
+Added `scripts/atlas-calendar-check.test.mjs` with five offline tests covering:
+
+- unchanged calendar;
+- round, date, and confirmed Session-time changes;
+- missing remote records and count changes;
+- manual date override precedence;
+- source failure fallback.
+
+Validation for this continuation:
+
+- `node --check scripts/atlas-calendar-check.mjs` — passed.
+- `node --test scripts/atlas-calendar-check.test.mjs` — passed (5 tests).
+- `node --test --experimental-strip-types src/lib/atlas/solar.test.ts` — passed (4 tests).
+- `npx.cmd tsc --noEmit --incremental false` — passed.
+- `npm.cmd run lint` — passed.
+- `npm.cmd run build` — passed; `/atlas-v2` generated successfully.
+
+Latest implementation checkpoint before this continuation: `d6f7e93c` (`fix: dispose promoted atlas texture on unmount`). This continuation is intentionally limited to the calendar monitor refactor/test and this handoff update. The user-owned dirty files listed in Section 13 remain untouched and are not part of the Atlas checkpoint.

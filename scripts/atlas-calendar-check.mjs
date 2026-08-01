@@ -1,4 +1,6 @@
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const SOURCE_URL = "https://api.openf1.org/v1/meetings?year=2026";
 const SESSIONS_URL = "https://api.openf1.org/v1/sessions?year=2026";
@@ -19,7 +21,7 @@ async function fetchJson(url) {
       return await response.json();
     } catch (error) {
       lastError = error;
-      await new Promise((resolve) => setTimeout(resolve, attempt * 500));
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, attempt * 500));
     } finally {
       clearTimeout(timer);
     }
@@ -27,7 +29,7 @@ async function fetchJson(url) {
   throw lastError ?? new Error("Unknown calendar source error");
 }
 
-function parseCurrentCalendar(source) {
+export function parseCurrentCalendar(source) {
   const records = [];
   const pattern = /id:\s*"([^"]+)"[\s\S]*?round:\s*(\d+)[\s\S]*?name:\s*"([^"]+)"[\s\S]*?country:\s*"([^"]+)"[\s\S]*?city:\s*"([^"]+)"[\s\S]*?circuitName:\s*"([^"]+)"[\s\S]*?startDate:\s*"(\d{4}-\d{2}-\d{2})"[\s\S]*?endDate:\s*"(\d{4}-\d{2}-\d{2})"[\s\S]*?isSprint:\s*(true|false)/g;
   for (const match of source.matchAll(pattern)) {
@@ -46,7 +48,7 @@ function parseCurrentCalendar(source) {
   return records.sort((a, b) => a.round - b.round);
 }
 
-function parseLocalSessionCalendar(source) {
+export function parseLocalSessionCalendar(source) {
   const sessionsByRace = new Map();
   const blockPattern = /race\(\{([\s\S]*?)\n  \}\),?/g;
   for (const match of source.matchAll(blockPattern)) {
@@ -76,9 +78,7 @@ function parseLocalSessionCalendar(source) {
     const names = /\bsprint:\s*true/.test(block)
       ? ["第一次自由练习赛", "冲刺排位赛", "冲刺赛", "排位赛", "正赛"]
       : ["第一次自由练习赛", "第二次自由练习赛", "第三次自由练习赛", "排位赛", "正赛"];
-    const times = /\bsprint:\s*true/.test(block)
-      ? [startDate, startDate, saturdayIso, saturdayIso, raceStart]
-      : [startDate, startDate, saturdayIso, saturdayIso, raceStart];
+    const times = [startDate, startDate, saturdayIso, saturdayIso, raceStart];
     sessionsByRace.set(
       id,
       names.map((name, index) => ({
@@ -120,44 +120,11 @@ function canonical(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
-const source = await readFile("src/lib/atlas/season-2026.ts", "utf8");
-const current = parseCurrentCalendar(source);
-const overrideSource = await readFile("scripts/atlas-calendar-overrides.json", "utf8");
-const manualOverrides = JSON.parse(overrideSource).overrides ?? [];
-const overrideById = new Map(manualOverrides.map((override) => [override.id, override]));
-const localSessionSource = await readFile("src/lib/race-calendar.ts", "utf8");
-const localSessions = parseLocalSessionCalendar(localSessionSource);
-for (const race of current) {
-  race.sessions = localSessions.get(`2026-${race.id}`) ??
-    localSessions.get(race.id) ?? [];
-}
-let remote = [];
-let sourceStatus = "ok";
-let sourceError = null;
-
-try {
-  const [meetingRows, sessionRows] = await Promise.all([
-    fetchJson(SOURCE_URL),
-    fetchJson(SESSIONS_URL),
-  ]);
-  const sessionsByMeeting = new Map();
-  for (const session of sessionRows) {
-    const key = String(session.meeting_key ?? "");
-    const list = sessionsByMeeting.get(key) ?? [];
-    list.push(session);
-    sessionsByMeeting.set(key, list);
-  }
-  remote = meetingRows
-    .filter((row) => row.year === 2026 || !row.year)
-    .sort((a, b) => String(a.date_start).localeCompare(String(b.date_start)))
-    .map((row, index) => normalizeRemote(row, index, sessionsByMeeting));
-} catch (error) {
-  sourceStatus = "fallback";
-  sourceError = String(error);
-}
-
-const changes = [];
-if (sourceStatus === "ok") {
+export function compareCalendars(current, remote, manualOverrides = []) {
+  const changes = [];
+  const overrideById = new Map(
+    manualOverrides.map((override) => [override.id, override]),
+  );
   if (remote.length !== current.length) {
     changes.push({ type: "count", current: current.length, remote: remote.length });
   }
@@ -209,30 +176,79 @@ if (sourceStatus === "ok") {
       }
     }
   }
+  return changes;
 }
 
-const report = {
-  generatedAt: new Date().toISOString(),
-  sources: { meetings: SOURCE_URL, sessions: SESSIONS_URL },
-  sourceStatus,
-  sourceError,
-  currentCount: current.length,
-  remoteCount: remote.length,
-  changes,
-  policy: "候选数据仅进入独立分支和草稿 PR，不自动合并或发布生产。",
-};
+export function getCandidateChanges(sourceStatus, current, remote, manualOverrides = []) {
+  return sourceStatus === "ok"
+    ? compareCalendars(current, remote, manualOverrides)
+    : [];
+}
 
-await mkdir("output/atlas-calendar", { recursive: true });
-await writeFile(
-  "output/atlas-calendar/report.json",
-  `${JSON.stringify(report, null, 2)}\n`,
-);
-await writeFile(
-  "output/atlas-calendar/candidate.json",
-  `${JSON.stringify({ sourceStatus, generatedAt: report.generatedAt, changes }, null, 2)}\n`,
-);
+async function main() {
+  const source = await readFile("src/lib/atlas/season-2026.ts", "utf8");
+  const current = parseCurrentCalendar(source);
+  const overrideSource = await readFile("scripts/atlas-calendar-overrides.json", "utf8");
+  const manualOverrides = JSON.parse(overrideSource).overrides ?? [];
+  const localSessionSource = await readFile("src/lib/race-calendar.ts", "utf8");
+  const localSessions = parseLocalSessionCalendar(localSessionSource);
+  for (const race of current) {
+    race.sessions = localSessions.get(`2026-${race.id}`) ??
+      localSessions.get(race.id) ?? [];
+  }
+  let remote = [];
+  let sourceStatus = "ok";
+  let sourceError = null;
 
-console.log(JSON.stringify(report, null, 2));
-if (process.env.GITHUB_OUTPUT) {
-  await appendFile(process.env.GITHUB_OUTPUT, `changed=${changes.length ? "true" : "false"}\n`);
+  try {
+    const [meetingRows, sessionRows] = await Promise.all([
+      fetchJson(SOURCE_URL),
+      fetchJson(SESSIONS_URL),
+    ]);
+    const sessionsByMeeting = new Map();
+    for (const session of sessionRows) {
+      const key = String(session.meeting_key ?? "");
+      const list = sessionsByMeeting.get(key) ?? [];
+      list.push(session);
+      sessionsByMeeting.set(key, list);
+    }
+    remote = meetingRows
+      .filter((row) => row.year === 2026 || !row.year)
+      .sort((a, b) => String(a.date_start).localeCompare(String(b.date_start)))
+      .map((row, index) => normalizeRemote(row, index, sessionsByMeeting));
+  } catch (error) {
+    sourceStatus = "fallback";
+    sourceError = String(error);
+  }
+
+  const changes = getCandidateChanges(sourceStatus, current, remote, manualOverrides);
+  const report = {
+    generatedAt: new Date().toISOString(),
+    sources: { meetings: SOURCE_URL, sessions: SESSIONS_URL },
+    sourceStatus,
+    sourceError,
+    currentCount: current.length,
+    remoteCount: remote.length,
+    changes,
+    policy: "Candidate data enters an independent branch and draft PR only; it never merges or publishes production automatically.",
+  };
+
+  await mkdir("output/atlas-calendar", { recursive: true });
+  await writeFile(
+    "output/atlas-calendar/report.json",
+    `${JSON.stringify(report, null, 2)}\n`,
+  );
+  await writeFile(
+    "output/atlas-calendar/candidate.json",
+    `${JSON.stringify({ sourceStatus, generatedAt: report.generatedAt, changes }, null, 2)}\n`,
+  );
+
+  console.log(JSON.stringify(report, null, 2));
+  if (process.env.GITHUB_OUTPUT) {
+    await appendFile(process.env.GITHUB_OUTPUT, `changed=${changes.length ? "true" : "false"}\n`);
+  }
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main();
 }
