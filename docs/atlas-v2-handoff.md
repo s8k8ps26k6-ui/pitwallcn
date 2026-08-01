@@ -585,3 +585,5 @@ Validation for this change:
 - Real-device WebGL, touch, Bloom, label placement, and high-resolution promotion still require manual Preview verification; no headless browser or screenshot probe was used.
 
 Latest local runtime change is intentionally limited to `src/components/atlas-v2/atlas-globe.tsx`; the handoff update is this document. User-owned `.gitignore`, `.playwright-cli/`, logs, screenshots, and `output/` remain untouched and excluded from Atlas commits.
+
+Preview for commit `01e19676`: `https://pitwallcn-e4805608k-s8k8ps26k6-uis-projects.vercel.app/atlas-v2` (Ready). Debug view: append `?atlasDebug=1`.
