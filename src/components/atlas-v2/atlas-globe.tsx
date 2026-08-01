@@ -192,6 +192,7 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
   uniform float uDaylightStrength;
   uniform float uSaturation;
   uniform float uCityLightsIntensity;
+  uniform vec2 uDayTexel;
   uniform float uDayFactorDebug;
   uniform float uDayTextureDebug;
 
@@ -226,6 +227,21 @@ const EARTH_FRAGMENT_SHADER = /* glsl */ `
       vec3 dayColor = naturalAlbedo;
       dayColor *= (0.72 + max(sun, 0.0) * 0.28) * uDaylightStrength;
       dayColor *= mix(0.94, 1.02, terrainRoughness);
+
+      // A restrained texture-gradient relief keeps coastlines and terrain
+      // legible without inventing a geographic normal map or tinting the albedo.
+      float reliefX = atlasLuminance(
+        texture2D(uDayMap, vUv + vec2(uDayTexel.x, 0.0)).rgb
+      ) - atlasLuminance(
+        texture2D(uDayMap, vUv - vec2(uDayTexel.x, 0.0)).rgb
+      );
+      float reliefY = atlasLuminance(
+        texture2D(uDayMap, vUv + vec2(0.0, uDayTexel.y)).rgb
+      ) - atlasLuminance(
+        texture2D(uDayMap, vUv - vec2(0.0, uDayTexel.y)).rgb
+      );
+      float relief = clamp((reliefX + reliefY) * 3.2, -1.0, 1.0);
+      dayColor *= 1.0 + relief * 0.024 * max(sun, 0.0);
 
       vec3 nightBase = naturalAlbedo * uNightSurfaceFloor;
       nightBase += vec3(0.006, 0.008, 0.011) * (0.44 + 0.56 * max(normal.y, 0.0));
@@ -563,6 +579,7 @@ function EarthSystem({
       uDaylightStrength: { value: ATLAS_RENDER_DEFAULTS.daylightStrength },
       uSaturation: { value: ATLAS_RENDER_DEFAULTS.saturation },
       uCityLightsIntensity: { value: ATLAS_RENDER_DEFAULTS.cityLightsIntensity },
+      uDayTexel: { value: new THREE.Vector2(1 / 2048, 1 / 1024) },
       uDayFactorDebug: { value: 0 },
       uDayTextureDebug: { value: 0 },
     }),
@@ -613,6 +630,10 @@ function EarthSystem({
     material.uniforms.uDaylightStrength.value = renderSettings.daylightStrength;
     material.uniforms.uSaturation.value = renderSettings.saturation;
     material.uniforms.uCityLightsIntensity.value = renderSettings.cityLightsIntensity;
+    const image = activeDayMap.image as { width?: number; height?: number } | undefined;
+    if (image?.width && image.height) {
+      material.uniforms.uDayTexel.value.set(1 / image.width, 1 / image.height);
+    }
     material.uniforms.uDayFactorDebug.value = renderSettings.dayFactorDebug ? 1 : 0;
     material.uniforms.uDayTextureDebug.value = renderSettings.dayTextureDebug ? 1 : 0;
 

@@ -516,3 +516,5 @@ The monthly calendar monitor was also tightened in the follow-up: it now fetches
 Verified circuit traces are now available for all 22 active 2026 entries in `src/lib/atlas/circuit-outlines-2026.ts`. They are normalized centerline polylines derived from the public MIT-licensed `bacinger/f1-circuits` GeoJSON source; the registry preserves the source URL and `lastVerified` date, and LOCKED FOCUS renders the trace without inventing geometry when a future circuit is missing.
 
 Latest checkpoint: `bdce88d2` on `codex/velocity-at-dawn-homepage`. Preview is Ready at `https://pitwallcn-3twjltyjj-s8k8ps26k6-uis-projects.vercel.app/atlas-v2`; the Preview includes the trace, session, progressive texture, solar/debug, registry, and calendar-monitor changes. TypeScript, ESLint, production build, and the four UTC solar tests pass. Real-device touch/visual verification remains manual and was not claimed here.
+
+The latest material pass adds only a small day-texture luminance-gradient relief term (`uDayTexel`) for coastline/terrain readability. It does not add a fabricated normal map, change the albedo hue, or alter the shared UTC sun vector.
