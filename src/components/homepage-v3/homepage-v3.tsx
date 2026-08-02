@@ -40,14 +40,6 @@ const EVENT_THEMES: Partial<Record<string, EventTheme>> = {
   qatar: { accent: "#c69b80", accentRgb: "198 155 128", support: "#6d608d" },
 };
 
-const REGION_THEMES: Record<UnifiedRace["race"]["region"], EventTheme> = {
-  AMERICAS: { accent: "#c99b72", accentRgb: "201 155 114", support: "#3f78a0" },
-  APAC: { accent: "#c6af72", accentRgb: "198 175 114", support: "#397e93" },
-  EUROPE: { accent: "#d0ab72", accentRgb: "208 171 114", support: "#52799b" },
-  EURASIA: { accent: "#bc8d78", accentRgb: "188 141 120", support: "#567796" },
-  MIDDLE_EAST: { accent: "#c59d7f", accentRgb: "197 157 127", support: "#6e638f" },
-};
-
 function getCountdown(targetIso: string, now: Date) {
   const remaining = Math.max(0, Date.parse(targetIso) - now.getTime());
   return {
@@ -80,23 +72,6 @@ function getGrandPrixTitle(name: string) {
   return name.replace(/ Grand Prix$/i, "");
 }
 
-function getRaceWeekProgress(race: UnifiedRace, now: Date) {
-  const start = Date.parse(`${race.race.startDate}T00:00:00.000Z`);
-  const end = Date.parse(`${race.race.endDate}T23:59:59.999Z`);
-  const timestamp = now.getTime();
-  const progress = Math.round(
-    Math.max(0, Math.min(1, (timestamp - start) / (end - start))) * 100,
-  );
-
-  if (timestamp < start) {
-    return { progress: 0, label: "赛前待命", detail: `比赛周始于 ${formatShortDate(race.race.startDate)}` };
-  }
-  if (timestamp > end) {
-    return { progress: 100, label: "比赛周已完成", detail: "下一站赛程已进入待命状态" };
-  }
-  return { progress, label: "比赛周进行中", detail: `赛程已推进 ${progress}%` };
-}
-
 function getPhaseLabel(phase: "current" | "next" | "off-season") {
   if (phase === "current") return "比赛周进行中";
   if (phase === "off-season") return "赛季收官后";
@@ -126,11 +101,7 @@ export function HomepageV3({
   const [now, setNow] = useState(() => new Date());
   const moment = useMemo(() => getPrimaryRaceMoment(race, now), [now, race]);
   const countdown = getCountdown(moment.startTime, now);
-  const raceWeek = getRaceWeekProgress(race, now);
-  const theme =
-    EVENT_THEMES[race.race.id] ??
-    REGION_THEMES[race.race.region] ??
-    DEFAULT_THEME;
+  const theme = EVENT_THEMES[race.race.id] ?? DEFAULT_THEME;
   const detailHref = `/races/${race.season}/${race.eventId}` as Route;
   const localSessionTime = moment.isTimeConfirmed
     ? formatLocalDateTime(moment.startTime, race.circuit?.timeZone, "zh-CN")
@@ -139,25 +110,11 @@ export function HomepageV3({
     "--event-accent": theme.accent,
     "--event-accent-rgb": theme.accentRgb,
     "--event-support": theme.support,
-    "--week-progress": `${raceWeek.progress}%`,
   } as CSSProperties;
 
   useEffect(() => {
-    let interval: number | undefined;
-
-    const refreshClock = () => setNow(new Date());
-    const syncClock = () => {
-      if (interval) window.clearInterval(interval);
-      refreshClock();
-      if (!document.hidden) interval = window.setInterval(refreshClock, 1_000);
-    };
-
-    syncClock();
-    document.addEventListener("visibilitychange", syncClock);
-    return () => {
-      if (interval) window.clearInterval(interval);
-      document.removeEventListener("visibilitychange", syncClock);
-    };
+    const interval = window.setInterval(() => setNow(new Date()), 1_000);
+    return () => window.clearInterval(interval);
   }, []);
 
   return (
@@ -192,9 +149,9 @@ export function HomepageV3({
           <p className={styles.weekendDates}>{formatRaceDates(race)}</p>
         </div>
 
-        <div className={styles.trackStage} aria-label={`${race.race.circuitName} circuit scene`}>
+        <div className={styles.trackStage} aria-label={`${race.race.circuitName} circuit model`}>
           <div className={styles.trackHalo} aria-hidden="true" />
-          <div className={styles.sceneArcs} aria-hidden="true" />
+          <div className={styles.trackRings} aria-hidden="true" />
           <CircuitOutline
             outline={race.circuit?.outline}
             className={`${styles.trackLayer} ${styles.trackDepth}`}
@@ -210,11 +167,6 @@ export function HomepageV3({
             className={`${styles.trackLayer} ${styles.trackTop}`}
             title={`${race.race.circuitName} circuit outline`}
             showStartMarker
-          />
-          <CircuitOutline
-            outline={race.circuit?.outline}
-            className={`${styles.trackLayer} ${styles.trackFlow}`}
-            title={`${race.race.circuitName} session light flowing along the circuit`}
           />
           <p className={styles.trackLocation}>{race.race.city}</p>
         </div>
@@ -264,45 +216,34 @@ export function HomepageV3({
         </div>
       </section>
 
-      <section className={styles.operations} aria-label="Race operations summary">
-        <div className={styles.weekStatus}>
-          <div className={styles.weekRing} aria-hidden="true"><span /></div>
-          <div>
-            <span className={styles.dataKicker}>比赛周状态</span>
-            <strong>{raceWeek.label}</strong>
-            <p>{raceWeek.detail}</p>
-          </div>
-          <Link className={styles.liveLink} href="/live">
-            <span className={styles.liveDot} aria-hidden="true" />
-            {phase === "current" ? "进入 Live Timing" : "Live Timing 赛时开启"}
-            <b aria-hidden="true">→</b>
-          </Link>
-        </div>
+      <section className={styles.dataDeck} aria-label="Race data summary">
+        <Link className={styles.liveStatus} href="/live">
+          <span className={styles.dataKicker}>LIVE TIMING</span>
+          <strong>{phase === "current" ? "比赛周数据窗口" : "赛时开启"}</strong>
+          <p>
+            {phase === "current"
+              ? "实时计时入口已就绪，数据流取决于 OpenF1 当期可用性。"
+              : "比赛周开始后可进入实时计时；当前不伪造实时圈速。"}
+          </p>
+          <span className={styles.dataArrow} aria-hidden="true">→</span>
+        </Link>
 
-        <article className={styles.metrics}>
+        <article className={styles.circuitData}>
           <span className={styles.dataKicker}>本站关键数据</span>
-          <div className={styles.metricValues}>
-            <div>
-              <strong>{race.circuit?.lengthKm ? `${race.circuit.lengthKm.toFixed(3)}` : "—"}</strong>
-              <span>公里</span>
-            </div>
-            <div>
-              <strong>{race.circuit?.laps ?? "—"}</strong>
-              <span>正赛圈数</span>
-            </div>
-            <div>
-              <strong>{race.race.isSprint ? "SPRINT" : "STANDARD"}</strong>
-              <span>比赛格式</span>
-            </div>
+          <div>
+            <strong>{race.circuit?.lengthKm ? `${race.circuit.lengthKm.toFixed(3)} KM` : "长度待确认"}</strong>
+            <strong>{race.circuit?.laps ? `${race.circuit.laps} 圈` : "圈数待确认"}</strong>
+            <strong>{race.race.isSprint ? "冲刺周末" : "常规周末"}</strong>
           </div>
+          <p>赛道字段来自统一 circuit registry。</p>
         </article>
 
-        <div className={styles.standingsNote}>
+        <Link className={styles.standingsStatus} href="/standings">
           <span className={styles.dataKicker}>冠军积分</span>
-          <strong>等待已核验排名快照</strong>
-          <p>项目现有静态 fallback 不作为真实前三展示。</p>
-          <Link href="/standings">查看积分入口 →</Link>
-        </div>
+          <strong>已核验快照待接入</strong>
+          <p>当前项目的静态 fallback 不作为真实积分榜展示。</p>
+          <span className={styles.dataArrow} aria-hidden="true">→</span>
+        </Link>
       </section>
 
       <footer className={styles.footer}>
