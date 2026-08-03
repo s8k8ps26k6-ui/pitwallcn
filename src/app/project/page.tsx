@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { BackNavigation } from "@/components/back-navigation";
 
 const changelog = [
   {
@@ -110,9 +110,7 @@ const statusCards = [
 export default function ProjectPage() {
   return (
     <main className="space-y-5">
-      <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
-        ← BACK TO HOME
-      </Link>
+      <BackNavigation className="race-code inline-flex min-h-10 items-center rounded-xl border border-zinc-800 bg-black/30 px-3 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" fallbackHref="/" fallbackLabel="返回主页" />
 
       <section className="motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
         <div className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">

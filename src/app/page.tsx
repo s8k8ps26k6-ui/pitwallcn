@@ -1,4 +1,6 @@
 import { HomepageV3 } from "@/components/homepage-v3/homepage-v3";
+
+export const dynamic = "force-dynamic";
 import {
   getCurrentSeasonRace,
   getSeasonRaces,

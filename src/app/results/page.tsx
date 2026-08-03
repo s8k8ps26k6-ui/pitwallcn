@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackNavigation } from "@/components/back-navigation";
 import { RaceWeekendReturnLink } from "@/components/race-weekend-return-link";
 import { getResultsBySession, getResultsSelectionData } from "@/lib/results-service";
 
@@ -120,9 +121,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
   return (
     <main className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
-          ← BACK TO HOME
-        </Link>
+        <BackNavigation className="race-code inline-flex min-h-10 items-center rounded-xl border border-zinc-800 bg-black/30 px-3 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" fallbackHref="/race-weekend" fallbackLabel="返回比赛周" />
         <RaceWeekendReturnLink session={resolvedSearchParams.session} />
       </div>
 

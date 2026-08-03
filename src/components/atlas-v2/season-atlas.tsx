@@ -55,6 +55,14 @@ export type AtlasScrollStage = "global-core" | "season-data-reserved";
 
 type WebGLState = "checking" | "ready" | "blocked";
 
+const ATLAS_RETURN_STATE_KEY = "gd:atlas-return-state";
+
+type AtlasReturnState = {
+  viewMode: AtlasViewMode;
+  selectedRaceId: string | null;
+  focusExpanded: boolean;
+};
+
 function useMediaQuery(query: string) {
   const [matches, setMatches] = useState(false);
 
@@ -227,6 +235,7 @@ function statusLabel(
 export function SeasonAtlas() {
   const rootRef = useRef<HTMLElement>(null);
   const initialFocusRequestedRef = useRef(false);
+  const returnStateRestoredRef = useRef(false);
   const now = useSeasonClock();
   const races = useMemo(() => getSeason2026(now), [now]);
   const automaticSelection = useMemo(
@@ -272,6 +281,38 @@ export function SeasonAtlas() {
   useEffect(() => {
     setFavorites(readAtlasFavorites(getAtlasStorage()));
   }, []);
+
+  useEffect(() => {
+    if (returnStateRestoredRef.current) return;
+    try {
+      const raw = window.sessionStorage.getItem(ATLAS_RETURN_STATE_KEY);
+      if (!raw || searchParams.get("station")) return;
+      const saved = JSON.parse(raw) as AtlasReturnState;
+      const selected = saved.selectedRaceId
+        ? races.find((race) => race.id === saved.selectedRaceId)
+        : null;
+      if (saved.viewMode === "global" || selected) {
+        returnStateRestoredRef.current = true;
+        initialFocusRequestedRef.current = true;
+        setHoveredTargetId(null);
+        setSelectedRaceId(selected?.id ?? null);
+        setViewMode(saved.viewMode === "global" ? "global" : saved.viewMode);
+        setFocusExpanded(Boolean(saved.focusExpanded));
+        setNavigationVersion((version) => version + 1);
+      }
+    } catch {
+      // Atlas state is optional and should never block a globe load.
+    }
+  }, [races, searchParams]);
+
+  useEffect(() => {
+    try {
+      const snapshot: AtlasReturnState = { viewMode, selectedRaceId, focusExpanded };
+      window.sessionStorage.setItem(ATLAS_RETURN_STATE_KEY, JSON.stringify(snapshot));
+    } catch {
+      // Storage may be unavailable in private browser modes.
+    }
+  }, [focusExpanded, selectedRaceId, viewMode]);
 
   const hoveredRace = useMemo(
     () => races.find((race) => race.id === hoveredTargetId) ?? null,
@@ -666,7 +707,7 @@ export function SeasonAtlas() {
                 <span>{selectedRace ? "STATION LOCKED" : "AUTO RACE FOCUS"}</span>
                 <Link
                   className={styles.focusEnter}
-                  href={`/races/2026/${focusedEventId}?from=atlas&station=${focusedRace.id}` as Route}
+                  href={`/races/2026/${focusedEventId}` as Route}
                 >
                   ENTER RACE WEEK CONTROL ↗
                 </Link>

@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
+import { MobileRaceDock } from "@/components/mobile-race-dock";
+import { NavigationMemory } from "@/components/navigation-memory";
+import { HomeBrandLink } from "@/components/home-brand-link";
 
 const navItems = [
   { label: "首页", href: "/" },
@@ -18,24 +22,31 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   const isImmersiveRoute =
     isHomepage ||
     pathname.startsWith("/atlas-v2") ||
+    pathname.startsWith("/news") ||
     pathname.startsWith("/schedule") ||
     pathname.startsWith("/races/");
 
   if (isImmersiveRoute) {
-    return <div className="min-h-screen bg-gdBg text-gdText">{children}</div>;
+    return (
+      <div className="gd-site-shell min-h-screen bg-gdBg text-gdText">
+        <Suspense fallback={null}><NavigationMemory /></Suspense>
+        {children}
+        <MobileRaceDock />
+      </div>
+    );
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-6xl px-4 py-4 sm:px-6 sm:py-6">
+    <div className="gd-site-shell mx-auto min-h-screen max-w-6xl px-4 py-4 sm:px-6 sm:py-6">
+      <Suspense fallback={null}><NavigationMemory /></Suspense>
       <header
         data-site-header
-        className="mb-5 rounded-[1.25rem] border border-zinc-800/80 bg-zinc-950/55 px-3 py-2.5 shadow-2xl shadow-black/20 backdrop-blur sm:mb-6 sm:rounded-[1.75rem] sm:py-3 md:px-4"
+        className="mb-5 border-b border-zinc-800/70 px-0 py-2.5 sm:mb-6 sm:rounded-[1.75rem] sm:border sm:bg-zinc-950/55 sm:px-3 sm:py-3 sm:shadow-2xl sm:shadow-black/20 sm:backdrop-blur md:px-4"
       >
         <div className="flex items-center justify-between gap-3">
-          <Link
+          <HomeBrandLink
             className="group inline-flex items-center gap-2.5 py-0.5 sm:gap-3 sm:py-1"
-            href="/"
-            aria-label="GridDelta CN 首页"
+            ariaLabel="GridDelta CN 首页"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full border border-neonRed/30 bg-neonRed/10 text-xs font-black tracking-tight text-neonRed shadow-inner shadow-red-950/40 sm:h-9 sm:w-9 sm:text-sm">
               GD
@@ -48,7 +59,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
                 F1 Data Pitwall
               </span>
             </span>
-          </Link>
+          </HomeBrandLink>
           <Link
             className="shrink-0 rounded-full border border-zinc-800/70 bg-black/15 px-2.5 py-1 text-[0.68rem] font-semibold tracking-[0.1em] text-zinc-500 transition hover:border-neonAmber/30 hover:bg-neonAmber/5 hover:text-neonAmber sm:px-3 sm:py-1.5 sm:text-xs"
             href="/project"
@@ -57,7 +68,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
         <nav
-          className="mt-2.5 grid grid-cols-3 gap-x-2 gap-y-1.5 border-t border-zinc-800/70 pt-2.5 text-xs sm:mt-3 sm:flex sm:gap-2 sm:pt-3 sm:text-sm"
+          className="mt-3 hidden border-t border-zinc-800/70 pt-3 text-sm sm:flex sm:gap-2"
           aria-label="主导航"
         >
           {navItems.map((item) => (
@@ -72,6 +83,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
       {children}
+      <MobileRaceDock />
     </div>
   );
 }

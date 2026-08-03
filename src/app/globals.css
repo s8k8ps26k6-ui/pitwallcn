@@ -23,6 +23,12 @@ body {
   background: var(--color-bg);
 }
 
+@media (max-width: 767px) {
+  .gd-site-shell {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+
 ::selection {
   background: rgba(212, 168, 67, 0.32);
   color: var(--color-text);

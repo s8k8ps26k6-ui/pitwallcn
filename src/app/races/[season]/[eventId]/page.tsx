@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { RaceDetailView } from "@/components/race-detail/race-detail-view";
 import { getRaceByEventId, getSeasonRaces } from "@/lib/atlas/race-detail";
+import { readRaceOutlook } from "@/lib/race-outlook";
 
 type RaceDetailPageProps = {
   params: Promise<{ season: string; eventId: string }>;
@@ -27,5 +28,10 @@ export default async function RaceDetailPage({ params }: RaceDetailPageProps) {
   const race = getRaceByEventId(eventId);
   if (!race) notFound();
 
-  return <RaceDetailView race={race} />;
+  const outlook = readRaceOutlook(race.eventId, "qualifying")
+    ?? readRaceOutlook(race.eventId, "fp3")
+    ?? readRaceOutlook(race.eventId, "fp2")
+    ?? readRaceOutlook(race.eventId, "fp1");
+
+  return <RaceDetailView race={race} outlook={outlook} />;
 }

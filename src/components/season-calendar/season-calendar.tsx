@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { CircuitOutline } from "@/components/race-shared/circuit-outline";
+import { HomeBrandLink } from "@/components/home-brand-link";
 import {
   formatRaceDateRange,
   getCalendarDisplayStatus,
@@ -29,7 +30,7 @@ function CalendarRow({
   race: UnifiedRace;
   status: ReturnType<typeof getCalendarDisplayStatus>;
 }) {
-  const detailHref = `/races/${race.season}/${race.eventId}?from=calendar` as Route;
+  const detailHref = `/races/${race.season}/${race.eventId}` as Route;
 
   return (
     <Link
@@ -88,9 +89,9 @@ export function SeasonCalendar({
     <main className={styles.page}>
       <div className={styles.backdrop} aria-hidden="true" />
       <header className={styles.header}>
-        <Link className={styles.brand} href="/">
+        <HomeBrandLink className={styles.brand} ariaLabel="返回主页顶部">
           <span>GRIDDELTA</span> <em>CN</em>
-        </Link>
+        </HomeBrandLink>
         <nav className={styles.nav} aria-label="Season navigation">
           <Link href="/">HOME</Link>
           <Link href="/atlas-v2">ATLAS</Link>
