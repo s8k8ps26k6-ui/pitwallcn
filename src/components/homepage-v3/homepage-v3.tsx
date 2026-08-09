@@ -82,7 +82,7 @@ export function HomepageV3({ race, phase, raceRail }: { race: UnifiedRace; phase
   return <main className={styles.page} style={style}>
     <div className={styles.backdrop} aria-hidden="true" />
     <header className={styles.header}>
-      <HomeBrandLink className={styles.brand} ariaLabel="返回主页顶部">GRIDDELTA <em>CN</em></HomeBrandLink>
+      <HomeBrandLink className={styles.brand} ariaLabel="返回主页顶部">LAPMETRY</HomeBrandLink>
       <nav className={styles.nav} aria-label="主要导航"><Link href="/schedule">赛历</Link><Link href="/atlas-v2">Atlas</Link></nav>
     </header>
 
@@ -121,6 +121,6 @@ export function HomepageV3({ race, phase, raceRail }: { race: UnifiedRace; phase
       <div className={styles.metrics}><p>本站关键数据</p><div><strong>{race.circuit?.lengthKm ? race.circuit.lengthKm.toFixed(3) : "—"}<small>公里</small></strong><strong>{race.circuit?.laps ?? "—"}<small>正赛圈数</small></strong><strong>{race.race.isSprint ? "SPRINT" : "GP"}<small>比赛格式</small></strong></div></div>
       <div className={styles.standings}><p>冠军积分</p><strong>等待已核验排名快照</strong><small>项目现有静态 fallback 不作为真实前三展示。</small><Link href="/standings">查看积分入口 →</Link></div>
     </section>
-    <footer className={styles.footer}><span>GRIDDELTA CN · 2026 F1 SEASON</span><span>赛程与赛道字段来自统一赛历数据源</span></footer>
+    <footer className={styles.footer}><span>LAPMETRY · 2026 F1 SEASON</span><span>赛程与赛道字段来自统一赛历数据源</span></footer>
   </main>;
 }

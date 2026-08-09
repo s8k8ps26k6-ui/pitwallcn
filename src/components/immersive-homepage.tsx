@@ -586,10 +586,10 @@ export function ImmersiveHomepage({
               <Link
                 href="/"
                 className="min-h-11 py-2 transition hover:text-gdGold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gdCyan"
-                aria-label="GridDelta CN 首页"
+                aria-label="LAPMETRY 首页"
               >
-                <span className="sm:hidden">GD</span>
-                <span className="hidden sm:inline">GridDelta CN</span>
+                <span className="sm:hidden">LM</span>
+                <span className="hidden sm:inline">LAPMETRY</span>
               </Link>
               <nav className="flex min-h-11 items-start gap-4 py-2 sm:gap-5" aria-label="首页导航">
                 <a
@@ -630,11 +630,9 @@ export function ImmersiveHomepage({
               <p className="gd-label">Velocity at Dawn</p>
               <h1
                 className="mt-5 flex max-w-[84rem] flex-wrap gap-x-[0.14em] text-[clamp(2.75rem,13.6vw,10.8rem)] font-black uppercase leading-[0.88] tracking-[0.08em] text-gdText"
-                aria-label="GRIDDELTA CN"
+                aria-label="LAPMETRY"
               >
-                <span>GRID</span>
-                <span className="text-gdGold">DELTA</span>
-                <span>CN</span>
+                <span>LAPMETRY</span>
               </h1>
               <p className="mt-6 font-mono text-[clamp(0.78rem,1.4vw,1rem)] uppercase tracking-[0.35em] text-gdCyan">
                 F1 DATA IN MOTION
@@ -761,7 +759,7 @@ export function ImmersiveHomepage({
                 ))}
               </div>
               <footer className="mt-12 flex flex-col gap-2 font-mono uppercase tracking-[0.28em] sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-gdText">GRIDDELTA CN</p>
+                <p className="text-xs text-gdText">LAPMETRY</p>
                 <p className="max-w-xl text-[0.62rem] leading-5 text-[rgba(237,233,224,0.48)]">
                   BUILT FOR THE RACE BETWEEN THE NUMBERS
                 </p>

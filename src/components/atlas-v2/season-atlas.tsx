@@ -532,7 +532,7 @@ export function SeasonAtlas() {
 
         <header className={styles.identity}>
           <span className={styles.identityRule} aria-hidden="true" />
-          <p>GRIDDELTA CN</p>
+          <p>LAPMETRY</p>
           <h1>SEASON ATLAS</h1>
           <span>2026 · GLOBAL CORE</span>
         </header>

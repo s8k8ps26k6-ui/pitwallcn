@@ -15,7 +15,7 @@ export function getVenueModel(circuitId: string): VenueModel {
   return {
     circuitId,
     fidelity: "track-verified",
-    source: "bacinger/f1-circuits GeoJSON (MIT) / GridDelta circuit registry",
+    source: "bacinger/f1-circuits GeoJSON (MIT) / LAPMETRY circuit registry",
     lastVerified: "2026-07-26",
     note: "Verified track centreline. Venue terrain and structures are pending dedicated source verification.",
   };

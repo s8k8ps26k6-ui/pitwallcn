@@ -17,8 +17,8 @@ export function NewsFeedView({ articles }: { articles: readonly NewsArticle[] })
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <div className={styles.topline}><Link href="/">GRIDDELTA <em>CN</em></Link><BackNavigation className={styles.back} fallbackHref="/" fallbackLabel="返回主页" /></div>
-        <p>GRIDDELTA CN / F1 资讯</p>
+        <div className={styles.topline}><Link href="/">LAPMETRY</Link><BackNavigation className={styles.back} fallbackHref="/" fallbackLabel="返回主页" /></div>
+        <p>LAPMETRY / F1 资讯</p>
         <h1>资讯流</h1>
         <span>只显示可追溯来源的中文短摘要。</span>
       </header>

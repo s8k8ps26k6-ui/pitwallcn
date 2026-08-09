@@ -46,17 +46,17 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-between gap-3">
           <HomeBrandLink
             className="group inline-flex items-center gap-2.5 py-0.5 sm:gap-3 sm:py-1"
-            ariaLabel="GridDelta CN 首页"
+            ariaLabel="LAPMETRY 首页"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full border border-neonRed/30 bg-neonRed/10 text-xs font-black tracking-tight text-neonRed shadow-inner shadow-red-950/40 sm:h-9 sm:w-9 sm:text-sm">
-              GD
+              LM
             </span>
             <span className="leading-none">
               <span className="block text-base font-bold tracking-wide text-white transition group-hover:text-neonRed sm:text-xl">
-                GridDelta CN
+                LAPMETRY
               </span>
               <span className="mt-1 hidden text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-zinc-500 sm:block">
-                F1 Data Pitwall
+                F1 Race Data Command Center
               </span>
             </span>
           </HomeBrandLink>

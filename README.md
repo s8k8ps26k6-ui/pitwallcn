@@ -1,6 +1,8 @@
-# GridDelta CN
+# LAPMETRY
 
-GridDelta CN is an unofficial Formula 1 data dashboard for Chinese F1 fans.
+LAPMETRY — F1 Race Data Command Center
+
+中文 F1 数据指挥台。LAPMETRY is an unofficial Formula 1 data dashboard for Chinese F1 fans.
 
 Live site:
 
@@ -51,17 +53,17 @@ https://github.com/s8k8ps26k6-ui/pitwallcn
 - Combined session results, race-control messages, lap-analysis summary and weather data into one overview
 - Added Race Weekend Recap entry to the home dashboard and sitemap
 
-### v1.7 Brand Rename
+### v1.7 Brand Migration
 
-- Renamed the public-facing project from Pitwall CN to GridDelta CN
-- Updated homepage brand text, site metadata, package name and public project copy
-- Kept the existing repository name and Vercel URL unchanged for now to avoid unnecessary deployment risk
+- Standardized the public-facing brand as LAPMETRY
+- Updated public copy and metadata while preserving existing technical identifiers
+- Kept the repository name and Vercel URL unchanged to avoid unnecessary deployment risk
 
 ### v1.6 Weather Center
 
 - Added `/weather` track-weather page
 - Added OpenF1 weather samples: track temperature, air temperature, humidity, pressure, rainfall, wind direction and wind speed
-- Added weather shortcut beside the GridDelta CN brand instead of crowding the main navigation
+- Added weather shortcut beside the LAPMETRY brand instead of crowding the main navigation
 
 ### v1.5 Loading and Performance
 
@@ -145,8 +147,8 @@ npm run lint
 
 ## Notes
 
-GridDelta CN avoids unnecessary frontend third-party resources where possible. Major external data requests are handled through service files, which makes future caching and mirror deployment easier.
+LAPMETRY avoids unnecessary frontend third-party resources where possible. Major external data requests are handled through service files, which makes future caching and mirror deployment easier.
 
 ## Disclaimer
 
-GridDelta CN is an unofficial fan-made project. It is not affiliated with Formula 1, FIA, OpenF1, any Formula 1 team or any driver. Data availability depends on public data sources and may be incomplete for some sessions.
+LAPMETRY is an unofficial fan-made project. It is not affiliated with Formula 1, FIA, OpenF1, any Formula 1 team or any driver. Data availability depends on public data sources and may be incomplete for some sessions.
