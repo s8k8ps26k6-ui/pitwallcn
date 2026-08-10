@@ -24,7 +24,7 @@ body {
 }
 
 @media (max-width: 767px) {
-  .gd-site-shell {
+  .gd-site-shell--home-dock {
     padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
 }

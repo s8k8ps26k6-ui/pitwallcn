@@ -19,6 +19,7 @@ const navItems = [
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHomepage = pathname === "/";
+  const mobileRaceDock = isHomepage ? <MobileRaceDock /> : null;
   const isImmersiveRoute =
     isHomepage ||
     pathname.startsWith("/atlas-v2") ||
@@ -28,10 +29,10 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
   if (isImmersiveRoute) {
     return (
-      <div className="gd-site-shell min-h-screen bg-gdBg text-gdText">
+      <div className={`gd-site-shell min-h-screen bg-gdBg text-gdText${isHomepage ? " gd-site-shell--home-dock" : ""}`}>
         <Suspense fallback={null}><NavigationMemory /></Suspense>
         {children}
-        <MobileRaceDock />
+        {mobileRaceDock}
       </div>
     );
   }
@@ -83,7 +84,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
       {children}
-      <MobileRaceDock />
+      {mobileRaceDock}
     </div>
   );
 }
