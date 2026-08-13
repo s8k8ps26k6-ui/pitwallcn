@@ -1,4 +1,5 @@
 import { HomepageV3 } from "@/components/homepage-v3/homepage-v3";
+import { MobileRaceDock } from "@/components/mobile-race-dock";
 
 export const dynamic = "force-dynamic";
 import {
@@ -20,10 +21,13 @@ export default function Home() {
   ].filter((candidate): candidate is UnifiedRace => Boolean(candidate));
 
   return (
-    <HomepageV3
-      race={current.race}
-      phase={current.phase}
-      raceRail={raceRail}
-    />
+    <>
+      <HomepageV3
+        race={current.race}
+        phase={current.phase}
+        raceRail={raceRail}
+      />
+      <MobileRaceDock />
+    </>
   );
 }
