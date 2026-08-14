@@ -45,7 +45,7 @@ export function LivePulsePanel() {
             </div>
 
             <div className="max-w-3xl">
-              <p className="eyebrow text-red-300/80">Pitwall Live Pulse</p>
+              <p className="eyebrow text-red-300/80">LAPMETRY Live Pulse</p>
               <h2
                 id="live-pulse-title"
                 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl"

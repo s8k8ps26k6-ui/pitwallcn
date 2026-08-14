@@ -3,10 +3,10 @@ import { BackNavigation } from "@/components/back-navigation";
 const changelog = [
   {
     version: "v1.7",
-    title: "品牌名切换为 GridDelta CN",
+    title: "品牌名切换为 LAPMETRY",
     date: "2026-05",
     items: [
-      "站点对外展示名从 Pitwall CN 调整为 GridDelta CN。",
+      "站点对外展示名统一为 LAPMETRY。",
       "更新首页、顶部品牌入口、元信息和公开项目文案。",
       "仓库名和当前 Vercel 部署地址暂时保持不变，降低改名成本。"
     ]
@@ -18,7 +18,7 @@ const changelog = [
     items: [
       "新增 /weather 赛道天气页面。",
       "接入 OpenF1 weather 数据，展示赛道温度、空气温度、湿度、气压、降雨、风向与风速。",
-      "天气入口放在 GridDelta CN 标题旁边，避免主导航变成拥挤的 3×3。"
+      "天气入口放在 LAPMETRY 标题旁边，避免主导航变成拥挤的 3×3。"
     ]
   },
   {
@@ -118,7 +118,7 @@ export default function ProjectPage() {
             <p className="eyebrow">Update Log</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">更新日志</h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-300">
-              这里记录 GridDelta CN 的公开版本更新、主要功能变化和下一步计划。页面仅保留公开信息，不展示内部开发备注。
+              这里记录 LAPMETRY 的公开版本更新、主要功能变化和下一步计划。页面仅保留公开信息，不展示内部开发备注。
             </p>
           </div>
           <div className="rounded-2xl border border-neonAmber/30 bg-neonAmber/10 p-4">

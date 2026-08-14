@@ -90,7 +90,7 @@ export function SeasonCalendar({
       <div className={styles.backdrop} aria-hidden="true" />
       <header className={styles.header}>
         <HomeBrandLink className={styles.brand} ariaLabel="返回主页顶部">
-          <span>GRIDDELTA</span> <em>CN</em>
+          <span>LAPMETRY</span>
         </HomeBrandLink>
         <nav className={styles.nav} aria-label="Season navigation">
           <Link href="/">HOME</Link>

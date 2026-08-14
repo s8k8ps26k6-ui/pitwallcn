@@ -83,7 +83,7 @@ export function RaceDetailView({ race, outlook }: { race: UnifiedRace; outlook: 
     <main className={styles.page}>
       <div className={styles.backdrop} aria-hidden="true" />
       <header className={styles.header}>
-        <HomeBrandLink className={styles.brand} ariaLabel="返回主页顶部">GRIDDELTA <em>CN</em></HomeBrandLink>
+        <HomeBrandLink className={styles.brand} ariaLabel="返回主页顶部">LAPMETRY</HomeBrandLink>
         <BackNavigation className={styles.backButton} fallbackHref="/schedule" fallbackLabel="返回赛历" />
         <span className={styles.round}>2026 / R{String(race.race.round).padStart(2, "0")}</span>
       </header>

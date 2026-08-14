@@ -3,7 +3,7 @@ import { getCurrentSeasonRace, getSeasonRaces } from "@/lib/atlas/race-detail";
 
 export const metadata = {
   title: "2026 赛季赛历",
-  description: "GridDelta CN 2026 Formula 1 season calendar.",
+  description: "LAPMETRY 2026 Formula 1 season calendar.",
 };
 
 export default function SchedulePage() {

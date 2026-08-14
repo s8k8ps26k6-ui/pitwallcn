@@ -4,7 +4,7 @@ export default function Loading() {
       <section className="rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="eyebrow">Pitwall CN</p>
+            <p className="eyebrow">LAPMETRY</p>
             <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">正在加载数据</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
               正在连接 OpenF1 与本地赛历。数据页首次进入可能需要几秒钟，请稍等。
