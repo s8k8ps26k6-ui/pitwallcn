@@ -1,32 +1,33 @@
-import { CinematicHomepage } from "@/components/cinematic-homepage";
-import { getScheduleCalendar } from "@/lib/f1-service";
+import { HomepageV3 } from "@/components/homepage-v3/homepage-v3";
+import { MobileRaceDock } from "@/components/mobile-race-dock";
 
-function formatDateRange(startIso: string, endIso: string) {
-  const formatter = new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: "Asia/Shanghai",
-  });
-  return `${formatter.format(new Date(startIso))} - ${formatter.format(new Date(endIso))}`;
-}
+export const dynamic = "force-dynamic";
+import {
+  getCurrentSeasonRace,
+  getSeasonRaces,
+  type UnifiedRace,
+} from "@/lib/atlas/race-detail";
 
-function getScheduleSourceLabel(source: "local" | "local+openf1") {
-  return source === "local+openf1"
-    ? "Local calendar + OpenF1 sessions"
-    : "Local official calendar";
-}
-
-export default async function Home() {
-  const { nextRace, source } = await getScheduleCalendar();
+export default function Home() {
+  const current = getCurrentSeasonRace();
+  const season = getSeasonRaces();
+  const currentIndex = season.findIndex(
+    (candidate) => candidate.eventId === current.race.eventId,
+  );
+  const raceRail = [
+    season[currentIndex - 1],
+    current.race,
+    season[currentIndex + 1],
+  ].filter((candidate): candidate is UnifiedRace => Boolean(candidate));
 
   return (
-    <main>
-      <CinematicHomepage
-        nextRace={nextRace}
-        sourceLabel={getScheduleSourceLabel(source)}
-        dateRange={formatDateRange(nextRace.startDate, nextRace.endDate)}
+    <>
+      <HomepageV3
+        race={current.race}
+        phase={current.phase}
+        raceRail={raceRail}
       />
-    </main>
+      <MobileRaceDock />
+    </>
   );
 }

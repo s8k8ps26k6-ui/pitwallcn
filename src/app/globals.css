@@ -4,17 +4,59 @@
 
 :root {
   color-scheme: dark;
+  --color-bg: #0B0A0E;
+  --color-text: #EDE9E0;
+  --color-gold: #D4A843;
+  --color-cyan: #5FBFCA;
+  --color-hot: #E05C2A;
+  --color-line: rgba(237, 233, 224, 0.04);
 }
 
 html {
-  overflow-x: hidden;
+  overflow-x: clip;
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-asphalt text-zinc-100;
-  overflow-x: hidden;
-  background: #09090b;
+  @apply bg-gdBg text-zinc-100;
+  overflow-x: clip;
+  background: var(--color-bg);
+}
+
+@media (max-width: 767px) {
+  .gd-site-shell--home-dock {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+
+::selection {
+  background: rgba(212, 168, 67, 0.32);
+  color: var(--color-text);
+}
+
+.gd-home {
+  background: var(--color-bg);
+  color: var(--color-text);
+  overflow-x: clip;
+  touch-action: pan-y;
+}
+
+.gd-home canvas {
+  pointer-events: none;
+}
+
+.gd-home-stage {
+  height: 100svh;
+}
+
+@supports (height: 100dvh) {
+  .gd-home-stage {
+    height: 100dvh;
+  }
+}
+
+.gd-label {
+  @apply font-mono text-xs font-semibold uppercase tracking-[0.35em] text-gdCyan;
 }
 
 .card {
@@ -105,5 +147,55 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .gd-home-scroll {
+    min-height: auto !important;
+  }
+
+  .gd-home-stage {
+    position: relative !important;
+    height: auto !important;
+    min-height: 100svh;
+    overflow: visible !important;
+  }
+
+  .gd-scene-panel,
+  [data-feature-stack] {
+    position: relative !important;
+    inset: auto !important;
+    min-height: 100svh;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  [data-feature-stack] {
+    pointer-events: auto !important;
+  }
+
+  [data-feature-stack] > div {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  [data-feature-item] {
+    position: relative !important;
+    top: auto !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    filter: none !important;
+    pointer-events: auto !important;
+    min-height: 44px;
+  }
+
+  [data-stage-line] {
+    transform: none !important;
   }
 }

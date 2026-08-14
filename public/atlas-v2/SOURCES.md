@@ -1,0 +1,38 @@
+# Atlas V2 image sources
+
+## 2026-07-19 texture tiers
+
+- `earth-day-8192.png` is the desktop day/albedo tier: NASA Visible Earth,
+  Blue Marble land/ocean/ice composite, 8192x4096:
+  https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_8192.png
+- `earth-day.png` remains the 2048x1024 mobile tier. Night-light and cloud
+  maps remain data/opacity inputs in linear color space; only day/albedo is
+  decoded as sRGB by the globe shader.
+
+The globe uses real, equirectangular Earth observation imagery. The uploaded
+concept artwork is not used as geographic source material.
+
+- `earth-day.png` — NASA Visible Earth, Blue Marble land/ocean/ice composite:
+  https://visibleearth.nasa.gov/images/57730/the-blue-marble-land-surface-ocean-color-and-sea-ice
+- `earth-night.jpg` — NASA Earth Observatory / Suomi NPP, Black Marble 2012:
+  https://earthobservatory.nasa.gov/images/79765/night-lights-2012-map
+- `earth-clouds.jpg` — NASA Visible Earth global cloud composite:
+  https://visibleearth.nasa.gov/images/57747/blue-marble-clouds
+- `src/lib/atlas/europe-50m.json` — Europe continent feature extracted from
+  Natural Earth 1:50m Geography Regions Polygons, version 5.1.2 (public domain):
+  https://github.com/nvkelso/natural-earth-vector/blob/v5.1.2/geojson/ne_50m_geography_regions_polys.geojson
+
+Natural Earth terms: https://www.naturalearthdata.com/about/terms-of-use/
+
+## Calendar and coordinates
+
+- Current 22-round calendar: https://www.formula1.com/en/racing/2026
+- FIA revised calendar and WMSC approval:
+  https://www.fia.com/news/2026-fia-sporting-calendars-approved-world-motor-sport-council
+- FIA notice removing Bahrain and Saudi Arabia without replacements:
+  https://www.fia.com/news/bahrain-and-saudi-arabian-grands-prix-will-not-take-place-april
+- Official 2026 Sprint venues:
+  https://www.fia.com/news/fia-and-formula-1-announce-2026-sprint-calendar
+- Circuit coordinates use Wikidata P625 circuit entities; Madring is
+  cross-checked against the official IFEMA location map:
+  https://www.ifema.es/en/doc/access-map/plano-ifema-accesos.pdf

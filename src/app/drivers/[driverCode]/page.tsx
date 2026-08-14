@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackNavigation } from "@/components/back-navigation";
 import { getDriverProfile } from "@/lib/drivers";
 
 export default async function DriverDetailPage({ params }: { params: Promise<{ driverCode: string }> }) {
@@ -21,9 +22,7 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ d
   return (
     <main className="space-y-4">
       <div className="flex flex-wrap gap-2">
-        <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/">
-          ← BACK TO HOME
-        </Link>
+        <BackNavigation className="race-code inline-flex min-h-10 items-center rounded-xl border border-zinc-800 bg-black/30 px-3 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" fallbackHref="/drivers" fallbackLabel="返回车手" />
         <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/drivers">
           ← DRIVER INDEX
         </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { RaceWeekend } from "@/lib/types";
 
 function formatDateTime(iso: string, timeZone: string) {
@@ -30,7 +30,14 @@ function getSessionTone(name: string) {
 }
 
 export function ScheduleView({ race }: { race: RaceWeekend }) {
-  const [timeMode, setTimeMode] = useState<"local" | "circuit">("local");
+  const [timeMode, setTimeMode] = useState<"local" | "circuit">(() => {
+    if (typeof window === "undefined") return "local";
+    return window.sessionStorage.getItem("gd:schedule-time-mode") === "circuit" ? "circuit" : "local";
+  });
+
+  useEffect(() => {
+    window.sessionStorage.setItem("gd:schedule-time-mode", timeMode);
+  }, [timeMode]);
 
   const modeMeta = useMemo(
     () => ({
