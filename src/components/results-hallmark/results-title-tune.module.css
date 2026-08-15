@@ -11,21 +11,21 @@
   margin-top: 16px;
 }
 
-:global(dl[aria-label="当前成绩数据概况"]) {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-md);
+.openDataStrip {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: var(--space-md) !important;
   border: 0 !important;
 }
 
-:global(dl[aria-label="当前成绩数据概况"] > div) {
+.openDataStrip > div {
   position: relative;
   min-width: 0;
   padding: var(--space-sm) 0 !important;
   border: 0 !important;
 }
 
-:global(dl[aria-label="当前成绩数据概况"] > div)::before {
+.openDataStrip > div::before {
   display: block;
   width: var(--space-lg);
   height: 1px;
@@ -34,11 +34,11 @@
   content: "";
 }
 
-:global(select[name="session"]) {
+.sessionSelect {
   border-radius: var(--space-2xs) !important;
 }
 
-:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]) {
+.actionButton {
   justify-self: end;
   width: auto !important;
   min-width: 0;
@@ -46,25 +46,25 @@
   border: 0 !important;
   border-bottom: 1px solid var(--hm-accent) !important;
   border-radius: 0 !important;
-  color: var(--hm-accent);
+  color: var(--hm-accent) !important;
   background: transparent !important;
   outline: 2px solid transparent;
   outline-offset: 3px;
 }
 
-:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]:hover) {
-  color: var(--hm-ink);
+.actionButton:hover {
+  color: var(--hm-ink) !important;
 }
 
-:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]:focus-visible) {
-  outline-color: var(--hm-focus);
+.actionButton:focus-visible {
+  outline-color: var(--hm-focus) !important;
 }
 
-:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]:active) {
-  color: var(--hm-muted);
+.actionButton:active {
+  color: var(--hm-muted) !important;
 }
 
-:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]:disabled) {
+.actionButton:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -77,13 +77,13 @@
     line-height: 1 !important;
   }
 
-  :global(dl[aria-label="当前成绩数据概况"]) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--space-lg);
-    row-gap: 0;
+  .openDataStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    column-gap: var(--space-lg) !important;
+    row-gap: 0 !important;
   }
 
-  :global(form[action="/preview/results-hallmark#classification"] button[type="submit"]) {
+  .actionButton {
     justify-self: start;
   }
 }
