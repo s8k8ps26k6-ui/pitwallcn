@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { getResultsBySession, getResultsSelectionData } from "@/lib/results-service";
 import styles from "./results-hallmark.module.css";
+import titleStyles from "./results-title-tune.module.css";
 
 type ResultsHallmarkSearchParams = {
   session?: string;
@@ -141,7 +142,7 @@ export async function ResultsHallmarkView({
 
       <section className={styles.identity} aria-labelledby="results-preview-title">
         <div className={styles.identityCopy}>
-          <h1 id="results-preview-title">比赛结果</h1>
+          <h1 id="results-preview-title" className={titleStyles.title}>比赛结果</h1>
           <p className={styles.eventName}>{selectedMeetingName}</p>
           <p className={styles.sessionName}>{selectedSessionName}</p>
         </div>
