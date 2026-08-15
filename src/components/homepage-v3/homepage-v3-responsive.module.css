@@ -35,45 +35,48 @@
     padding-bottom: 12px;
   }
 
+  /* Keep the desktop circuit artwork intact; only scale its stage for portrait. */
   .scene.scene {
     position: relative;
     width: 100%;
-    min-height: clamp(182px, 52vw, 220px);
-    margin: 4px 0 2px;
+    min-height: clamp(218px, 64vw, 246px);
+    margin: 2px 0 4px;
     overflow: visible;
+    perspective: 1000px;
   }
 
   .track.track {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: min(90%, 380px);
-    height: 92%;
+    width: min(90%, 390px);
+    height: 145%;
     transform-origin: center;
+    transform-style: preserve-3d;
   }
 
   .trackDepth.trackDepth {
-    opacity: 0.34;
-    transform: translate(-50%, -50%) translateY(10px) rotateZ(-8deg) scale(0.95);
-    filter: blur(1px);
+    opacity: 0.46;
+    transform: translate(-50%, -50%) translateY(28px) rotateX(56deg) rotateZ(-12deg) scale(0.94);
+    filter: blur(1.3px);
     animation: none;
   }
 
   .trackBase.trackBase {
-    opacity: 0.74;
-    transform: translate(-50%, -50%) translateY(5px) rotateZ(-8deg) scale(0.975);
+    opacity: 0.78;
+    transform: translate(-50%, -50%) translateY(14px) rotateX(56deg) rotateZ(-12deg) scale(0.97);
     animation: none;
   }
 
   .trackEdge.trackEdge {
     opacity: 1;
-    transform: translate(-50%, -50%) rotateZ(-8deg);
+    transform: translate(-50%, -50%) rotateX(56deg) rotateZ(-12deg);
     animation: none;
   }
 
   .trackFlow.trackFlow {
     opacity: 1;
-    transform: translate(-50%, -50%) rotateZ(-8deg);
+    transform: translate(-50%, -50%) rotateX(56deg) rotateZ(-12deg);
     animation: none;
   }
 
@@ -92,19 +95,19 @@
     width: 91%;
     height: 45%;
     opacity: 0.58;
-    transform: translate(-50%, -50%) rotate(-10deg) skewX(-8deg);
+    transform: translate(-50%, -50%) rotate(-15deg) skewX(-12deg);
     animation: none;
   }
 }
 
 @media (max-width: 420px) and (orientation: portrait) {
   .scene.scene {
-    min-height: clamp(176px, 50vw, 198px);
+    min-height: clamp(208px, 61vw, 226px);
   }
 
   .track.track {
     width: 94%;
-    height: 94%;
+    height: 150%;
   }
 }
 
