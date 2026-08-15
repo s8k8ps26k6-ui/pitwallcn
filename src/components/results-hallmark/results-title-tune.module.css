@@ -1,37 +1,108 @@
-.title {
-  font-size: clamp(64px, 6vw, 80px) !important;
-  font-weight: 680 !important;
-  letter-spacing: -0.035em !important;
+.identityStage {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+  padding: var(--space-3xl) 0 var(--space-xl) !important;
+}
+
+.locationLine {
+  margin: 0 0 var(--space-sm);
+  color: var(--hm-muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  line-height: 1.4;
+}
+
+.eventTitle {
+  max-width: 11ch;
+  margin: 0;
+  color: var(--hm-ink);
+  font-size: clamp(58px, 6.8vw, 88px) !important;
+  font-weight: 690 !important;
+  letter-spacing: -0.045em !important;
   line-height: 0.98 !important;
-  max-width: 8ch;
   text-wrap: balance;
 }
 
-.title + p {
-  margin-top: 16px;
+.sessionHeading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-left: var(--space-sm);
+  border-left: 2px solid var(--hm-accent);
 }
 
-.openDataStrip {
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-  gap: var(--space-md) !important;
-  border: 0 !important;
+.sessionTitle,
+.sessionDate {
+  margin: 0;
 }
 
-.openDataStrip > div {
-  position: relative;
-  min-width: 0;
-  padding: var(--space-sm) 0 !important;
-  border: 0 !important;
+.sessionTitle {
+  color: var(--hm-ink);
+  font-size: clamp(22px, 2.3vw, 30px);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
-.openDataStrip > div::before {
-  display: block;
-  width: var(--space-lg);
-  height: 1px;
-  margin-bottom: var(--space-xs);
-  background: var(--hm-line-strong);
-  content: "";
+.sessionDate {
+  color: var(--hm-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+
+.sessionBar {
+  border-top: 1px solid var(--hm-line-strong) !important;
+  border-bottom: 1px solid var(--hm-line) !important;
+}
+
+.primarySessions {
+  gap: var(--space-lg) !important;
+  padding: var(--space-sm) 0 var(--space-xs) !important;
+}
+
+.primarySession {
+  gap: var(--space-xs) !important;
+  min-height: 40px;
+  padding: var(--space-2xs) 0 !important;
+  font-size: 14px !important;
+}
+
+.primarySession[data-active="true"] {
+  color: var(--hm-ink) !important;
+  font-weight: 700;
+}
+
+.otherSessions {
+  border-top: 1px solid var(--hm-line);
+}
+
+.otherSessions summary {
+  width: fit-content;
+  padding: var(--space-sm) 0;
+  color: var(--hm-muted);
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  list-style-position: outside;
+}
+
+.otherSessions summary:hover {
+  color: var(--hm-ink);
+}
+
+.otherSessions summary:focus-visible {
+  outline: 2px solid var(--hm-focus);
+  outline-offset: 4px;
+}
+
+.compactForm {
+  grid-template-columns: minmax(0, 680px) auto !important;
+  justify-content: start;
+  gap: var(--space-sm) !important;
+  padding: 0 0 var(--space-md) !important;
 }
 
 .sessionSelect {
@@ -39,10 +110,11 @@
 }
 
 .actionButton {
-  justify-self: end;
+  align-self: end;
+  justify-self: start;
   width: auto !important;
-  min-width: 0;
-  padding: 0 var(--space-3xs) !important;
+  min-width: 56px;
+  padding: 0 var(--space-2xs) !important;
   border: 0 !important;
   border-bottom: 1px solid var(--hm-accent) !important;
   border-radius: 0 !important;
@@ -69,27 +141,68 @@
   cursor: not-allowed;
 }
 
+.classificationHeader h2 {
+  font-size: clamp(26px, 3vw, 38px) !important;
+  font-weight: 680 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.sourceStamp {
+  color: var(--hm-faint) !important;
+  letter-spacing: 0.04em !important;
+}
+
 @media (max-width: 767px) {
-  .title {
-    font-size: clamp(48px, 13vw, 56px) !important;
-    font-weight: 660 !important;
-    letter-spacing: -0.02em !important;
-    line-height: 1 !important;
+  .identityStage {
+    padding: var(--space-2xl) 0 var(--space-lg) !important;
   }
 
-  .openDataStrip {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    column-gap: var(--space-lg) !important;
-    row-gap: 0 !important;
+  .eventTitle {
+    max-width: 9ch;
+    font-size: clamp(44px, 12.5vw, 56px) !important;
+    font-weight: 670 !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.02 !important;
+  }
+
+  .sessionHeading {
+    display: grid;
+    gap: var(--space-2xs);
+    margin-top: var(--space-md);
+  }
+
+  .sessionTitle {
+    font-size: 22px;
+  }
+
+  .primarySessions {
+    gap: var(--space-md) !important;
+  }
+
+  .primarySession {
+    display: grid !important;
+    gap: var(--space-3xs) !important;
+  }
+
+  .compactForm {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
   .actionButton {
-    justify-self: start;
+    min-height: 36px !important;
+  }
+
+  .classificationHeader {
+    gap: var(--space-sm) !important;
   }
 }
 
 @media (max-width: 374px) {
-  .title {
-    font-size: clamp(44px, 13vw, 50px) !important;
+  .eventTitle {
+    font-size: clamp(40px, 12.5vw, 48px) !important;
+  }
+
+  .primarySessions {
+    gap: var(--space-sm) !important;
   }
 }
