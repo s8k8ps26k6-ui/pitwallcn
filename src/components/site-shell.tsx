@@ -23,7 +23,8 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/atlas-v2") ||
     pathname.startsWith("/news") ||
     pathname.startsWith("/schedule") ||
-    pathname.startsWith("/races/");
+    pathname.startsWith("/races/") ||
+    pathname.startsWith("/preview/results-hallmark");
 
   if (isImmersiveRoute) {
     return (
