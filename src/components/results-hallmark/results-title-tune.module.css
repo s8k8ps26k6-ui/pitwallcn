@@ -1,0 +1,27 @@
+.title {
+  font-size: clamp(64px, 6vw, 80px) !important;
+  font-weight: 680 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 0.98 !important;
+  max-width: 8ch;
+  text-wrap: balance;
+}
+
+.title + p {
+  margin-top: 16px;
+}
+
+@media (max-width: 767px) {
+  .title {
+    font-size: clamp(48px, 13vw, 56px) !important;
+    font-weight: 660 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1 !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .title {
+    font-size: clamp(44px, 13vw, 50px) !important;
+  }
+}
