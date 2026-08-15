@@ -35,6 +35,12 @@
     padding-bottom: 12px;
   }
 
+  .heroCopy.heroCopy {
+    align-self: stretch;
+    width: 100%;
+    text-align: left;
+  }
+
   /* Keep the desktop circuit artwork intact; only scale its stage for portrait. */
   .scene.scene {
     position: relative;
