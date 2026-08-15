@@ -30,60 +30,81 @@
 }
 
 @media (max-width: 640px) and (orientation: portrait) {
+  .hero.hero {
+    padding-top: 22px;
+    padding-bottom: 12px;
+  }
+
   .scene.scene {
-    min-height: clamp(260px, 72vw, 308px);
-    margin: 10px -2px 4px;
+    position: relative;
+    width: 100%;
+    min-height: clamp(182px, 52vw, 220px);
+    margin: 4px 0 2px;
     overflow: visible;
   }
 
   .track.track {
-    width: min(94%, 470px);
-    height: 94%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(90%, 380px);
+    height: 92%;
+    transform-origin: center;
   }
 
   .trackDepth.trackDepth {
     opacity: 0.34;
-    transform: translateY(14px) rotateZ(-8deg) scale(0.95);
+    transform: translate(-50%, -50%) translateY(10px) rotateZ(-8deg) scale(0.95);
     filter: blur(1px);
     animation: none;
   }
 
   .trackBase.trackBase {
     opacity: 0.74;
-    transform: translateY(7px) rotateZ(-8deg) scale(0.975);
+    transform: translate(-50%, -50%) translateY(5px) rotateZ(-8deg) scale(0.975);
     animation: none;
   }
 
   .trackEdge.trackEdge {
     opacity: 1;
-    transform: rotateZ(-8deg);
+    transform: translate(-50%, -50%) rotateZ(-8deg);
     animation: none;
   }
 
   .trackFlow.trackFlow {
     opacity: 1;
-    transform: rotateZ(-8deg);
+    transform: translate(-50%, -50%) rotateZ(-8deg);
     animation: none;
   }
 
   .sceneHalo.sceneHalo {
-    width: min(82vw, 320px);
+    top: 50%;
+    left: 50%;
+    width: min(76vw, 286px);
+    opacity: 0.9;
+    transform: translate(-50%, -50%);
+    animation: none;
   }
 
   .sceneContour.sceneContour {
-    width: 94%;
-    height: 48%;
+    top: 50%;
+    left: 50%;
+    width: 91%;
+    height: 45%;
+    opacity: 0.58;
+    transform: translate(-50%, -50%) rotate(-10deg) skewX(-8deg);
+    animation: none;
   }
 }
 
 @media (max-width: 420px) and (orientation: portrait) {
   .scene.scene {
-    min-height: 272px;
+    min-height: clamp(176px, 50vw, 198px);
   }
 
   .track.track {
-    width: 98%;
-    height: 96%;
+    width: 94%;
+    height: 94%;
   }
 }
 
