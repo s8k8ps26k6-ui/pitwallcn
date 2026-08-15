@@ -123,17 +123,17 @@ export async function ResultsHallmarkView({
     : "2026 FORMULA 1";
 
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${tune.pageTypography}`}>
       <div className={styles.backdrop} aria-hidden="true" />
 
-      <header className={styles.masthead}>
-        <Link className={styles.brand} href="/" aria-label="返回 LAPMETRY 首页">
+      <header className={`${styles.masthead} ${tune.masthead}`}>
+        <Link className={`${styles.brand} ${tune.brand}`} href="/" aria-label="返回 LAPMETRY 首页">
           LAPMETRY
         </Link>
-        <div className={styles.mastheadActions}>
-          <span className={styles.seasonMark}>2026 FORMULA 1</span>
-          <Link className={styles.textLink} href="/results">当前版本</Link>
-          <Link className={styles.textLink} href="/race-weekend">单站复盘</Link>
+        <div className={`${styles.mastheadActions} ${tune.mastheadActions}`}>
+          <span className={`${styles.seasonMark} ${tune.seasonMark}`}>2026 FORMULA 1</span>
+          <Link className={`${styles.textLink} ${tune.mastheadLink} ${tune.secondaryLink}`} href="/results">当前版本</Link>
+          <Link className={`${styles.textLink} ${tune.mastheadLink}`} href="/race-weekend">单站复盘</Link>
         </div>
       </header>
 
@@ -202,7 +202,7 @@ export async function ResultsHallmarkView({
         </details>
       </section>
 
-      <section id="classification" className={styles.classification} aria-labelledby="classification-title">
+      <section id="classification" className={`${styles.classification} ${tune.classification}`} aria-labelledby="classification-title">
         <header className={`${styles.classificationHeader} ${tune.classificationHeader}`}>
           <div>
             <h2 id="classification-title">正式排名</h2>
@@ -214,28 +214,28 @@ export async function ResultsHallmarkView({
         </header>
 
         {result.rows.length ? (
-          <ol className={styles.resultList}>
+          <ol className={`${styles.resultList} ${tune.resultList}`}>
             {result.rows.map((row, index) => (
               <li
                 key={`${row.position}-${row.driver}`}
-                className={styles.resultRow}
+                className={`${styles.resultRow} ${tune.resultRow}`}
                 data-podium={index < 3 ? String(index + 1) : undefined}
                 data-status={statusTone(row.status)}
               >
-                <span className={styles.position}>{String(row.position).padStart(2, "0")}</span>
-                <div className={styles.driverCell}>
+                <span className={`${styles.position} ${tune.position}`}>{String(row.position).padStart(2, "0")}</span>
+                <div className={`${styles.driverCell} ${tune.driverCell}`}>
                   <strong>{row.driver}</strong>
                   <span>{row.team}</span>
                 </div>
-                <div className={styles.metricCell}>
+                <div className={`${styles.metricCell} ${tune.metricCell}`}>
                   <span>时间 / 差距</span>
                   <strong>{row.timeOrGap}</strong>
                 </div>
-                <div className={styles.metricCell}>
+                <div className={`${styles.metricCell} ${tune.metricCell}`}>
                   <span>完成圈数</span>
                   <strong>{row.completedLaps}</strong>
                 </div>
-                <span className={styles.status} data-tone={statusTone(row.status)}>{row.status}</span>
+                <span className={`${styles.status} ${tune.status}`} data-tone={statusTone(row.status)}>{row.status}</span>
               </li>
             ))}
           </ol>
@@ -247,7 +247,7 @@ export async function ResultsHallmarkView({
         )}
       </section>
 
-      <footer className={styles.footer}>
+      <footer className={`${styles.footer} ${tune.footer}`}>
         <span>Hallmark preview · Results only</span>
         <span>沿用现有 LAPMETRY Results service；未新增模拟指标。</span>
       </footer>
