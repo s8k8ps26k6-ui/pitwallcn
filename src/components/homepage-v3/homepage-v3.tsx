@@ -13,6 +13,7 @@ import {
   type UnifiedRace,
 } from "@/lib/atlas/race-detail";
 import styles from "./homepage-v3.module.css";
+import responsiveStyles from "./homepage-v3-responsive.module.css";
 
 type EventTheme = { accent: string; accentRgb: string; support: string };
 
@@ -86,15 +87,15 @@ export function HomepageV3({ race, phase, raceRail }: { race: UnifiedRace; phase
       <nav className={styles.nav} aria-label="主要导航"><Link href="/schedule">赛历</Link><Link href="/atlas-v2">Atlas</Link></nav>
     </header>
 
-    <section className={styles.hero} aria-labelledby="race-title">
-      <div className={styles.heroWord} aria-hidden="true">{getGrandPrixTitle(race.race.name)}</div>
-      <div className={styles.scene} aria-hidden="true">
-        <div className={styles.sceneHalo} />
-        <div className={styles.sceneContour} />
-        <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackDepth}`} title="" />
-        <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackBase}`} title="" />
-        <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackEdge}`} title="" showStartMarker />
-        <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackFlow}`} title="" />
+    <section className={`${styles.hero} ${responsiveStyles.hero}`} aria-labelledby="race-title">
+      <div className={`${styles.heroWord} ${responsiveStyles.heroWord}`} aria-hidden="true">{getGrandPrixTitle(race.race.name)}</div>
+      <div className={`${styles.scene} ${responsiveStyles.scene}`} aria-hidden="true">
+        <div className={`${styles.sceneHalo} ${responsiveStyles.sceneHalo}`} />
+        <div className={`${styles.sceneContour} ${responsiveStyles.sceneContour}`} />
+        <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackDepth} ${responsiveStyles.track} ${responsiveStyles.trackDepth}`} title="" />
+        <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackBase} ${responsiveStyles.track} ${responsiveStyles.trackBase}`} title="" />
+        <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackEdge} ${responsiveStyles.track} ${responsiveStyles.trackEdge}`} title="" showStartMarker />
+        <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackFlow} ${responsiveStyles.track} ${responsiveStyles.trackFlow}`} title="" />
       </div>
       <div className={styles.heroCopy}>
         <p className={styles.meta}><span>{getPhaseLabel(phase)}</span>2026 赛季 · 第 {race.race.round} 轮</p>
