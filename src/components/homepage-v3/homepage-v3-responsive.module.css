@@ -1,0 +1,97 @@
+.heroWord.heroWord {
+  left: 0;
+  max-width: none;
+  overflow: visible;
+}
+
+@media (max-width: 960px) and (orientation: landscape) {
+  .hero.hero {
+    min-height: calc(100dvh - 52px);
+    gap: clamp(20px, 4vw, 42px);
+    padding: 24px 0 108px;
+  }
+
+  .heroWord.heroWord {
+    top: 4%;
+    width: 58%;
+    max-width: none;
+    overflow: visible;
+    font-size: clamp(76px, 12vw, 128px);
+    letter-spacing: -0.075em;
+    line-height: 0.84;
+  }
+
+  .scene.scene {
+    top: 2%;
+    right: 3%;
+    bottom: 9%;
+    left: 20%;
+  }
+}
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .scene.scene {
+    min-height: clamp(250px, 70vw, 300px);
+    margin: 8px -4px 0;
+    overflow: visible;
+  }
+
+  .track.track {
+    width: min(92%, 460px);
+    height: 92%;
+  }
+
+  .trackDepth.trackDepth {
+    opacity: 0.34;
+    transform: translateY(14px) rotateZ(-8deg) scale(0.95);
+    filter: blur(1px);
+    animation: none;
+  }
+
+  .trackBase.trackBase {
+    opacity: 0.74;
+    transform: translateY(7px) rotateZ(-8deg) scale(0.975);
+    animation: none;
+  }
+
+  .trackEdge.trackEdge {
+    opacity: 1;
+    transform: rotateZ(-8deg);
+    animation: none;
+  }
+
+  .trackFlow.trackFlow {
+    opacity: 1;
+    transform: rotateZ(-8deg);
+    animation: none;
+  }
+
+  .sceneHalo.sceneHalo {
+    width: min(82vw, 320px);
+  }
+
+  .sceneContour.sceneContour {
+    width: 94%;
+    height: 48%;
+  }
+}
+
+@media (max-width: 420px) and (orientation: portrait) {
+  .scene.scene {
+    min-height: 265px;
+  }
+
+  .track.track {
+    width: 96%;
+    height: 94%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trackDepth.trackDepth,
+  .trackBase.trackBase,
+  .trackEdge.trackEdge,
+  .trackFlow.trackFlow {
+    animation: none;
+  }
+}
