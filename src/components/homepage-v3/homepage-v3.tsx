@@ -97,7 +97,7 @@ export function HomepageV3({ race, phase, raceRail }: { race: UnifiedRace; phase
         <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackEdge} ${responsiveStyles.track} ${responsiveStyles.trackEdge}`} title="" showStartMarker />
         <CircuitOutline outline={race.circuit?.outline} className={`${styles.track} ${styles.trackFlow} ${responsiveStyles.track} ${responsiveStyles.trackFlow}`} title="" />
       </div>
-      <div className={styles.heroCopy}>
+      <div className={`${styles.heroCopy} ${responsiveStyles.heroCopy}`}>
         <p className={styles.meta}><span>{getPhaseLabel(phase)}</span>2026 赛季 · 第 {race.race.round} 轮</p>
         <p className={styles.country}>{getCountryFlag(race.race.country)} {race.race.country} · {race.race.city}</p>
         <h1 id="race-title">{getGrandPrixTitle(race.race.name)} <span>GRAND PRIX</span></h1>
