@@ -146,7 +146,7 @@ export async function ResultsHallmarkView({
           <p className={styles.eventName}>{selectedMeetingName}</p>
           <p className={styles.sessionName}>{selectedSessionName}</p>
         </div>
-        <dl className={styles.dataStrip} aria-label="当前成绩数据概况">
+        <dl className={`${styles.dataStrip} ${titleStyles.openDataStrip}`} aria-label="当前成绩数据概况">
           <div>
             <dt>记录</dt>
             <dd>{result.rows.length || "—"}</dd>
@@ -171,7 +171,7 @@ export async function ResultsHallmarkView({
           <label className={styles.selectLabel}>
             <span>比赛 / 赛段</span>
             <select
-              className={styles.select}
+              className={`${styles.select} ${titleStyles.sessionSelect}`}
               defaultValue={selectedSessionKey ?? ""}
               name="session"
               disabled={!selection.meetings.length}
@@ -191,7 +191,7 @@ export async function ResultsHallmarkView({
               ))}
             </select>
           </label>
-          <button className={styles.submitButton} type="submit" disabled={!selection.meetings.length}>
+          <button className={`${styles.submitButton} ${titleStyles.actionButton}`} type="submit" disabled={!selection.meetings.length}>
             更新成绩
           </button>
         </form>
