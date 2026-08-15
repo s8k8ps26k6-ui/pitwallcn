@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { getResultsBySession, getResultsSelectionData } from "@/lib/results-service";
 import styles from "./results-hallmark.module.css";
-import titleStyles from "./results-title-tune.module.css";
+import tune from "./results-title-tune.module.css";
 
 type ResultsHallmarkSearchParams = {
   session?: string;
@@ -75,10 +75,10 @@ function translateMeetingName(name: string) {
 }
 
 function sourceLabel(source: string) {
-  if (source === "openf1") return "OPENF1";
-  if (source === "openf1-waiting") return "WAITING DATA";
-  if (source === "openf1-error") return "OPENF1 WAITING";
-  return "API READY";
+  if (source === "openf1") return "OpenF1";
+  if (source === "openf1-waiting") return "等待数据";
+  if (source === "openf1-error") return "OpenF1 暂不可用";
+  return "API";
 }
 
 function statusTone(status: string) {
@@ -118,8 +118,9 @@ export async function ResultsHallmarkView({
     const priority = { qualifying: 0, sprint: 1, race: 2 } as const;
     return priority[a.category] - priority[b.category];
   });
-  const finishedCount = result.rows.filter((row) => row.status === "完赛").length;
-  const exceptionCount = result.rows.filter((row) => row.status !== "完赛").length;
+  const locationLine = selectedMeeting
+    ? [selectedMeeting.location, selectedMeeting.country, "2026"].filter(Boolean).join(" · ")
+    : "2026 FORMULA 1";
 
   return (
     <main className={styles.page}>
@@ -131,79 +132,31 @@ export async function ResultsHallmarkView({
         </Link>
         <div className={styles.mastheadActions}>
           <span className={styles.seasonMark}>2026 FORMULA 1</span>
-          <Link className={styles.textLink} href="/results">
-            当前版本
-          </Link>
-          <Link className={styles.textLink} href="/race-weekend">
-            单站复盘
-          </Link>
+          <Link className={styles.textLink} href="/results">当前版本</Link>
+          <Link className={styles.textLink} href="/race-weekend">单站复盘</Link>
         </div>
       </header>
 
-      <section className={styles.identity} aria-labelledby="results-preview-title">
+      <section className={`${styles.identity} ${tune.identityStage}`} aria-labelledby="results-preview-title">
         <div className={styles.identityCopy}>
-          <h1 id="results-preview-title" className={titleStyles.title}>比赛结果</h1>
-          <p className={styles.eventName}>{selectedMeetingName}</p>
-          <p className={styles.sessionName}>{selectedSessionName}</p>
+          <p className={tune.locationLine}>{locationLine}</p>
+          <h1 id="results-preview-title" className={tune.eventTitle}>{selectedMeetingName}</h1>
+          <div className={tune.sessionHeading}>
+            <p className={tune.sessionTitle}>{selectedSessionName}成绩</p>
+            <p className={tune.sessionDate}>{selectedSession ? formatSessionTime(selectedSession.sessionStart) : "等待赛段时间"}</p>
+          </div>
         </div>
-        <dl className={`${styles.dataStrip} ${titleStyles.openDataStrip}`} aria-label="当前成绩数据概况">
-          <div>
-            <dt>记录</dt>
-            <dd>{result.rows.length || "—"}</dd>
-          </div>
-          <div>
-            <dt>完赛</dt>
-            <dd>{result.rows.length ? finishedCount : "—"}</dd>
-          </div>
-          <div>
-            <dt>异常</dt>
-            <dd>{result.rows.length ? exceptionCount : "—"}</dd>
-          </div>
-          <div>
-            <dt>数据源</dt>
-            <dd>{sourceLabel(result.source)}</dd>
-          </div>
-        </dl>
       </section>
 
-      <section className={styles.sessionControl} aria-label="切换比赛与赛段">
-        <form action="/preview/results-hallmark#classification" className={styles.sessionForm} method="get">
-          <label className={styles.selectLabel}>
-            <span>比赛 / 赛段</span>
-            <select
-              className={`${styles.select} ${titleStyles.sessionSelect}`}
-              defaultValue={selectedSessionKey ?? ""}
-              name="session"
-              disabled={!selection.meetings.length}
-            >
-              {!selectedSessionKey ? <option value="">自动选择最新可用赛段</option> : null}
-              {selection.meetings.map((meeting) => (
-                <optgroup
-                  key={meeting.meetingKey}
-                  label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}
-                >
-                  {meeting.sessions.map((session) => (
-                    <option key={session.sessionKey} value={session.sessionKey}>
-                      {translateSessionName(session.sessionName)} · {formatSessionTime(session.sessionStart)}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </label>
-          <button className={`${styles.submitButton} ${titleStyles.actionButton}`} type="submit" disabled={!selection.meetings.length}>
-            更新成绩
-          </button>
-        </form>
-
+      <section className={`${styles.sessionControl} ${tune.sessionBar}`} aria-label="切换赛段">
         {quickSessions.length ? (
-          <nav className={styles.quickSessions} aria-label="当前比赛周末赛段">
+          <nav className={`${styles.quickSessions} ${tune.primarySessions}`} aria-label="当前比赛周末赛段">
             {quickSessions.map((session) => {
               const active = session.sessionKey === selectedSessionKey;
               return (
                 <Link
                   key={session.sessionKey}
-                  className={styles.quickSession}
+                  className={`${styles.quickSession} ${tune.primarySession}`}
                   data-active={active}
                   href={`/preview/results-hallmark?session=${session.sessionKey}#classification`}
                   aria-current={active ? "page" : undefined}
@@ -215,16 +168,48 @@ export async function ResultsHallmarkView({
             })}
           </nav>
         ) : null}
+
+        <details className={tune.otherSessions}>
+          <summary>选择其他比赛 / 赛段</summary>
+          <form action="/preview/results-hallmark#classification" className={`${styles.sessionForm} ${tune.compactForm}`} method="get">
+            <label className={styles.selectLabel}>
+              <span>比赛 / 赛段</span>
+              <select
+                className={`${styles.select} ${tune.sessionSelect}`}
+                defaultValue={selectedSessionKey ?? ""}
+                name="session"
+                disabled={!selection.meetings.length}
+              >
+                {!selectedSessionKey ? <option value="">自动选择最新可用赛段</option> : null}
+                {selection.meetings.map((meeting) => (
+                  <optgroup
+                    key={meeting.meetingKey}
+                    label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}
+                  >
+                    {meeting.sessions.map((session) => (
+                      <option key={session.sessionKey} value={session.sessionKey}>
+                        {translateSessionName(session.sessionName)} · {formatSessionTime(session.sessionStart)}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+            <button className={`${styles.submitButton} ${tune.actionButton}`} type="submit" disabled={!selection.meetings.length}>
+              切换
+            </button>
+          </form>
+        </details>
       </section>
 
       <section id="classification" className={styles.classification} aria-labelledby="classification-title">
-        <header className={styles.classificationHeader}>
+        <header className={`${styles.classificationHeader} ${tune.classificationHeader}`}>
           <div>
-            <h2 id="classification-title">Classification</h2>
-            <p>同一份成绩只展示一次；领奖台、时间差与状态直接在排名中建立层级。</p>
+            <h2 id="classification-title">正式排名</h2>
+            <p>{selectedMeetingName} · {selectedSessionName}</p>
           </div>
-          <p className={styles.sessionStamp}>
-            {selectedSessionKey ? `SESSION ${selectedSessionKey}` : "NO SESSION"}
+          <p className={`${styles.sessionStamp} ${tune.sourceStamp}`}>
+            {sourceLabel(result.source)}{selectedSessionKey ? ` · SESSION ${selectedSessionKey}` : ""}
           </p>
         </header>
 
@@ -250,9 +235,7 @@ export async function ResultsHallmarkView({
                   <span>完成圈数</span>
                   <strong>{row.completedLaps}</strong>
                 </div>
-                <span className={styles.status} data-tone={statusTone(row.status)}>
-                  {row.status}
-                </span>
+                <span className={styles.status} data-tone={statusTone(row.status)}>{row.status}</span>
               </li>
             ))}
           </ol>
@@ -266,7 +249,7 @@ export async function ResultsHallmarkView({
 
       <footer className={styles.footer}>
         <span>Hallmark preview · Results only</span>
-        <span>数据来自现有 LAPMETRY Results service；未新增模拟指标。</span>
+        <span>沿用现有 LAPMETRY Results service；未新增模拟指标。</span>
       </footer>
     </main>
   );
