@@ -35,6 +35,10 @@
     padding-bottom: 12px;
   }
 
+  .hero.hero > :global(section[aria-label="下一场赛段"]) {
+    padding-bottom: 16px;
+  }
+
   .heroCopy.heroCopy {
     align-self: stretch;
     width: 100%;
