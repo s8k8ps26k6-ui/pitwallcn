@@ -11,12 +11,80 @@
   margin-top: 16px;
 }
 
+:global(dl[aria-label="当前成绩数据概况"]) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+  border: 0 !important;
+}
+
+:global(dl[aria-label="当前成绩数据概况"] > div) {
+  position: relative;
+  min-width: 0;
+  padding: var(--space-sm) 0 !important;
+  border: 0 !important;
+}
+
+:global(dl[aria-label="当前成绩数据概况"] > div)::before {
+  display: block;
+  width: var(--space-lg);
+  height: 1px;
+  margin-bottom: var(--space-xs);
+  background: var(--hm-line-strong);
+  content: "";
+}
+
+:global(select[name="session"]) {
+  border-radius: var(--space-2xs) !important;
+}
+
+:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]) {
+  justify-self: end;
+  width: auto !important;
+  min-width: 0;
+  padding: 0 var(--space-3xs) !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hm-accent) !important;
+  border-radius: 0 !important;
+  color: var(--hm-accent);
+  background: transparent !important;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+}
+
+:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]:hover) {
+  color: var(--hm-ink);
+}
+
+:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]:focus-visible) {
+  outline-color: var(--hm-focus);
+}
+
+:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]:active) {
+  color: var(--hm-muted);
+}
+
+:global(form[action="/preview/results-hallmark#classification"] button[type="submit"]:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 @media (max-width: 767px) {
   .title {
     font-size: clamp(48px, 13vw, 56px) !important;
     font-weight: 660 !important;
     letter-spacing: -0.02em !important;
     line-height: 1 !important;
+  }
+
+  :global(dl[aria-label="当前成绩数据概况"]) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-lg);
+    row-gap: 0;
+  }
+
+  :global(form[action="/preview/results-hallmark#classification"] button[type="submit"]) {
+    justify-self: start;
   }
 }
 
