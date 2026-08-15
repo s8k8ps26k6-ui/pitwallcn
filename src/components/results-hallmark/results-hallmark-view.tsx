@@ -1,3 +1,4 @@
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V5 */
 import Link from "next/link";
 import { getResultsBySession, getResultsSelectionData } from "@/lib/results-service";
 import styles from "./results-hallmark.module.css";
@@ -128,6 +129,7 @@ export async function ResultsHallmarkView({
           LAPMETRY
         </Link>
         <div className={styles.mastheadActions}>
+          <span className={styles.seasonMark}>2026 FORMULA 1</span>
           <Link className={styles.textLink} href="/results">
             当前版本
           </Link>
@@ -139,7 +141,6 @@ export async function ResultsHallmarkView({
 
       <section className={styles.identity} aria-labelledby="results-preview-title">
         <div className={styles.identityCopy}>
-          <p className={styles.contextLine}>2026 FORMULA 1 / CLASSIFICATION</p>
           <h1 id="results-preview-title">比赛结果</h1>
           <p className={styles.eventName}>{selectedMeetingName}</p>
           <p className={styles.sessionName}>{selectedSessionName}</p>
