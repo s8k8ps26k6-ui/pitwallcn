@@ -21,12 +21,11 @@
   --hm-accent: var(--color-gold);
   --hm-cyan: var(--color-cyan);
   --hm-hot: var(--color-hot);
-  --hm-muted: color-mix(in oklch, var(--hm-ink) 62%, var(--hm-bg));
-  --hm-faint: color-mix(in oklch, var(--hm-ink) 42%, var(--hm-bg));
-  --hm-line: color-mix(in oklch, var(--hm-ink) 14%, transparent);
-  --hm-line-strong: color-mix(in oklch, var(--hm-ink) 28%, transparent);
-  --hm-surface: color-mix(in oklch, var(--hm-ink) 4%, var(--hm-bg));
-  --hm-surface-raised: color-mix(in oklch, var(--hm-ink) 7%, var(--hm-bg));
+  --hm-muted: color-mix(in oklch, var(--hm-ink) 74%, var(--hm-bg));
+  --hm-faint: color-mix(in oklch, var(--hm-ink) 60%, var(--hm-bg));
+  --hm-line: color-mix(in oklch, var(--hm-ink) 18%, transparent);
+  --hm-line-strong: color-mix(in oklch, var(--hm-ink) 32%, transparent);
+  --hm-surface: color-mix(in oklch, var(--hm-ink) 5%, var(--hm-bg));
   --hm-accent-wash: color-mix(in oklch, var(--hm-accent) 9%, transparent);
   --hm-focus: var(--hm-accent);
   --hm-complete: var(--hm-cyan);
@@ -48,8 +47,8 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 78% 8%, color-mix(in oklch, var(--hm-cyan) 8%, transparent), transparent 30%),
-    linear-gradient(132deg, color-mix(in oklch, var(--hm-cyan) 2%, var(--hm-bg)), var(--hm-bg) 54%, color-mix(in oklch, var(--hm-accent) 2%, var(--hm-bg)));
+    radial-gradient(circle at 78% 8%, color-mix(in oklch, var(--hm-accent) 6%, transparent), transparent 30%),
+    linear-gradient(132deg, color-mix(in oklch, var(--hm-accent) 1%, var(--hm-bg)), var(--hm-bg) 58%);
 }
 
 .masthead,
@@ -95,6 +94,14 @@
   min-width: 0;
 }
 
+.seasonMark {
+  color: var(--hm-faint);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .textLink {
   color: var(--hm-muted);
   font-size: 13px;
@@ -131,15 +138,6 @@
 
 .identityCopy {
   min-width: 0;
-}
-
-.contextLine {
-  margin: 0 0 var(--space-sm);
-  color: var(--hm-accent);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  line-height: 1.4;
 }
 
 .identity h1 {
@@ -271,6 +269,7 @@
   outline-color: var(--hm-focus);
 }
 
+.select:active,
 .submitButton:active {
   background: var(--hm-accent-wash);
 }
@@ -512,6 +511,10 @@
 
   .mastheadActions {
     gap: var(--space-xs);
+  }
+
+  .seasonMark {
+    display: none;
   }
 
   .identity {
