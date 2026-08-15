@@ -124,7 +124,7 @@ export async function ResultsHallmarkView({
 
   return (
     <main className={`${styles.page} ${tune.pageTypography}`}>
-      <div className={styles.backdrop} aria-hidden="true" />
+      <div className={`${styles.backdrop} ${tune.backdropBoost}`} aria-hidden="true" />
 
       <header className={`${styles.masthead} ${tune.masthead}`}>
         <Link className={`${styles.brand} ${tune.brand}`} href="/" aria-label="返回 LAPMETRY 首页">
