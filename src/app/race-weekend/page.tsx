@@ -101,12 +101,10 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams: 
 
   return (
     <main className={styles.page}>
-      <div className={styles.backRow}><Link className={styles.back} href="/">返回主页</Link></div>
       <header className={styles.pageHead}>
         <div>
-          <p className={styles.routeCode}>RACE WEEKEND / RECAP MAP</p>
           <h1 className={styles.title}>单站复盘</h1>
-          <p className={styles.lede}>先确定赛段，再沿结果、赛控、圈速与天气四条路径进入细节。这里负责导航和上下文，不再把四个模块压缩成 Dashboard 卡片。</p>
+          <p className={styles.lede}>选择赛段后进入结果、赛控、圈速与天气。</p>
         </div>
         <p className={styles.source}>MODULES AVAILABLE · {available}/4</p>
       </header>

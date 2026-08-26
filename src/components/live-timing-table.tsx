@@ -4,47 +4,43 @@ import type { LiveTimingSnapshot } from "@/lib/types";
 
 export function LiveTimingTable({ snapshot }: { snapshot: LiveTimingSnapshot }) {
   return (
-    <section aria-labelledby="live-title">
-      <header className={styles.pageHead}>
+    <section className={styles.liveDeck} aria-labelledby="live-title">
+      <header className={styles.liveHead}>
         <div>
-          <p className={styles.routeCode}>LIVE / SOURCE GATE</p>
-          <h1 className={styles.title} id="live-title">实时计时</h1>
-          <p className={styles.lede}>
-            这个入口只会在存在可验证的实时数据源时展示排名、差距和圈速。当前没有接入，所以页面明确停在数据门禁状态。
-          </p>
+          <p className={styles.liveKicker}>Timing monitor</p>
+          <h1 className={styles.liveTitle} id="live-title">实时计时</h1>
         </div>
-        <p className={`${styles.source} ${styles.sourceDanger}`}>NOT LIVE · SOURCE NOT CONNECTED</p>
+        <p className={styles.liveStatus}>数据源离线</p>
       </header>
 
-      <div className={styles.journalLead}>
-        <p>{snapshot.message}</p>
-        <p>页面不会轮询模拟接口，也不会使用绿色脉冲、自动刷新时间或“Live”状态制造实时错觉。</p>
-      </div>
+      <p className={styles.liveContext}>这里仅显示可验证的实时排名、差距和圈速。</p>
 
-      <section className={styles.sheet} aria-labelledby="live-available-title">
-        <div className={styles.sheetHead}>
-          <h2 className={styles.sheetTitle} id="live-available-title">目前可用的数据入口</h2>
-          <p className={styles.sheetNote}>这些模块读取 OpenF1 的已产生记录，并各自公开数据状态。</p>
+      <section className={styles.timingBoard} aria-labelledby="timing-board-title">
+        <div className={styles.timingBoardMeta}>
+          <span id="timing-board-title">Session feed</span>
+          <span>Unverified</span>
         </div>
-        <div className={styles.moduleMap}>
-          <Link className={styles.moduleLink} href="/race-control">
-            <span className={styles.moduleIndex}>01</span>
-            <span>
-              <strong className={styles.moduleTitle}>赛会控制</strong>
-              <span className={styles.moduleDescription}>查看旗语、安全车、调查和赛会通知时间线。</span>
-            </span>
-            <span className={styles.moduleMeta}>OPENF1 / RECORDED EVENTS</span>
-          </Link>
-          <Link className={styles.moduleLink} href="/results">
-            <span className={styles.moduleIndex}>02</span>
-            <span>
-              <strong className={styles.moduleTitle}>比赛结果</strong>
-              <span className={styles.moduleDescription}>读取已经生成的赛段分类结果。</span>
-            </span>
-            <span className={styles.moduleMeta}>OPENF1 / SESSION RESULT</span>
-          </Link>
+        <div className={styles.timingColumns} aria-hidden="true">
+          <span>Pos</span><span>Driver</span><span>Gap</span><span>Last</span>
+        </div>
+        <div className={styles.timingBlank}>
+          <p className={styles.timingBlankCode}>Source unavailable</p>
+          <h2>计时数据源未连接</h2>
+          <p>{snapshot.message} 接入可验证的实时源后，排位、差距和圈速会在此处出现。</p>
         </div>
       </section>
+
+      <nav className={styles.liveRoutes} aria-label="已记录赛段数据">
+        <p className={styles.liveRoutesLabel}>已记录数据</p>
+        <Link className={styles.liveRoute} href="/race-control">
+          <span><strong>赛会控制</strong><small>旗语、调查与官方通知</small></span>
+          <span aria-hidden="true" className={styles.liveRouteArrow}>→</span>
+        </Link>
+        <Link className={styles.liveRoute} href="/results">
+          <span><strong>比赛结果</strong><small>已生成赛段的分类表</small></span>
+          <span aria-hidden="true" className={styles.liveRouteArrow}>→</span>
+        </Link>
+      </nav>
     </section>
   );
 }

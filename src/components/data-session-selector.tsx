@@ -40,7 +40,7 @@ export function DataSessionSelector({
   return (
     <section className={styles.sessionDock} id={anchor} aria-labelledby={`${anchor}-title`}>
       <div>
-        <h2 className={styles.sessionTitle} id={`${anchor}-title`}>选择比赛与赛段</h2>
+        <h2 className={styles.sessionTitle} id={`${anchor}-title`}>赛段</h2>
         <p className={styles.sessionCurrent}>
           {selectedMeetingName ? `${selectedMeetingName} · ${selectedSessionName ?? "自动选择"}` : "等待数据源返回可用赛段"}
         </p>

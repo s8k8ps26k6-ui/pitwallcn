@@ -1,4 +1,3 @@
-import { BackNavigation } from "@/components/back-navigation";
 import { DataSessionSelector } from "@/components/data-session-selector";
 import styles from "@/app/data-pages.module.css";
 import { parseSessionKey, sourceLabel, translateMeetingName, translateSessionName } from "@/lib/f1-labels";
@@ -25,15 +24,10 @@ export default async function LapAnalysisPage({ searchParams }: { searchParams: 
 
   return (
     <main className={styles.page}>
-      <div className={styles.backRow}>
-        <BackNavigation className={styles.back} fallbackHref="/race-weekend" fallbackLabel="返回比赛周" />
-      </div>
-
       <header className={styles.pageHead}>
         <div>
-          <p className={styles.routeCode}>LAP ANALYSIS / TELEMETRY WORKBENCH</p>
           <h1 className={styles.title}>圈速分析</h1>
-          <p className={styles.lede}>左侧用于快速比较车手，右侧保留完整圈速与分段矩阵。车手不再被包装成三张卡片，更不会在卡片内部继续套指标卡。</p>
+          <p className={styles.lede}>比较车手最快圈、最近圈、分段与差距。</p>
         </div>
         <p className={styles.source}>{sourceLabel(result.source)}</p>
       </header>
@@ -52,8 +46,8 @@ export default async function LapAnalysisPage({ searchParams }: { searchParams: 
         <section className={styles.workbench} aria-label="圈速遥测工作台">
           <div>
             <div className={styles.sheetHead}>
-              <h2 className={styles.sheetTitle}>Driver comparison</h2>
-              <p className={styles.sheetNote}>按最快圈排序的快速视图。</p>
+              <h2 className={styles.sheetTitle}>车手对比</h2>
+              <p className={styles.sheetNote}>按最快圈排序。</p>
             </div>
             <div className={styles.leaderboard}>
               {result.rows.map((row) => (

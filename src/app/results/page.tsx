@@ -1,4 +1,3 @@
-import { BackNavigation } from "@/components/back-navigation";
 import { DataSessionSelector } from "@/components/data-session-selector";
 import styles from "@/app/data-pages.module.css";
 import { parseSessionKey, sourceLabel, translateMeetingName, translateSessionName } from "@/lib/f1-labels";
@@ -29,20 +28,13 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
 
   const meetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : null;
   const sessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : null;
-  const finished = result.rows.filter((row) => row.status === "完赛").length;
-  const winner = result.rows[0];
 
   return (
     <main className={styles.page}>
-      <div className={styles.backRow}>
-        <BackNavigation className={styles.back} fallbackHref="/race-weekend" fallbackLabel="返回比赛周" />
-      </div>
-
       <header className={styles.pageHead}>
         <div>
-          <p className={styles.routeCode}>RESULTS / CLASSIFICATION SHEET</p>
           <h1 className={styles.title}>比赛结果</h1>
-          <p className={styles.lede}>成绩只出现一次：头名在同一张分类表内获得强调，不再用摘要卡、领奖台卡和表格重复展示同一信息。</p>
+          <p className={styles.lede}>按赛段查看正式分类、差距与完赛状态。</p>
         </div>
         <p className={styles.source}>{sourceLabel(result.source)}</p>
       </header>
@@ -58,22 +50,6 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       />
 
       {result.rows.length ? (
-        <>
-          <section className={styles.factRail} aria-label="成绩概况">
-            <div className={styles.fact}>
-              <p className={styles.factLabel}>头名</p><p className={styles.factValue}>{winner?.driver ?? "—"}</p><p className={styles.factHint}>{winner?.team ?? "—"}</p>
-            </div>
-            <div className={styles.fact}>
-              <p className={styles.factLabel}>记录</p><p className={styles.factValue}>{result.rows.length}</p><p className={styles.factHint}>当前分类表</p>
-            </div>
-            <div className={styles.fact}>
-              <p className={styles.factLabel}>完赛</p><p className={styles.factValue}>{finished}</p><p className={styles.factHint}>状态为完赛</p>
-            </div>
-            <div className={styles.fact}>
-              <p className={styles.factLabel}>赛段</p><p className={styles.factValue}>{sessionName ?? "—"}</p><p className={styles.factHint}>Session {selectedSessionKey}</p>
-            </div>
-          </section>
-
           <section className={styles.sheet} aria-labelledby="classification-title">
             <div className={styles.sheetHead}>
               <h2 className={styles.sheetTitle} id="classification-title">Classification</h2>
@@ -103,7 +79,6 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
               </table>
             </div>
           </section>
-        </>
       ) : (
         <section className={styles.empty}>
           <h2 className={styles.emptyTitle}>该赛段暂无成绩数据</h2>

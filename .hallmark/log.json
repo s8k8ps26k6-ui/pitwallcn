@@ -18,5 +18,16 @@
     "brief": "LAPMETRY Design Architecture 2.0 for all data and project routes",
     "slop_test": "pass-58-of-58",
     "pre_emit": "P5 H5 E5 S5 R5 V5"
+  },
+  {
+    "date": "2026-08-26",
+    "scope": "app",
+    "macrostructure": "Data Console",
+    "theme": "custom",
+    "theme_axes": "dark / condensed-sans / warm",
+    "enrichment": "none",
+    "brief": "Recast data-page mobile shell and disconnected live timing as an in-context workbench",
+    "slop_test": "pass-58-of-58",
+    "pre_emit": "P5 H5 E5 S5 R5 V5"
   }
 ]

@@ -1,4 +1,3 @@
-import { BackNavigation } from "@/components/back-navigation";
 import { DataSessionSelector } from "@/components/data-session-selector";
 import styles from "@/app/data-pages.module.css";
 import { parseSessionKey, sourceLabel, translateMeetingName, translateSessionName } from "@/lib/f1-labels";
@@ -32,15 +31,10 @@ export default async function RaceControlPage({ searchParams }: { searchParams: 
 
   return (
     <main className={styles.page}>
-      <div className={styles.backRow}>
-        <BackNavigation className={styles.back} fallbackHref="/race-weekend" fallbackLabel="返回比赛周" />
-      </div>
-
       <header className={styles.pageHead}>
         <div>
-          <p className={styles.routeCode}>RACE CONTROL / EVENT LOG</p>
           <h1 className={styles.title}>赛会控制</h1>
-          <p className={styles.lede}>页面以消息发生顺序为主轴。选择器和数据状态退到工具层，旗语、安全车、调查和通知直接进入时间线。</p>
+          <p className={styles.lede}>按发生顺序读取旗语、安全车、调查与官方通知。</p>
         </div>
         <p className={styles.source}>{sourceLabel(feed.source)}</p>
       </header>

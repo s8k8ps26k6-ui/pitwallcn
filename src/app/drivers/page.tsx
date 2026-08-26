@@ -1,4 +1,3 @@
-import { BackNavigation } from "@/components/back-navigation";
 import { DriverIndex } from "@/components/driver-index";
 import styles from "@/app/data-pages.module.css";
 import { getDriverStandings } from "@/lib/standings-service";
@@ -10,14 +9,10 @@ export default async function DriversPage() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.backRow}>
-        <BackNavigation className={styles.back} fallbackHref="/" fallbackLabel="返回主页" />
-      </div>
       <header className={styles.pageHead}>
         <div>
-          <p className={styles.routeCode}>PADDOCK / DRIVER INDEX</p>
           <h1 className={styles.title}>车手名录</h1>
-          <p className={styles.lede}>按车队组织当前赛季车手，重点是识别与进入资料页，而不是把名录做成三列指标卡片墙。</p>
+          <p className={styles.lede}>按车队浏览当前赛季车手，并进入其赛季资料。</p>
         </div>
         <p className={`${styles.source} ${standings.source === "jolpica" ? "" : styles.sourceDanger}`}>{standings.sourceLabel}</p>
       </header>

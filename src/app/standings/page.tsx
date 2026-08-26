@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BackNavigation } from "@/components/back-navigation";
 import styles from "@/app/data-pages.module.css";
 import { getDriverStandings } from "@/lib/standings-service";
 
@@ -11,14 +10,10 @@ export default async function StandingsPage() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.backRow}>
-        <BackNavigation className={styles.back} fallbackHref="/" fallbackLabel="返回主页" />
-      </div>
       <header className={styles.pageHead}>
         <div>
-          <p className={styles.routeCode}>SEASON / CHAMPIONSHIP LADDER</p>
           <h1 className={styles.title}>积分榜</h1>
-          <p className={styles.lede}>车手和车队使用同一赛季排名源。页面不再把车手名录中的手填数字重排成“实时积分”。</p>
+          <p className={styles.lede}>当前赛季的车手与车队冠军排名。</p>
         </div>
         <p className={`${styles.source} ${available ? "" : styles.sourceDanger}`}>{standings.sourceLabel}</p>
       </header>
