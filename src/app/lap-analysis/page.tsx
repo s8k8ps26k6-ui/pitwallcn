@@ -64,12 +64,12 @@ export default async function LapAnalysisPage({ searchParams }: { searchParams: 
 
           <section className={styles.sheet} aria-labelledby="lap-matrix-title">
             <div className={styles.sheetHead}>
-              <h2 className={styles.sheetTitle} id="lap-matrix-title">Lap matrix</h2>
-              <p className={styles.sheetNote}>Best、Latest、三个分段、圈数和 stint 在同一矩阵内比较。</p>
+              <h2 className={styles.sheetTitle} id="lap-matrix-title">圈速矩阵</h2>
+              <p className={styles.sheetNote}>最快圈、最近圈、三个分段、圈数和轮胎使用情况在同一矩阵内比较。</p>
             </div>
             <div className={styles.tableWrap}>
               <table className={styles.table}>
-                <thead><tr><th>POS</th><th>Driver</th><th>Best</th><th>Latest</th><th>Laps</th><th>Gap</th><th>S1</th><th>S2</th><th>S3</th><th>Stint</th></tr></thead>
+                <thead><tr><th>名次</th><th>车手</th><th>最快圈</th><th>最近圈</th><th>圈数</th><th>差距</th><th>S1</th><th>S2</th><th>S3</th><th>轮胎</th></tr></thead>
                 <tbody>
                   {result.rows.map((row) => (
                     <tr key={row.driver}>

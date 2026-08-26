@@ -1,5 +1,16 @@
 [
   {
+    "date": "2026-08-27",
+    "scope": "app",
+    "macrostructure": "In-context route transition + task-first data field",
+    "theme": "custom",
+    "theme_axes": "deep blue-black / event-adaptive accent / condensed-sans",
+    "enrichment": "none",
+    "brief": "Replace the isolated loading poster with an in-context data skeleton; apply accessible mobile type, interaction, and overflow rules without changing the protected homepage architecture.",
+    "slop_test": "targeted implementation gates reviewed; visual viewport acceptance pending",
+    "pre_emit": "P5 H5 E5 S5 R5 V5"
+  },
+  {
     "date": "2026-08-26",
     "scope": "repair",
     "macrostructure": "Workbench Suite",

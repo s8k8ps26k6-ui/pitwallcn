@@ -4,27 +4,27 @@ const entries = [
   {
     id: "2026.08.26",
     date: "2026-08-26",
-    title: "Data Console Recast",
+    title: "数据页重铸",
     items: [
-      "数据页移动端改为收起的路由菜单，首屏优先留给当前任务。",
-      "Live 变为离线计时台；状态嵌入数据表面，不再作为整页说明。",
-      "顶层工作区撤去重复返回键，并统一为紧凑的任务说明与来源标签。"
+      "数据页改用同一张赛事环境底板，页面内容直接生长在底板上。",
+      "移动端首屏先呈现当前任务；导航仅在需要时展开。",
+      "Live 明确展示数据源状态，不再模拟实时刷新。"
     ]
   },
   {
     id: "2026.08.26",
     date: "2026-08-26",
-    title: "Design Architecture 2.0",
+    title: "设计架构",
     items: [
-      "数据页从旧 SiteShell 卡片模板迁移到统一的边缘导航与工作区。",
-      "Results、Race Control、Lap Analysis、Weather、Standings、Drivers 与 Race Weekend 分别采用适合自身任务的结构。",
-      "Live 取消 Mock 轮询与伪实时状态；积分榜取消手填积分回退。"
+      "统一品牌语言，不统一页面模板。",
+      "成绩以分类表呈现，赛控以时间线呈现，圈速以工作台呈现。",
+      "圆角、字号、间距和状态语言在所有数据页遵循同一套规则。"
     ]
   },
   {
     id: "2026.08",
     date: "2026-08",
-    title: "路由职责拆分",
+    title: "路由职责",
     items: [
       "主页独立拥有移动赛事快捷坞，切换到 Atlas、赛历和比赛详情时不再残留主页内容。",
       "沉浸式路由与数据工作区分开，避免同一外壳强迫所有页面使用相同宽度和节奏。"
@@ -33,7 +33,7 @@ const entries = [
   {
     id: "LAPMETRY",
     date: "2026-08",
-    title: "品牌迁移",
+    title: "品牌基线",
     items: [
       "对外品牌从 GridDelta 迁移到 LAPMETRY。",
       "保留既有仓库名与生产路由，降低品牌迁移对部署和链接的影响。"
@@ -42,7 +42,7 @@ const entries = [
   {
     id: "ATLAS",
     date: "2026-07",
-    title: "赛季地图与比赛详情",
+    title: "沉浸式入口",
     items: [
       "Atlas 建立全球赛历入口、欧洲节点与赛道轮廓。",
       "比赛详情形成赛道技术图、下一赛段、日程、纪录与历史分区。",
@@ -52,7 +52,7 @@ const entries = [
   {
     id: "FOUNDATION",
     date: "2026-05",
-    title: "数据模块基础",
+    title: "数据基础",
     items: [
       "建立 Results、Race Control、Lap Analysis 与 Weather 的 OpenF1 服务层。",
       "完成移动端路由、错误边界、加载状态和基础 E2E 边界测试。",
@@ -69,11 +69,11 @@ export default function ProjectPage() {
           <h1 className={styles.title}>项目记录</h1>
           <p className={styles.lede}>记录已进入代码的产品与数据变化。</p>
         </div>
-        <p className={styles.source}>CURRENT ARCHITECTURE · 2.1</p>
+        <p className={styles.source}>设计记录</p>
       </header>
 
       <p className={styles.journalLead}>
-        LAPMETRY 围绕比赛、赛道、时间和数据来源组织。每个路由承担不同任务，但共享同一套来源状态、导航与交互纪律。
+        LAPMETRY 围绕比赛、赛道、时间和数据来源组织。每个路由有自己的任务与节奏，但共享同一套状态语言、导航和视觉底板。
       </p>
 
       <section aria-label="LAPMETRY 更新记录">

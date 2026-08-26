@@ -10,6 +10,8 @@ const siteUrl = "https://pitwallcn.vercel.app";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#020712",
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -67,6 +69,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
+        <a className="skip-link" href="#main-content">跳到主要内容</a>
         <SiteShell dataTheme={currentTheme}>{children}</SiteShell>
       </body>
     </html>

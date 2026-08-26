@@ -40,18 +40,18 @@ export function DataSessionSelector({
   return (
     <section className={styles.sessionDock} id={anchor} aria-labelledby={`${anchor}-title`}>
       <div>
-        <h2 className={styles.sessionTitle} id={`${anchor}-title`}>赛段</h2>
+        <h2 className={styles.sessionTitle} id={`${anchor}-title`}>选择赛段</h2>
         <p className={styles.sessionCurrent}>
           {selectedMeetingName ? `${selectedMeetingName} · ${selectedSessionName ?? "自动选择"}` : "等待数据源返回可用赛段"}
         </p>
-        <p className={styles.sessionId}>SESSION {selectedSessionKey ?? "—"}</p>
+        <p className={styles.sessionId} translate="no">SESSION {selectedSessionKey ?? "—"}</p>
       </div>
 
       <div>
         <form action={`${action}#${anchor}`} className={styles.selectorForm} method="get">
           <label className={styles.fieldLabel}>
             赛段
-            <select className={styles.select} defaultValue={selectedSessionKey ?? ""} name="session">
+            <select autoComplete="off" className={styles.select} defaultValue={selectedSessionKey ?? ""} name="session">
               {!selectedSessionKey ? <option value="">自动选择最新可用赛段</option> : null}
               {meetings.map((meeting) => (
                 <optgroup key={meeting.meetingKey} label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}>

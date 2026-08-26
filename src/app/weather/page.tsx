@@ -58,7 +58,7 @@ export default async function WeatherPage({ searchParams }: { searchParams: Prom
         <>
           <section className={styles.instrumentBoard} aria-label="赛道天气仪表">
             <article className={`${styles.instrument} ${styles.instrumentMain}`}>
-              <p className={styles.instrumentLabel}>TRACK TEMPERATURE / LATEST</p>
+              <p className={styles.instrumentLabel}>赛道温度 · 最新</p>
               <p className={styles.instrumentValue}>{latest?.trackTemperature ?? "—"}</p>
               <p className={styles.instrumentSub}>均值 {weather.summary.averageTrackTemperature} · 最高 {weather.summary.maxTrackTemperature} · 最低 {weather.summary.minTrackTemperature}</p>
               <div className={styles.trend} aria-label="最近赛道温度趋势">
@@ -72,22 +72,22 @@ export default async function WeatherPage({ searchParams }: { searchParams: Prom
               </div>
             </article>
             <article className={styles.instrument}>
-              <p className={styles.instrumentLabel}>AIR</p>
+              <p className={styles.instrumentLabel}>空气</p>
               <p className={styles.factValue}>{latest?.airTemperature ?? "—"}</p>
               <p className={styles.instrumentSub}>空气温度</p>
             </article>
             <article className={styles.instrument}>
-              <p className={styles.instrumentLabel}>HUMIDITY</p>
+              <p className={styles.instrumentLabel}>湿度</p>
               <p className={styles.factValue}>{latest?.humidity ?? "—"}</p>
               <p className={styles.instrumentSub}>相对湿度</p>
             </article>
             <article className={styles.instrument}>
-              <p className={styles.instrumentLabel}>WIND</p>
+              <p className={styles.instrumentLabel}>风</p>
               <p className={styles.factValue}>{latest?.windSpeed ?? "—"}</p>
               <p className={styles.instrumentSub}>{latest?.windDirection ?? "方向未知"} · 最大 {weather.summary.maxWindSpeed}</p>
             </article>
             <article className={styles.instrument}>
-              <p className={styles.instrumentLabel}>RAIN / PRESSURE</p>
+              <p className={styles.instrumentLabel}>降雨 / 气压</p>
               <p className={styles.factValue}>{latest?.rainLabel ?? "—"}</p>
               <p className={styles.instrumentSub}>{latest?.pressure ?? "—"} · 雨量样本 {weather.summary.rainySamples}</p>
             </article>
@@ -95,7 +95,7 @@ export default async function WeatherPage({ searchParams }: { searchParams: Prom
 
           <section className={styles.sheet} aria-labelledby="weather-ledger-title">
             <div className={styles.sheetHead}>
-              <h2 className={styles.sheetTitle} id="weather-ledger-title">Weather ledger</h2>
+              <h2 className={styles.sheetTitle} id="weather-ledger-title">天气记录</h2>
               <p className={styles.sheetNote}>共 {weather.summary.sampleCount} 条采样；此处列出最近 {recent.length} 条。历史赛段字段可能不完整。</p>
             </div>
             <div className={styles.mobileRows}>
