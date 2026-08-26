@@ -15,16 +15,14 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ d
     <main className={styles.page}>
       <div className={styles.backRow}>
         <BackNavigation className={styles.back} fallbackHref="/drivers" fallbackLabel="返回车手" />
-        <Link className={styles.back} href="/drivers">车手名录</Link>
       </div>
 
       {driver ? (
         <>
           <header className={styles.pageHead}>
             <div>
-              <p className={styles.routeCode}>DRIVER / VERIFIED SEASON SNAPSHOT</p>
               <h1 className={styles.title}>{driver.name}</h1>
-              <p className={styles.lede}>资料页只展示当前排名源能够确认的身份和赛季字段，不再使用通用赛车图片、模拟圈数、轮胎或“POINTS FIGHT”标签。</p>
+              <p className={styles.lede}>当前赛季可核验的身份、车队与排名资料。</p>
             </div>
             <p className={styles.source}>{driver.sourceLabel}</p>
           </header>

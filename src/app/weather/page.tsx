@@ -1,4 +1,3 @@
-import { BackNavigation } from "@/components/back-navigation";
 import { DataSessionSelector } from "@/components/data-session-selector";
 import styles from "@/app/data-pages.module.css";
 import { parseSessionKey, sourceLabel, translateMeetingName, translateSessionName } from "@/lib/f1-labels";
@@ -37,15 +36,10 @@ export default async function WeatherPage({ searchParams }: { searchParams: Prom
 
   return (
     <main className={styles.page}>
-      <div className={styles.backRow}>
-        <BackNavigation className={styles.back} fallbackHref="/race-weekend" fallbackLabel="返回比赛周" />
-      </div>
-
       <header className={styles.pageHead}>
         <div>
-          <p className={styles.routeCode}>WEATHER / INSTRUMENT BOARD</p>
           <h1 className={styles.title}>赛道天气</h1>
-          <p className={styles.lede}>最新读数、温度趋势与原始采样形成一块气象仪表板，不再经过四张摘要卡和两个相似信息面板。</p>
+          <p className={styles.lede}>读取当前赛段的温度、风、降雨与历史采样。</p>
         </div>
         <p className={`${styles.source} ${styles.sourceCyan}`}>{sourceLabel(weather.source)}</p>
       </header>

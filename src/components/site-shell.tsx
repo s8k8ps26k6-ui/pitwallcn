@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { usePathname } from "next/navigation";
 import { NavigationMemory } from "@/components/navigation-memory";
 import { HomeBrandLink } from "@/components/home-brand-link";
@@ -23,6 +23,7 @@ const navItems = [
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
   const isHomepage = pathname === "/";
   const isImmersiveRoute =
     isHomepage ||
@@ -50,21 +51,34 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <span className={styles.brandMark}>LM</span>
           <span>LAPMETRY</span>
         </HomeBrandLink>
-        <Link className={styles.mobileLink} href="/project">ARCH. 2.0</Link>
+        <button
+          aria-controls="data-route-menu"
+          aria-expanded={menuOpen}
+          aria-label={menuOpen ? "关闭导航" : "打开导航"}
+          className={styles.menuToggle}
+          onClick={() => setMenuOpen((open) => !open)}
+          type="button"
+        >
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </button>
       </header>
 
-      <nav className={styles.mobileNav} aria-label="移动端主导航">
-        {navItems.map((item) => (
-          <Link
-            aria-current={isActive(item.href) ? "page" : undefined}
-            className={`${styles.mobileLink} ${isActive(item.href) ? styles.activeLink : ""}`}
-            href={item.href}
-            key={item.href}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      {menuOpen ? (
+        <nav className={styles.mobileMenu} id="data-route-menu" aria-label="移动端主导航">
+          {navItems.map((item) => (
+            <Link
+              aria-current={isActive(item.href) ? "page" : undefined}
+              className={`${styles.mobileLink} ${isActive(item.href) ? styles.activeLink : ""}`}
+              href={item.href}
+              key={item.href}
+              onClick={() => setMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
 
       <aside className={styles.rail}>
         <HomeBrandLink className={styles.brand} ariaLabel="LAPMETRY 首页">

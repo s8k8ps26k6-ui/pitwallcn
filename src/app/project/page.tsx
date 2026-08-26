@@ -1,7 +1,16 @@
-import { BackNavigation } from "@/components/back-navigation";
 import styles from "@/app/data-pages.module.css";
 
 const entries = [
+  {
+    id: "2026.08.26",
+    date: "2026-08-26",
+    title: "Data Console Recast",
+    items: [
+      "数据页移动端改为收起的路由菜单，首屏优先留给当前任务。",
+      "Live 变为离线计时台；状态嵌入数据表面，不再作为整页说明。",
+      "顶层工作区撤去重复返回键，并统一为紧凑的任务说明与来源标签。"
+    ]
+  },
   {
     id: "2026.08.26",
     date: "2026-08-26",
@@ -55,20 +64,16 @@ const entries = [
 export default function ProjectPage() {
   return (
     <main className={`${styles.page} ${styles.journal}`}>
-      <div className={styles.backRow}>
-        <BackNavigation className={styles.back} fallbackHref="/" fallbackLabel="返回主页" />
-      </div>
       <header className={styles.pageHead}>
         <div>
-          <p className={styles.routeCode}>PROJECT / RELEASE JOURNAL</p>
           <h1 className={styles.title}>项目记录</h1>
-          <p className={styles.lede}>这里记录已经进入代码的方向变化，并把每次发布绑定到可核验的实现与数据状态。</p>
+          <p className={styles.lede}>记录已进入代码的产品与数据变化。</p>
         </div>
-        <p className={styles.source}>CURRENT ARCHITECTURE · 2.0</p>
+        <p className={styles.source}>CURRENT ARCHITECTURE · 2.1</p>
       </header>
 
       <p className={styles.journalLead}>
-        LAPMETRY 是一套围绕比赛、赛道、时间和数据来源组织的中文 F1 产品。页面可以有不同职业，但来源状态、品牌语言和交互纪律必须一致。
+        LAPMETRY 围绕比赛、赛道、时间和数据来源组织。每个路由承担不同任务，但共享同一套来源状态、导航与交互纪律。
       </p>
 
       <section aria-label="LAPMETRY 更新记录">

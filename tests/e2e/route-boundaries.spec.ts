@@ -208,7 +208,8 @@ test("live route states its disconnected source without simulated-live language"
 
   expect(response?.status()).toBe(200);
   await expect(page.getByRole("heading", { name: "实时计时", exact: true })).toBeVisible();
-  await expect(page.getByText("NOT LIVE · SOURCE NOT CONNECTED", { exact: true })).toBeVisible();
+  await expect(page.getByText("数据源离线", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "计时数据源未连接", exact: true })).toBeVisible();
   await expect(page.getByText("AUTO REFRESH", { exact: true })).toHaveCount(0);
   await expect(page.getByText("MOCK FEED", { exact: true })).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
@@ -248,18 +249,32 @@ test("data-product routes survive the mandated responsive widths", async ({ page
   }
 });
 
-test("session tools collapse to one selector and one back action on a phone", async ({ page }, testInfo) => {
+test("session tools use one selector and the mobile route menu on a phone", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-chromium", "One browser project covers the explicit phone viewport.");
   await page.setViewportSize({ width: 375, height: 844 });
 
   for (const route of ["/results", "/race-control", "/lap-analysis", "/weather"]) {
     const response = await page.goto(route);
     expect(response?.status(), route).toBe(200);
-    await expect(page.locator("[data-back-navigation]"), `${route} back controls`).toHaveCount(1);
+    await expect(page.locator("[data-back-navigation]"), `${route} top-level back controls`).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "打开导航" }), `${route} route menu`).toBeVisible();
     await expect(page.locator("[data-session-shortcuts]"), `${route} duplicate session strip`).toBeHidden();
     await expect(page.locator("select[name='session']"), `${route} session selector`).toBeVisible();
     await expectNoHorizontalOverflow(page);
   }
+});
+
+test("mobile route menu is opt-in and keeps the data canvas within the viewport", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "One browser project covers the explicit phone viewport.");
+  await page.setViewportSize({ width: 375, height: 844 });
+  const response = await page.goto("/live");
+
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole("navigation", { name: "移动端主导航" })).toHaveCount(0);
+  await page.getByRole("button", { name: "打开导航" }).click();
+  await expect(page.getByRole("navigation", { name: "移动端主导航" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "比赛结果", exact: true })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 test("news keeps its own heading without inheriting the homepage dock", async ({ page }) => {

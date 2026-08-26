@@ -48,9 +48,11 @@ Atmospheric, technical and austere. Atmosphere stays in the background; data rem
 ## What pages must share
 
 - Edge-aligned LAPMETRY navigation and the same route taxonomy.
+- On mobile, route navigation is an explicit menu action; it never occupies the data canvas by default.
 - Token palette, type roles, status wording and focus treatment.
 - Honest source labels. `LIVE`, `AUTO REFRESH` and pulsing green are reserved for a verified live feed.
 - Hairline dividers and mostly square data surfaces; rounded containers are not the default section language.
+- A top-level data route starts with its task and context, not a return action or an internal implementation explanation.
 
 ## What pages may differ on
 
