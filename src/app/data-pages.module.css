@@ -16,16 +16,14 @@
 }
 
 .mobileHeader {
-  position: sticky;
-  z-index: 30;
+  position: relative;
   inset-block-start: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   min-height: 3.5rem;
   padding-inline: var(--space-sm);
-  background: color-mix(in oklch, var(--color-paper) 92%, transparent);
-  backdrop-filter: blur(18px);
+  background: transparent;
 }
 
 .mobileMenu {
@@ -1266,6 +1264,10 @@
 }
 
 @media (max-width: 39.99rem) {
+  .frame {
+    padding-top: var(--space-sm);
+  }
+
   .pageHead {
     gap: var(--space-sm);
     padding-block-end: var(--space-md);
