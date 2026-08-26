@@ -48,20 +48,23 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <Suspense fallback={null}><NavigationMemory /></Suspense>
       <header className={styles.mobileHeader} data-site-header>
         <HomeBrandLink className={styles.brand} ariaLabel="LAPMETRY 首页">
-          <span className={styles.brandMark}>LM</span>
           <span>LAPMETRY</span>
         </HomeBrandLink>
-        <button
-          aria-controls="data-route-menu"
-          aria-expanded={menuOpen}
-          aria-label={menuOpen ? "关闭导航" : "打开导航"}
-          className={styles.menuToggle}
-          onClick={() => setMenuOpen((open) => !open)}
-          type="button"
-        >
-          <span aria-hidden="true" />
-          <span aria-hidden="true" />
-        </button>
+        <div className={styles.mobileHeaderTools}>
+          <Link className={styles.headerLink} href="/schedule">赛历</Link>
+          <Link className={styles.headerLink} href="/atlas-v2">Atlas</Link>
+          <button
+            aria-controls="data-route-menu"
+            aria-expanded={menuOpen}
+            aria-label={menuOpen ? "关闭导航" : "打开导航"}
+            className={styles.menuToggle}
+            onClick={() => setMenuOpen((open) => !open)}
+            type="button"
+          >
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       {menuOpen ? (
@@ -82,7 +85,6 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
       <aside className={styles.rail}>
         <HomeBrandLink className={styles.brand} ariaLabel="LAPMETRY 首页">
-          <span className={styles.brandMark}>LM</span>
           <span>LAPMETRY</span>
         </HomeBrandLink>
         <nav className={styles.railNav} aria-label="主导航">
