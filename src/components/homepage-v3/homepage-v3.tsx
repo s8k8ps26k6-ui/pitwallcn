@@ -12,21 +12,9 @@ import {
   getPrimaryRaceMoment,
   type UnifiedRace,
 } from "@/lib/atlas/race-detail";
+import { getEventTheme } from "@/lib/event-theme";
 import styles from "./homepage-v3.module.css";
 import responsiveStyles from "./homepage-v3-responsive.module.css";
-
-type EventTheme = { accent: string; accentRgb: string; support: string };
-
-const DEFAULT_THEME: EventTheme = { accent: "#d7b56d", accentRgb: "215 181 109", support: "#4d8ba9" };
-const EVENT_THEMES: Partial<Record<string, EventTheme>> = {
-  netherlands: { accent: "#d9a35a", accentRgb: "217 163 90", support: "#28749c" },
-  belgium: { accent: "#d6a566", accentRgb: "214 165 102", support: "#55758a" },
-  hungary: { accent: "#cc866d", accentRgb: "204 134 109", support: "#65769c" },
-  italy: { accent: "#b8c77a", accentRgb: "184 199 122", support: "#477f78" },
-  singapore: { accent: "#ce816d", accentRgb: "206 129 109", support: "#3c87a1" },
-  japan: { accent: "#cf8c83", accentRgb: "207 140 131", support: "#5475a1" },
-  australia: { accent: "#d3b16c", accentRgb: "211 177 108", support: "#3d87a9" },
-};
 
 function getCountdown(targetIso: string, now: Date) {
   const ms = Math.max(0, Date.parse(targetIso) - now.getTime());
@@ -62,7 +50,7 @@ export function HomepageV3({ race, phase, raceRail }: { race: UnifiedRace; phase
   const [now, setNow] = useState(() => new Date());
   const moment = useMemo(() => getPrimaryRaceMoment(race, now), [race, now]);
   const countdown = getCountdown(moment.startTime, now);
-  const theme = EVENT_THEMES[race.race.id] ?? DEFAULT_THEME;
+  const theme = getEventTheme(race.race.id);
   const week = getRaceWeekProgress(race, now);
   const detailHref = `/races/${race.season}/${race.eventId}` as Route;
   const localSessionTime = moment.isTimeConfirmed ? formatLocalDateTime(moment.startTime, race.circuit?.timeZone, "zh-CN") : "比赛周起始时间待官方赛段确认";

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { NavigationMemory } from "@/components/navigation-memory";
 import { HomeBrandLink } from "@/components/home-brand-link";
 import styles from "@/app/data-pages.module.css";
+import type { EventTheme } from "@/lib/event-theme";
 
 const navItems = [
   { label: "首页", href: "/" },
@@ -21,7 +22,7 @@ const navItems = [
   { label: "项目记录", href: "/project" },
 ] as const;
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+export function SiteShell({ children, dataTheme }: { children: React.ReactNode; dataTheme: EventTheme }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const isHomepage = pathname === "/";
@@ -43,16 +44,22 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
   const isActive = (href: string) => href === "/" ? pathname === href : pathname.startsWith(href);
 
+  const shellStyle = {
+    "--color-accent": dataTheme.accent,
+    "--color-accent-soft": `rgb(${dataTheme.accentRgb} / 0.12)`,
+    "--color-accent-ink": "#071016",
+    "--event-accent-rgb": dataTheme.accentRgb,
+    "--event-support": dataTheme.support,
+  } as React.CSSProperties;
+
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} style={shellStyle}>
       <Suspense fallback={null}><NavigationMemory /></Suspense>
       <header className={styles.mobileHeader} data-site-header>
         <HomeBrandLink className={styles.brand} ariaLabel="LAPMETRY 首页">
           <span>LAPMETRY</span>
         </HomeBrandLink>
         <div className={styles.mobileHeaderTools}>
-          <Link className={styles.headerLink} href="/schedule">赛历</Link>
-          <Link className={styles.headerLink} href="/atlas-v2">Atlas</Link>
           <button
             aria-controls="data-route-menu"
             aria-expanded={menuOpen}
