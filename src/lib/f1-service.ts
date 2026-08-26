@@ -1,11 +1,10 @@
 import "server-only";
 
-import { mockLiveTiming } from "@/lib/mockData";
 import { fetchOpenF1 } from "@/lib/openf1-client";
 import { findNextRaceFromCalendar, officialRaceCalendar2026 } from "@/lib/race-calendar";
 import { getRaceControlFeed } from "@/lib/race-control-service";
 import { getDriverStandings } from "@/lib/standings-service";
-import type { RaceWeekend, ScheduleSession } from "@/lib/types";
+import type { LiveTimingSnapshot, RaceWeekend, ScheduleSession } from "@/lib/types";
 
 type OpenF1Meeting = {
   meeting_key: number;
@@ -102,10 +101,13 @@ export async function getStandings() {
   return getDriverStandings();
 }
 
-export async function getLiveTiming() {
+export async function getLiveTiming(): Promise<LiveTimingSnapshot> {
   return {
-    data: mockLiveTiming,
-    source: process.env.F1_DATA_SOURCE ?? "mock"
+    data: [],
+    status: "unavailable",
+    source: "not-connected",
+    updatedAt: null,
+    message: "LAPMETRY 尚未接入经过验证的实时计时数据源。"
   };
 }
 

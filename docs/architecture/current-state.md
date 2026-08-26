@@ -1,5 +1,10 @@
 # LAPMETRY current architecture
 
+> Historical investigation snapshot. The active design and route architecture
+> was superseded on 2026-08-26 by [`design.md`](../../design.md). Statements
+> below describe the pre-2.0 baseline and are intentionally preserved as an
+> audit trail; they are not the current product contract.
+
 ## Purpose and evidence boundary
 
 This document records the repository state investigated for the route-isolation and Race Week foundation task. Statements under **Confirmed current state** are based on code present in the repository or on commands run against the working tree. Suggestions are deliberately deferred to [`race-week-foundation.md`](./race-week-foundation.md). The exact task verification commands, outcomes and investigated failures are recorded in [`verification.md`](./verification.md).

@@ -11,6 +11,8 @@ type OpenF1Params = Record<string, string | number>;
 
 type OpenF1FetchOptions = {
   timeoutMs?: number;
+  /** Bypass Next's response cache for payloads that can exceed its per-item limit. */
+  cache?: "no-store";
   /** Retained for backwards compatibility. OpenF1 responses always revalidate after 30 seconds. */
   revalidate?: number;
 };
@@ -42,7 +44,9 @@ export async function fetchOpenF1<T>(path: string, params: OpenF1Params, options
       headers: {
         Accept: "application/json"
       },
-      next: { revalidate: OPENF1_REVALIDATE_SECONDS },
+      ...(options.cache === "no-store"
+        ? { cache: "no-store" as const }
+        : { next: { revalidate: OPENF1_REVALIDATE_SECONDS } }),
       signal: controller.signal
     });
 

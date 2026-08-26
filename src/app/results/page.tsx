@@ -1,258 +1,104 @@
-import Link from "next/link";
 import { BackNavigation } from "@/components/back-navigation";
+import { DataSessionSelector } from "@/components/data-session-selector";
 import { RaceWeekendReturnLink } from "@/components/race-weekend-return-link";
+import styles from "@/app/data-pages.module.css";
+import { parseSessionKey, sourceLabel, translateMeetingName, translateSessionName } from "@/lib/f1-labels";
 import { getResultsBySession, getResultsSelectionData } from "@/lib/results-service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-type ResultsSearchParams = {
-  session?: string;
-};
-
-function parseSessionKey(value?: string) {
-  if (!value) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function formatSessionTime(iso: string) {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return "时间未知";
-
-  return new Intl.DateTimeFormat("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Asia/Shanghai"
-  }).format(parsed);
-}
-
-function translateSessionName(name: string) {
-  const normalized = name.toLowerCase();
-  if (normalized === "qualifying") return "排位赛";
-  if (normalized === "sprint") return "冲刺赛";
-  if (normalized === "race") return "正赛";
-  return name;
-}
-
-function translateMeetingName(name: string) {
-  const replacements: Array<[RegExp, string]> = [
-    [/Australian Grand Prix/i, "澳大利亚大奖赛"],
-    [/Chinese Grand Prix/i, "中国大奖赛"],
-    [/Japanese Grand Prix/i, "日本大奖赛"],
-    [/Miami Grand Prix/i, "迈阿密大奖赛"],
-    [/Canadian Grand Prix/i, "加拿大大奖赛"],
-    [/Monaco Grand Prix/i, "摩纳哥大奖赛"],
-    [/Spanish Grand Prix/i, "西班牙大奖赛"],
-    [/Austrian Grand Prix/i, "奥地利大奖赛"],
-    [/British Grand Prix/i, "英国大奖赛"],
-    [/Belgian Grand Prix/i, "比利时大奖赛"],
-    [/Hungarian Grand Prix/i, "匈牙利大奖赛"],
-    [/Dutch Grand Prix/i, "荷兰大奖赛"],
-    [/Italian Grand Prix/i, "意大利大奖赛"],
-    [/Azerbaijan Grand Prix/i, "阿塞拜疆大奖赛"],
-    [/Singapore Grand Prix/i, "新加坡大奖赛"],
-    [/United States Grand Prix/i, "美国大奖赛"],
-    [/Mexico City Grand Prix/i, "墨西哥城大奖赛"],
-    [/São Paulo Grand Prix/i, "圣保罗大奖赛"],
-    [/Sao Paulo Grand Prix/i, "圣保罗大奖赛"],
-    [/Las Vegas Grand Prix/i, "拉斯维加斯大奖赛"],
-    [/Qatar Grand Prix/i, "卡塔尔大奖赛"],
-    [/Abu Dhabi Grand Prix/i, "阿布扎比大奖赛"]
-  ];
-
-  return replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), name);
-}
-
-function sourceLabel(source: string) {
-  if (source === "openf1") return "OPENF1";
-  if (source === "openf1-waiting") return "WAITING DATA";
-  if (source === "openf1-error") return "OPENF1 WAITING";
-  return "API READY";
-}
+type ResultsSearchParams = { session?: string };
 
 function statusClass(status: string) {
-  if (status === "完赛") return "border-pitGreen/40 bg-pitGreen/10 text-pitGreen";
-  if (status === "退赛") return "border-neonAmber/40 bg-neonAmber/10 text-neonAmber";
-  return "border-neonRed/40 bg-neonRed/10 text-neonRed";
-}
-
-function sessionButtonClass(isActive: boolean) {
-  return `rounded-xl border px-3 py-2 text-sm font-semibold transition ${
-    isActive
-      ? "border-neonAmber bg-neonAmber/10 text-neonAmber"
-      : "border-zinc-800 bg-black/30 text-zinc-300 hover:border-neonAmber hover:text-neonAmber"
-  }`;
+  if (status === "完赛") return styles.status;
+  if (status === "退赛") return `${styles.status} ${styles.statusWarn}`;
+  return `${styles.status} ${styles.statusDanger}`;
 }
 
 export default async function ResultsPage({ searchParams }: { searchParams: Promise<ResultsSearchParams> }) {
-  const resolvedSearchParams = await searchParams;
+  const resolved = await searchParams;
   const selection = await getResultsSelectionData();
-  const requestedSession = parseSessionKey(resolvedSearchParams.session);
-  const selectedSessionKey = requestedSession ?? selection.defaultSessionKey;
-
+  const selectedSessionKey = parseSessionKey(resolved.session) ?? selection.defaultSessionKey;
   const selectedMeeting = selection.meetings.find((meeting) =>
     meeting.sessions.some((session) => session.sessionKey === selectedSessionKey)
   );
   const selectedSession = selectedMeeting?.sessions.find((session) => session.sessionKey === selectedSessionKey);
+  const result = selectedSessionKey
+    ? await getResultsBySession(selectedSessionKey)
+    : { rows: [], source: "openf1-waiting" as const };
 
-  const result = selectedSessionKey ? await getResultsBySession(selectedSessionKey) : { rows: [], source: "openf1-waiting" as const };
-  const source = sourceLabel(result.source);
-  const selectedMeetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : null;
-  const selectedSessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : null;
-  const podiumRows = result.rows.slice(0, 3);
-  const quickSessions = [...(selectedMeeting?.sessions ?? [])].sort((a, b) => {
-    const priority = { qualifying: 0, sprint: 1, race: 2 } as const;
-    return priority[a.category] - priority[b.category];
-  });
-  const finishedCount = result.rows.filter((row) => row.status === "完赛").length;
-  const nonFinishedCount = result.rows.filter((row) => row.status !== "完赛").length;
-  const winner = podiumRows[0];
-  const summaryItems = [
-    { label: "参赛车手", value: result.rows.length ? `${result.rows.length}` : "--", hint: "当前成绩表记录数" },
-    { label: "完赛车手", value: result.rows.length ? `${finishedCount}` : "--", hint: "状态为完赛" },
-    { label: "异常状态", value: result.rows.length ? `${nonFinishedCount}` : "--", hint: "退赛 / 未起步 / 取消成绩" },
-    { label: "头名车手", value: winner?.driver ?? "--", hint: winner?.team ?? "等待成绩数据" }
-  ];
+  const meetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : null;
+  const sessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : null;
+  const finished = result.rows.filter((row) => row.status === "完赛").length;
+  const winner = result.rows[0];
 
   return (
-    <main className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <BackNavigation className="race-code inline-flex min-h-10 items-center rounded-xl border border-zinc-800 bg-black/30 px-3 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" fallbackHref="/race-weekend" fallbackLabel="返回比赛周" />
-        <RaceWeekendReturnLink session={resolvedSearchParams.session} />
+    <main className={styles.page}>
+      <div className={styles.backRow}>
+        <BackNavigation className={styles.back} fallbackHref="/race-weekend" fallbackLabel="返回比赛周" />
+        <RaceWeekendReturnLink session={resolved.session} />
       </div>
 
-      <section className="motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="eyebrow">Results Center</p>
-            <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">比赛结果</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              单独展示排位赛、冲刺赛与正赛成绩。数据来自 OpenF1 session_result，不混入圈速分析页面。
-            </p>
-          </div>
-          <div className="w-fit rounded-full border border-pitGreen/50 bg-black/60 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.14)]">
-            SESSION RESULT · {source}
-          </div>
-        </div>
-      </section>
-
-      <section id="results-session-selector" className="card scroll-mt-6 motion-fade-up motion-delay-1 space-y-3">
+      <header className={styles.pageHead}>
         <div>
-          <p className="eyebrow">Weekend / Session</p>
-          <h2 className="mt-1 text-lg font-semibold text-white">选择比赛周末与赛段</h2>
-          <p className="mt-1 text-sm text-zinc-400">
-            当前：{selectedMeetingName ? `${selectedMeetingName} · ${selectedSessionName ?? "自动选择"}` : "等待 OpenF1 返回成绩赛段"}
-          </p>
-          <p className="mt-1 text-xs text-zinc-600">数据标识：{selectedSessionKey ?? "暂无"}</p>
+          <p className={styles.routeCode}>RESULTS / CLASSIFICATION SHEET</p>
+          <h1 className={styles.title}>比赛结果</h1>
+          <p className={styles.lede}>成绩只出现一次：头名在同一张分类表内获得强调，不再用摘要卡、领奖台卡和表格重复展示同一信息。</p>
         </div>
+        <p className={styles.source}>{sourceLabel(result.source)}</p>
+      </header>
 
-        <form action="/results#results-session-selector" className="grid gap-3 sm:grid-cols-[1fr_auto]" method="get">
-          <select
-            className="rounded-xl border border-zinc-800 bg-black/30 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-neonAmber"
-            defaultValue={selectedSessionKey ?? ""}
-            name="session"
-          >
-            {!selectedSessionKey ? <option value="">自动选择最新可用赛段</option> : null}
-            {selection.meetings.map((meeting) => (
-              <optgroup key={meeting.meetingKey} label={`${translateMeetingName(meeting.meetingName)} · ${meeting.country} · ${meeting.location}`}>
-                {meeting.sessions.map((session) => (
-                  <option key={session.sessionKey} value={session.sessionKey}>
-                    {translateSessionName(session.sessionName)} · {formatSessionTime(session.sessionStart)}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <button className="rounded-xl border border-zinc-800 bg-black/40 px-4 py-2 text-sm font-semibold text-zinc-200 transition hover:border-neonAmber hover:text-neonAmber" type="submit">
-            查看成绩
-          </button>
-        </form>
-
-        {quickSessions.length ? (
-          <div className="flex flex-wrap gap-2 border-t border-zinc-900 pt-3">
-            {quickSessions.map((session) => (
-              <Link
-                key={session.sessionKey}
-                className={sessionButtonClass(session.sessionKey === selectedSessionKey)}
-                href={`/results?session=${session.sessionKey}#results-session-selector`}
-              >
-                {translateSessionName(session.sessionName)}
-                <span className="ml-2 font-mono text-xs text-zinc-500">{formatSessionTime(session.sessionStart)}</span>
-              </Link>
-            ))}
-          </div>
-        ) : null}
-      </section>
+      <DataSessionSelector
+        action="/results"
+        anchor="results-session-selector"
+        meetings={selection.meetings}
+        selectedMeetingName={meetingName}
+        selectedSessionKey={selectedSessionKey}
+        selectedSessionName={sessionName}
+        submitLabel="查看成绩"
+      />
 
       {result.rows.length ? (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {summaryItems.map((item) => (
-              <article key={item.label} className="rounded-2xl border border-zinc-800 bg-black/25 p-4 shadow-lg shadow-black/10">
-                <p className="race-code">{item.label}</p>
-                <p className="mt-2 truncate font-mono text-2xl font-bold text-white">{item.value}</p>
-                <p className="mt-1 truncate text-xs text-zinc-500">{item.hint}</p>
-              </article>
-            ))}
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-3">
-            {podiumRows.map((item) => (
-              <article key={item.driver} className="card motion-fade-up">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-3xl font-bold text-white">{item.position}</span>
-                  <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] ${statusClass(item.status)}`}>
-                    {item.status}
-                  </span>
-                </div>
-                <p className="mt-5 font-mono text-2xl font-bold text-white">{item.driver}</p>
-                <p className="mt-1 text-sm text-zinc-500">{item.team}</p>
-                <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-lg border border-zinc-800 bg-black/25 p-3">
-                    <p className="race-code">时间 / 差距</p>
-                    <p className="mt-1 font-mono text-lg font-bold text-neonAmber">{item.timeOrGap}</p>
-                  </div>
-                  <div className="rounded-lg border border-zinc-800 bg-black/25 p-3">
-                    <p className="race-code">完成圈数</p>
-                    <p className="mt-1 font-mono text-lg font-bold text-white">{item.completedLaps}</p>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </section>
-
-          <section className="card motion-fade-up overflow-hidden p-0">
-            <div className="border-b border-zinc-800 bg-black/25 px-4 py-3">
-              <p className="eyebrow">Classification</p>
-              <h2 className="mt-1 text-lg font-semibold text-white">成绩表</h2>
-              <p className="mt-1 text-xs text-zinc-500">OpenF1 部分历史赛段可能缺少车队、圈数或完整成绩字段。</p>
+          <section className={styles.factRail} aria-label="成绩概况">
+            <div className={styles.fact}>
+              <p className={styles.factLabel}>头名</p><p className={styles.factValue}>{winner?.driver ?? "—"}</p><p className={styles.factHint}>{winner?.team ?? "—"}</p>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-zinc-800 bg-zinc-950/60 text-xs uppercase tracking-[0.18em] text-zinc-500">
-                  <tr>
-                    {['名次', '车手', '车队', '时间 / 差距', '完成圈数', '状态'].map((title) => (
-                      <th key={title} className="px-4 py-3">{title}</th>
-                    ))}
-                  </tr>
-                </thead>
+            <div className={styles.fact}>
+              <p className={styles.factLabel}>记录</p><p className={styles.factValue}>{result.rows.length}</p><p className={styles.factHint}>当前分类表</p>
+            </div>
+            <div className={styles.fact}>
+              <p className={styles.factLabel}>完赛</p><p className={styles.factValue}>{finished}</p><p className={styles.factHint}>状态为完赛</p>
+            </div>
+            <div className={styles.fact}>
+              <p className={styles.factLabel}>赛段</p><p className={styles.factValue}>{sessionName ?? "—"}</p><p className={styles.factHint}>Session {selectedSessionKey}</p>
+            </div>
+          </section>
+
+          <section className={styles.sheet} aria-labelledby="classification-title">
+            <div className={styles.sheetHead}>
+              <h2 className={styles.sheetTitle} id="classification-title">Classification</h2>
+              <p className={styles.sheetNote}>OpenF1 部分历史赛段可能缺少车队、圈数或完整成绩字段。</p>
+            </div>
+            <div className={styles.mobileRows}>
+              {result.rows.map((row) => (
+                <article className={styles.mobileRow} key={`${row.position}-${row.driver}`}>
+                  <span className={styles.position}>P{row.position}</span>
+                  <div><strong>{row.driver}</strong><p>{row.team} · {row.completedLaps} 圈</p></div>
+                  <div><strong className={styles.accentValue}>{row.timeOrGap}</strong><span className={statusClass(row.status)}>{row.status}</span></div>
+                </article>
+              ))}
+            </div>
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead><tr><th>名次</th><th>车手</th><th>车队</th><th>时间 / 差距</th><th>完成圈数</th><th>状态</th></tr></thead>
                 <tbody>
-                  {result.rows.map((row) => (
-                    <tr key={row.driver} className="border-b border-zinc-900 transition hover:bg-white/[0.03]">
-                      <td className="px-4 py-4 font-mono text-zinc-500">{row.position}</td>
-                      <td className="px-4 py-4 font-mono text-white">{row.driver}</td>
-                      <td className="px-4 py-4 text-zinc-400">{row.team}</td>
-                      <td className="px-4 py-4 font-mono text-neonAmber">{row.timeOrGap}</td>
-                      <td className="px-4 py-4 font-mono text-zinc-300">{row.completedLaps}</td>
-                      <td className="px-4 py-4">
-                        <span className={`rounded-full border px-2.5 py-1 text-[0.65rem] font-bold tracking-[0.16em] ${statusClass(row.status)}`}>
-                          {row.status}
-                        </span>
-                      </td>
+                  {result.rows.map((row, index) => (
+                    <tr data-rank={index + 1} key={`${row.position}-${row.driver}`}>
+                      <td className={styles.position}>P{row.position}</td><td className={styles.mono}>{row.driver}</td><td>{row.team}</td>
+                      <td className={styles.accentValue}>{row.timeOrGap}</td><td className={styles.mono}>{row.completedLaps}</td>
+                      <td><span className={statusClass(row.status)}>{row.status}</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -261,9 +107,9 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
           </section>
         </>
       ) : (
-        <section className="rounded-2xl border border-zinc-800 bg-black/20 p-5 text-sm leading-6 text-zinc-400">
-          <p className="font-semibold text-zinc-200">该赛段暂无成绩数据。</p>
-          <p className="mt-1">比赛尚未开始，或该赛段暂未产生可用的成绩记录。</p>
+        <section className={styles.empty}>
+          <h2 className={styles.emptyTitle}>该赛段暂无成绩数据</h2>
+          <p>比赛尚未开始，或 OpenF1 尚未生成可用的赛段结果。页面不会补入模拟排名。</p>
         </section>
       )}
     </main>

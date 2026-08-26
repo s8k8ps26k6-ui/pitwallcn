@@ -226,7 +226,7 @@ export async function getLapAnalysisBySession(sessionKey: number) {
       fetchOpenF1<OpenF1Lap[]>("/laps", { session_key: sessionKey }),
       fetchOpenF1<OpenF1Stint[]>("/stints", { session_key: sessionKey }).catch(() => []),
       fetchOpenF1<OpenF1Position[]>("/position", { session_key: sessionKey }).catch(() => []),
-      fetchOpenF1<OpenF1Interval[]>("/intervals", { session_key: sessionKey }).catch(() => []),
+      fetchOpenF1<OpenF1Interval[]>("/intervals", { session_key: sessionKey }, { cache: "no-store" }).catch(() => []),
       fetchOpenF1<OpenF1Driver[]>("/drivers", { session_key: sessionKey }).catch(() => [])
     ]);
 

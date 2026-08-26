@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 
-const signalLabels = ["LIVE TIMING", "RACE WEEKEND", "SESSION DATA", "OPENF1"];
-const telemetryBlocks = ["Timing", "Calendar", "Race Control"];
+const signalLabels = ["RESULTS", "RACE CONTROL", "WEATHER", "OPENF1"];
+const telemetryBlocks = ["Results", "Weather", "Race Control"];
 const pulseDots = Array.from({ length: 5 }, (_, index) => index);
 
 export function LivePulsePanel() {
@@ -11,7 +11,7 @@ export function LivePulsePanel() {
     <section className="motion-fade-up motion-delay-1" aria-labelledby="live-pulse-title">
       <Link
         href="/live"
-        aria-label="打开实时计时模块，查看可用的 F1 数据入口"
+        aria-label="查看 Live 数据源状态与可用的 F1 数据入口"
         className="group relative block overflow-hidden rounded-[1.75rem] border border-zinc-800/90 bg-[#070708] p-4 shadow-xl shadow-black/20 transition-[border-color,box-shadow] duration-300 hover:border-red-500/40 hover:shadow-red-950/20 sm:rounded-[2rem] sm:p-5 lg:p-6"
       >
         <div
@@ -50,10 +50,10 @@ export function LivePulsePanel() {
                 id="live-pulse-title"
                 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl"
               >
-                数据引擎保持在线，入口随时就绪。
+                已产生的数据，按赛段进入。
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base sm:leading-7">
-                以克制的遥测节奏呈现数据流、信号扫描与模块可用状态；这是视觉化系统脉冲，不展示或模拟实时比赛指标。
+                Results、Race Control 与 Weather 会读取已产生的 OpenF1 记录；LAPMETRY 当前尚未接入经过验证的实时计时源。
               </p>
             </div>
 
@@ -62,7 +62,7 @@ export function LivePulsePanel() {
                 <span className="absolute inline-flex h-full w-full rounded-full bg-neonRed/35" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-neonRed" />
               </span>
-              DATA LINK ACTIVE
+              LIVE TIMING NOT CONNECTED
             </div>
           </div>
 
@@ -106,7 +106,7 @@ export function LivePulsePanel() {
         </div>
 
         <div className="relative mt-5 flex items-center justify-between border-t border-white/10 pt-4 text-sm font-semibold text-zinc-300">
-          <span>打开实时计时模块</span>
+          <span>查看 Live 数据状态</span>
           <span
             className="translate-x-0 text-neonRed opacity-70 transition group-hover:translate-x-1 group-hover:opacity-100"
             aria-hidden="true"

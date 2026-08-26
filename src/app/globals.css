@@ -1,15 +1,16 @@
+@import "../../tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: dark;
-  --color-bg: #0B0A0E;
-  --color-text: #EDE9E0;
-  --color-gold: #D4A843;
-  --color-cyan: #5FBFCA;
-  --color-hot: #E05C2A;
-  --color-line: rgba(237, 233, 224, 0.04);
+  --color-bg: var(--color-paper);
+  --color-text: var(--color-ink);
+  --color-gold: var(--color-accent);
+  --color-hot: var(--color-danger);
+  --color-line: var(--color-rule);
 }
 
 html {
@@ -21,6 +22,7 @@ body {
   @apply bg-gdBg text-zinc-100;
   overflow-x: clip;
   background: var(--color-bg);
+  font-family: var(--font-body);
 }
 
 @media (max-width: 767px) {

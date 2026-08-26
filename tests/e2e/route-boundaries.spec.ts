@@ -174,9 +174,78 @@ test("/race-weekend keeps the shared shell without homepage-only content", async
   await expect(page.locator('nav[aria-label="赛事快捷坞"]')).toHaveCount(0);
   await expect(page.getByText("赛事脉搏", { exact: true })).toHaveCount(0);
   await expect(page.getByText("F1 资讯", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "单站复盘导航" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "单站复盘" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
   expectNoBrowserIssues(issues);
+});
+
+const architectureRoutes = [
+  { path: "/results", heading: "比赛结果" },
+  { path: "/race-control", heading: "赛会控制" },
+  { path: "/lap-analysis", heading: "圈速分析" },
+  { path: "/weather", heading: "赛道天气" },
+  { path: "/standings", heading: "积分榜" },
+  { path: "/drivers", heading: "车手名录" },
+  { path: "/project", heading: "项目记录" },
+] as const;
+
+for (const route of architectureRoutes) {
+  test(`${route.path} uses the data-product shell without overflow`, async ({ page }) => {
+    const issues = observeBrowserIssues(page);
+    const response = await page.goto(route.path);
+
+    expect(response?.status()).toBe(200);
+    await expect(page.locator('nav[aria-label="主导航"]')).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: route.heading, exact: true })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    expectNoBrowserIssues(issues);
+  });
+}
+
+test("live route states its disconnected source without simulated-live language", async ({ page }) => {
+  const issues = observeBrowserIssues(page);
+  const response = await page.goto("/live");
+
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "实时计时", exact: true })).toBeVisible();
+  await expect(page.getByText("NOT LIVE · SOURCE NOT CONNECTED", { exact: true })).toBeVisible();
+  await expect(page.getByText("AUTO REFRESH", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("MOCK FEED", { exact: true })).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+  expectNoBrowserIssues(issues);
+});
+
+test("data-product routes survive the mandated responsive widths", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "One browser project covers the explicit viewport matrix.");
+  test.setTimeout(180_000);
+  const widths = [320, 375, 414, 768, 1280];
+  const routes = ["/live", ...architectureRoutes.map((route) => route.path), "/race-weekend"];
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
+    for (const route of routes) {
+      const response = await page.goto(route);
+      expect(response?.status(), `${route} at ${width}px`).toBe(200);
+      await expect(page.locator("h1").first()).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+
+      const wrappedControls = await page.locator("a:visible, button:visible").evaluateAll((elements) =>
+        elements.flatMap((element) => {
+          const directTextNodes = [...element.childNodes].filter(
+            (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()
+          );
+          if (!directTextNodes.length) return [];
+          const lineTops = new Set(directTextNodes.flatMap((node) => {
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            return [...range.getClientRects()].map((rect) => Math.round(rect.top));
+          }));
+          return lineTops.size > 1 ? [element.textContent?.trim() || element.getAttribute("aria-label") || element.tagName] : [];
+        })
+      );
+      expect(wrappedControls, `${route} has wrapped clickable labels at ${width}px`).toEqual([]);
+    }
+  }
 });
 
 test("news keeps its own heading without inheriting the homepage dock", async ({ page }) => {
