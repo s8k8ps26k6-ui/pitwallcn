@@ -52,7 +52,7 @@ export default async function ResultsPage({ searchParams }: { searchParams: Prom
       {result.rows.length ? (
           <section className={styles.sheet} aria-labelledby="classification-title">
             <div className={styles.sheetHead}>
-              <h2 className={styles.sheetTitle} id="classification-title">Classification</h2>
+              <h2 className={styles.sheetTitle} id="classification-title">正式分类</h2>
               <p className={styles.sheetNote}>OpenF1 部分历史赛段可能缺少车队、圈数或完整成绩字段。</p>
             </div>
             <div className={styles.mobileRows}>

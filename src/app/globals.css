@@ -14,15 +14,56 @@
 }
 
 html {
+  min-height: 100%;
   overflow-x: clip;
   scroll-behavior: smooth;
 }
 
 body {
   @apply bg-gdBg text-zinc-100;
+  min-height: 100%;
+  margin: 0;
   overflow-x: clip;
   background: var(--color-bg);
   font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a,
+button,
+input,
+select,
+summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+:where(h1, h2, h3, h4, h5, h6)[id] {
+  scroll-margin-block-start: var(--space-lg);
+}
+
+.skip-link {
+  position: fixed;
+  inset-block-start: max(var(--space-xs), env(safe-area-inset-top));
+  inset-inline-start: max(var(--space-xs), env(safe-area-inset-left));
+  z-index: var(--z-skip);
+  min-height: 2.75rem;
+  padding-inline: var(--space-sm);
+  border: var(--rule-fine) solid var(--color-focus);
+  border-radius: var(--radius-control);
+  background: var(--color-paper-3);
+  color: var(--color-ink);
+  line-height: 2.75rem;
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--space-lg)));
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  outline: var(--rule-fine) solid var(--color-focus);
+  outline-offset: var(--rule-hair);
+  transform: translateY(0);
 }
 
 @media (max-width: 767px) {

@@ -25,7 +25,6 @@ export default async function RaceControlPage({ searchParams }: { searchParams: 
   );
   const selectedSession = selectedMeeting?.sessions.find((session) => session.sessionKey === selectedSessionKey);
   const feed = selectedSessionKey ? await getRaceControlFeedBySession(selectedSessionKey) : await getRaceControlFeed();
-  const latest = feed.data[0];
   const meetingName = selectedMeeting ? translateMeetingName(selectedMeeting.meetingName) : null;
   const sessionName = selectedSession ? translateSessionName(selectedSession.sessionName) : null;
 
@@ -48,13 +47,6 @@ export default async function RaceControlPage({ searchParams }: { searchParams: 
         selectedSessionName={sessionName}
         submitLabel="切换赛段"
       />
-
-      <section className={styles.eventSummary} aria-label="赛控日志概况">
-        <span>消息数<strong>{feed.data.length}</strong></span>
-        <span>最新时间<strong>{latest?.timestamp ?? "—"}</strong></span>
-        <span>当前赛段<strong>{sessionName ?? feed.sessionName ?? "—"}</strong></span>
-        <span>Session ID<strong>{selectedSessionKey ?? "—"}</strong></span>
-      </section>
 
       {feed.data.length ? (
         <section className={styles.sheet} aria-labelledby="event-log-title">

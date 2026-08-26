@@ -106,7 +106,7 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams: 
           <h1 className={styles.title}>单站复盘</h1>
           <p className={styles.lede}>选择赛段后进入结果、赛控、圈速与天气。</p>
         </div>
-        <p className={styles.source}>MODULES AVAILABLE · {available}/4</p>
+        <p className={styles.source}>可用模块 {available}/4</p>
       </header>
 
       <DataSessionSelector
@@ -129,9 +129,8 @@ export default async function RaceWeekendPage({ searchParams }: { searchParams: 
           </section>
 
           <nav className={styles.moduleMap} aria-label="单站复盘模块">
-            {modules.map((module, index) => (
+            {modules.map((module) => (
               <Link className={styles.moduleLink} href={module.href} key={module.title}>
-                <span className={styles.moduleIndex}>{String(index + 1).padStart(2, "0")}</span>
                 <span><strong className={styles.moduleTitle}>{module.title}</strong><span className={styles.moduleDescription}>{module.description}</span></span>
                 <span className={styles.moduleMeta}>{module.meta}</span>
               </Link>

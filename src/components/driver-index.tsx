@@ -35,13 +35,15 @@ export function DriverIndex({ drivers }: { drivers: DriverStanding[] }) {
             autoCapitalize="none"
             autoComplete="off"
             className={styles.searchInput}
-            placeholder="例如 VER、Norris 或 Ferrari"
+            name="driver-search"
+            placeholder="例如 VER、Norris 或 Ferrari…"
+            spellCheck={false}
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
-        <div className={styles.teamFilters} aria-label="按车队筛选">
+        <div className={styles.teamFilters} aria-label="按车队筛选" role="group">
           {teams.map((team) => (
             <button
               aria-pressed={selectedTeam === team}
@@ -55,7 +57,7 @@ export function DriverIndex({ drivers }: { drivers: DriverStanding[] }) {
           ))}
         </div>
         <div className={styles.filterFooter}>
-          <span>{filtered.length} / {drivers.length} 位车手</span>
+          <span aria-live="polite">{filtered.length} / {drivers.length} 位车手</span>
           <button className={styles.resetButton} onClick={() => { setQuery(""); setSelectedTeam("全部车队"); }} type="button">重置筛选</button>
         </div>
       </div>
@@ -64,11 +66,11 @@ export function DriverIndex({ drivers }: { drivers: DriverStanding[] }) {
         {grouped.map(([team, teamDrivers]) => (
           <section className={styles.teamGroup} key={team} aria-labelledby={`team-${team.replace(/\s+/g, "-")}`}>
             <h2 className={styles.teamName} id={`team-${team.replace(/\s+/g, "-")}`}>
-              {team}<span>{teamDrivers.length} DRIVERS</span>
+              {team}<span>{teamDrivers.length} 位车手</span>
             </h2>
             {teamDrivers.map((driver) => (
               <Link className={styles.driverRow} href={driver.href} key={driver.code}>
-                <span className={styles.driverCode}>{driver.code}</span>
+                <span className={styles.driverCode} translate="no">{driver.code}</span>
                 <span className={styles.driverName}>{driver.name}</span>
                 <span className={styles.driverNumber}>#{driver.number}</span>
               </Link>

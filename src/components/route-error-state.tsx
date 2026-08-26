@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import styles from "@/app/data-pages.module.css";
 
 type RouteErrorStateProps = {
   error: Error & { digest?: string };
@@ -21,38 +22,32 @@ export function RouteErrorState({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-[60vh] max-w-3xl items-center px-4 py-12">
+    <main className={`${styles.page} ${styles.errorPage}`}>
       <section
         aria-live="polite"
-        className="w-full rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 text-center shadow-2xl shadow-black/30 sm:p-10"
+        className={styles.errorState}
         role="alert"
       >
-        <div
-          aria-hidden="true"
-          className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-neonAmber/40 bg-neonAmber/10 text-2xl text-neonAmber"
-        >
-          !
-        </div>
-        <p className="eyebrow mt-5 text-zinc-500">Data unavailable</p>
-        <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl">{title}</h1>
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">{description}</p>
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+        <p className={`${styles.source} ${styles.sourceDanger}`}>数据不可用</p>
+        <h1 className={styles.errorTitle}>{title}</h1>
+        <p className={styles.errorDescription}>{description}</p>
+        <div className={styles.errorActions}>
           <button
-            className="rounded-full bg-neonRed px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600"
+            className={styles.submit}
             onClick={reset}
             type="button"
           >
             重新加载数据
           </button>
           <Link
-            className="rounded-full border border-zinc-700 bg-black/30 px-5 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-zinc-500 hover:text-white"
+            className={styles.back}
             href="/"
           >
             返回首页
           </Link>
         </div>
         {error.digest ? (
-          <p className="mt-5 font-mono text-[0.65rem] text-zinc-600">错误标识：{error.digest}</p>
+          <p className={styles.errorDigest} translate="no">错误标识：{error.digest}</p>
         ) : null}
       </section>
     </main>

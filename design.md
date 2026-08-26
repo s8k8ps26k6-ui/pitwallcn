@@ -1,141 +1,313 @@
-# Design — LAPMETRY
+<!-- Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V5 -->
 
-A locked design system for LAPMETRY. Data pages share a brand grammar, but each route is structured around its own professional task.
+# LAPMETRY Design Architecture
 
-## Genre
+LAPMETRY 是一个以赛事进程、赛道空间、时间与可信数据为核心的中文 F1 产品。它不是通用 Dashboard，也不是赛车主题的企业后台。
 
-Atmospheric, technical and austere. Atmosphere stays in the background; data remains the highest-contrast layer.
+这份文件是项目视觉与交互的最高层约束。它统一品牌世界，不统一页面模板。未来修改页面前，应先判断页面的任务类型，再选择对应的信息结构。
 
-## Macrostructure family
+## 1. 设计目标
 
-- Immersive pages: existing bespoke structures remain protected.
-- Data pages: Workbench family. Results = classification sheet; Race Control = event log; Lap Analysis = comparison workbench; Weather = instrument board; Standings = championship ladder; Drivers = paddock roster; Race Weekend = navigation map.
-- Content pages: Long Document. Project is a release journal, not a dashboard.
+LAPMETRY 应同时呈现三种感受：
 
-## Theme
+- **沉浸**：当前赛事、赛道和时间共同构成页面环境。
+- **精确**：排名、圈速、天气、消息和来源状态清楚、克制、可信。
+- **流动**：页面从抬头自然进入内容，避免固定顶栏、重复返回按钮、密集横线和独立面板造成的分层感。
 
-- Paper: deep blue-black, `oklch(11% 0.014 255)`.
-- Ink: cold white, `oklch(94% 0.012 82)`.
-- Accent: restrained champagne gold, `oklch(73% 0.115 78)`, limited to active selection and decisive values.
-- Focus: cyan, `oklch(76% 0.13 210)`.
-- Status colours are semantic only: positive, warning and danger.
+高级感不来自更大的标题、更多发光效果或更密的边框，而来自明确的主角、稳定的比例、克制的材料和完整的留白。
 
-## Typography
+## 2. 受保护的现有方向
 
-- Display: condensed system sans, weight 700, upright.
-- Body: neutral system sans, weight 400–600.
-- Mono: system monospace for times, positions, codes and identifiers.
-- Labels describe data roles; decorative eyebrows are not used on data pages.
+以下页面已经建立了有效的产品语言，除非用户明确要求，不进行结构性重做：
 
-## Spacing
+- `/`：主页。它是整个品牌的视觉基准，也是当前赛事主题色、赛道主视觉和空间层次的来源。
+- `/atlas-v2`：Atlas。它是独立的沉浸式空间体验，不套数据页外壳。
+- `/schedule`：赛历。保留赛季索引与赛道轮廓形成的纵向节奏。
+- `/races/...`：比赛详情。保留赛道技术图、Session、赛程和历史信息的赛事档案逻辑。
+- `/news`：新闻。保留内容优先的独立阅读结构，后续单独精修。
 
-4-point named scale in `tokens.css`. Data density may increase, but touch targets remain at least 44px.
+主页暂不改造。其他页面可以继承主页的底板、赛事环境色、字体气质和导航逻辑，但不能复制主页的构图。
 
-## Motion
+## 3. 页面模式
 
-- No blanket page reveals.
-- Hover changes use colour only; pressed controls may move by 1px.
-- Data refresh does not pulse continuously.
-- Reduced motion collapses spatial changes to an opacity change under 150ms.
+每个路由只能拥有一个主要模式。不要把四种模式混成同一张页面。
 
-## Microinteractions stance
+### Experience：进入赛事世界
 
-- Native controls where possible.
-- Visible `:focus-visible` ring on every control.
-- Status changes are quiet and textual; no celebratory effects.
-- Loading, unavailable and stale are distinct product states.
+适用：主页、Atlas、部分比赛详情。
 
-## What pages must share
+- 视觉主体可以先于数据表出现。
+- 赛道、地图、时间或赛事影像承担空间主角。
+- 导航和控件后退，不与视觉主体争夺注意力。
 
-- Edge-aligned LAPMETRY navigation and the same route taxonomy.
-- On mobile, route navigation is an explicit menu action; it never occupies the data canvas by default.
-- Token palette, type roles, status wording and focus treatment.
-- Honest source labels. `LIVE`, `AUTO REFRESH` and pulsing green are reserved for a verified live feed.
-- Hairline dividers and mostly square data surfaces; rounded containers are not the default section language.
-- A top-level data route starts with its task and context, not a return action or an internal implementation explanation.
+### Operate：读取并操作数据
 
-## What pages may differ on
+适用：Live、Results、Race Control、Lap Analysis、Weather、Standings、Drivers、Race Weekend。
 
-- Information structure, density, table behaviour and dominant visual primitive.
-- Accent use by task: gold for classification, red/amber for race control, cyan for weather.
-- Content pages may use longer measure and larger vertical rhythm.
+- 首屏直接回答“现在能看到什么、能做什么”。
+- 真实数据是主角，说明文字退居辅助层。
+- 页面结构由任务决定，而不是由通用 Card 组件决定。
 
-## Verification stamp
+### Read：连续理解内容
 
-| Gate | Result |
-| --- | --- |
-| Pre-emit critique | P5 · H5 · E5 · S5 · R5 · V5 |
-| Slop test | PASS · 58/58 gates |
-| Mobile contract | PASS · 320 / 375 / 414 / 768 CSS px rules audited |
-| Data honesty | PASS · no simulated live, standings or race-weekend fallback rows |
+适用：Project、News 以及长文档内容。
 
-## Exports
+- 以阅读顺序和章节关系组织页面。
+- 不使用 Dashboard 汇总卡，也不把每个版本记录装进独立卡片。
+- 正文宽度、行距和段落节奏优先于装饰。
 
-### tokens.css
+### Persuade：真正的品牌或介绍场景
 
-The canonical source is `tokens.css` at the repository root.
+LAPMETRY 当前大部分产品路由不属于营销页。除非新增品牌介绍或发布页面，不使用营销式 Hero、功能三卡和重复 CTA。
 
-### Tailwind v4 `@theme`
+## 4. 品牌底板与赛事自适应色
+
+### 固定底板
+
+保留当前深蓝黑底板。它不是纯黑，而是由冷黑、深海军蓝和低亮度层次组成的连续空间。
 
 ```css
-@theme {
-  --color-paper: oklch(11% 0.014 255);
-  --color-paper-2: oklch(15% 0.018 255);
-  --color-paper-3: oklch(19% 0.021 255);
-  --color-ink: oklch(94% 0.012 82);
-  --color-muted: oklch(61% 0.018 255);
-  --color-rule: oklch(28% 0.022 255);
-  --color-accent: oklch(73% 0.115 78);
-  --color-focus: oklch(76% 0.13 210);
-  --font-display: "Arial Narrow", "Aptos Display", "Noto Sans SC Variable", sans-serif;
-  --font-body: Inter, "Noto Sans SC Variable", system-ui, sans-serif;
-  --font-outlier: "SFMono-Regular", Consolas, "Noto Sans SC Variable", monospace;
-  --spacing-sm: 1rem;
-  --spacing-md: 1.5rem;
-  --spacing-lg: 2rem;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-}
+--color-paper: oklch(11% 0.014 255);
+--color-paper-2: oklch(15% 0.018 255);
+--color-paper-3: oklch(19% 0.021 255);
+--color-ink: oklch(94% 0.012 82);
+--color-ink-2: oklch(78% 0.014 82);
+--color-muted: oklch(61% 0.018 255);
+--color-rule: oklch(28% 0.022 255);
 ```
 
-### DTCG `tokens.json`
+### 赛事环境色
 
-```json
-{
-  "$schema": "https://design-tokens.github.io/community-group/format/",
-  "color": {
-    "paper": { "$value": "oklch(11% 0.014 255)", "$type": "color" },
-    "ink": { "$value": "oklch(94% 0.012 82)", "$type": "color" },
-    "accent": { "$value": "oklch(73% 0.115 78)", "$type": "color" },
-    "focus": { "$value": "oklch(76% 0.13 210)", "$type": "color" }
-  },
-  "font": {
-    "display": { "$value": "Arial Narrow, Aptos Display, Noto Sans SC Variable, sans-serif", "$type": "fontFamily" },
-    "body": { "$value": "Inter, Noto Sans SC Variable, system-ui, sans-serif", "$type": "fontFamily" },
-    "outlier": { "$value": "SFMono-Regular, Consolas, Noto Sans SC Variable, monospace", "$type": "fontFamily" }
-  },
-  "space": {
-    "sm": { "$value": "1rem", "$type": "dimension" },
-    "md": { "$value": "1.5rem", "$type": "dimension" },
-    "lg": { "$value": "2rem", "$type": "dimension" }
-  }
-}
-```
+所有主要页面继承当前比赛的 `accent` 与 `support`。主题色必须随着赛事切换，但它只改变环境与重点，不改变信息语义。
 
-### shadcn/ui CSS variables
+- `accent`：当前选择、关键时间、排名重点、主操作和少量环境光。
+- `support`：低饱和背景光、图表辅线和空间过渡。
+- 赛事色不得大面积填满普通内容容器。
+- 赛事色不得覆盖危险、警告、成功和数据不可用等语义状态。
+- 同一屏幕原则上只允许一个赛事强调色成为视觉焦点。
+
+主页的赛事环境色实现是基准。内页应同步其色彩来源与低饱和程度，而不是机械复制主页渐变的位置。
+
+### 数据状态色
+
+- 红色：错误、危险、来源断开或正式处罚。
+- 琥珀色：警告、延迟、待确认。
+- 绿色：只用于已验证的正常或实时状态。
+- 青色：焦点、天气或遥测辅助信息，不代表实时。
+
+`LIVE`、绿色脉冲和自动刷新提示只能在数据源经过验证且确实持续更新时出现。
+
+## 5. 字体与比例
+
+全站采用同一中文字体系，但不同模式允许不同密度。标题全部使用直立字形，不用斜体强调。
 
 ```css
-:root {
-  --background: 11% 0.014 255;
-  --foreground: 94% 0.012 82;
-  --card: 15% 0.018 255;
-  --card-foreground: 94% 0.012 82;
-  --primary: 73% 0.115 78;
-  --primary-foreground: 12% 0.02 78;
-  --muted: 28% 0.022 255;
-  --muted-foreground: 61% 0.018 255;
-  --border: 28% 0.022 255;
-  --input: 28% 0.022 255;
-  --ring: 76% 0.13 210;
-  --radius: 0.75rem;
-}
+--font-display: "Arial Narrow", "Aptos Display", "Noto Sans SC Variable", sans-serif;
+--font-body: Inter, "Noto Sans SC Variable", "PingFang SC", system-ui, sans-serif;
+--font-mono: "SFMono-Regular", Consolas, "Noto Sans SC Variable", monospace;
 ```
+
+### 手机端基准
+
+- 页面标题：32px，必要时最高 36px；不使用占据半屏的 50–60px 中文标题。
+- 模块标题：20–24px。
+- 关键数据：24–32px，按数据重要性而不是按组件大小决定。
+- 正文：16px，行高 1.55–1.7。
+- 辅助说明：14px。
+- 标签与表头：12px；承载重要信息的正文不得小于 12px。
+
+### 桌面端基准
+
+- 页面标题：clamp(40px, 4.5vw, 68px)。
+- 模块标题：24–32px。
+- 正文：16–18px，长文最大行宽 64ch。
+- 数据数字使用等宽字体或等宽数字特性，但不要让所有文本都变成 monospace。
+
+页面内只能有一个最大字号层级。标题、数据和空状态不能同时争夺最大视觉权重。
+
+## 6. 空间、边缘与材料
+
+### 连续页面
+
+- 顶部品牌抬头属于页面内容流，不默认固定在顶部。
+- 抬头下方不添加贯穿全宽的白色横线。
+- 页面标题、上下文、状态和主内容应形成一段连续的垂直节奏，不拆成四个独立区块。
+- 移动端默认水平边距 20–24px；桌面端使用弹性边距和受控内容宽度。
+
+### 圆角体系
+
+现有“mostly square”规则废止。LAPMETRY 使用柔和但克制的几何体系：
+
+```css
+--radius-control: 10px;
+--radius-surface: 16px;
+--radius-feature: 20px;
+--radius-pill: 999px;
+```
+
+- 输入框、选择器、菜单项和普通按钮使用 10px。
+- 确实具有独立材质或可交互层级的面板使用 16px。
+- 重要浮层、移动端抽屉和少量主功能容器可使用 20px。
+- 数据表格、时间线和连续排行榜不逐行做圆角卡片。
+- 直角可以用于图表基线、赛道技术图和精确测量标记，不能成为所有容器的默认外形。
+
+### 边框与横线
+
+- 横线只表达真实的表头、时间分隔、排名变化或章节边界。
+- 不同时使用外框、上下横线和行分隔线表达同一层级。
+- 一块内容优先通过留白、对齐和底色差建立边界；边框是最后手段。
+- 避免页面中连续出现三个以上完整矩形框。
+
+### 卡片
+
+Card 不是默认布局单位。只有以下情况可以使用独立面板：
+
+- 内容需要从背景中浮起才能操作，例如选择器、弹层或可展开详情。
+- 内容拥有独立状态，例如数据源断开、连接中或错误。
+- 多个项目确实需要并列比较，并且脱离容器会降低理解速度。
+
+不能因为组件已经存在，就把页面内容塞进 Card。
+
+## 7. 抬头与导航
+
+### 全站共同点
+
+- 使用简洁的 `LAPMETRY` 字标和单一菜单入口。
+- 移动端菜单按钮至少 44×44px。
+- 当前路由在菜单展开后明确标识，菜单关闭时不占用数据画布。
+- 不在页面正文重复放置“返回上页”和“返回比赛周”。一个可靠的浏览器返回行为或一个明确的上下文返回入口即可。
+
+### 页面抬头
+
+- 抬头与页面背景融为一体，不使用独立深色顶栏制造上下两层。
+- 默认随页面滚动。只有数据持续更新且用户确实需要固定控制时，才允许局部工具栏 sticky。
+- 品牌抬头不是 Hero。它不需要版本号、`ARCH 2.0`、装饰性状态或多余副导航。
+
+## 8. 数据与内容的视觉语法
+
+### 层级顺序
+
+一张数据页面按以下优先级组织：
+
+1. 当前任务或当前状态。
+2. 最重要的数据主体。
+3. 选择、筛选与比较工具。
+4. 来源、更新时间和解释。
+5. 相关路由入口。
+
+不要先用大段文案解释页面为什么存在，再让用户向下寻找数据。
+
+### 空状态
+
+空状态必须保留目标界面的结构，让用户知道数据接入后会出现在哪里。它应包含：
+
+- 一句明确状态，例如“计时数据源未连接”。
+- 一句结果说明，例如“当前不会显示排名、差距和圈速”。
+- 来源或恢复条件。
+
+空状态不是营销 Hero，不需要占据整屏，也不需要重复三次 `UNAVAILABLE`。
+
+### 表格和排行榜
+
+- 排名、车手、圈速和差距必须在一条稳定的水平阅读线上。
+- 手机端优先保留位置、车手、核心成绩；次要字段可折叠或进入详情。
+- 表头和数据列必须共享宽度规则，避免车手名或 Session 名称造成横向溢出。
+- 长标签使用合理缩写、换行或渐进披露，不以整页横向滚动作为默认解决方案。
+
+### 选择器
+
+- 比赛、Session 和车手选择是工具，不是页面主角。
+- 手机端使用可换行的分段选择、下拉或抽屉，不强迫五个长标签保持一行。
+- 主操作按钮不应占据整页宽度，除非它是当前步骤唯一且必要的动作。
+
+## 9. 各路由的职业
+
+### Live：Timing Monitor
+
+主角是计时表。无数据时保留表头和结构化空状态；有数据时直接进入排名、差距、最近圈与状态。相关页面入口放在数据之后，不在首屏抢占空间。
+
+### Results：Classification Sheet
+
+一份结果只展示一次。首屏展示赛事、Session 与来源状态，随后直接进入完整分类表。领奖台可以通过前三名的排版权重体现，不另做三张领奖台卡。
+
+### Race Control：Event Log
+
+主角是按时间排序的官方消息流。旗语、调查、处罚和通知通过左侧时间轴、轻量色标与文字层级区分。摘要来自日志，不在日志之前重复三张统计卡。
+
+### Lap Analysis：Telemetry Workbench
+
+主角是车手选择、圈速轨迹和差异比较。车手不是三张大卡片；同一坐标系中的曲线、分段和关键圈才是核心。选择器在手机端必须可收拢。
+
+### Weather：Weather Instrument
+
+主角是趋势，而不是四个静态天气卡。温度、降雨、风和赛道状态共享时间轴；当前读数作为趋势上的定位点出现。
+
+### Standings：Championship Ladder
+
+主角是积分差与排名关系。车手榜和车队榜可以切换，但不作为两块普通面板并排。进度条不能成为默认比较图形。
+
+### Drivers：Paddock Index
+
+主角是快速查找和人物识别。采用名录、索引或分组列表，而不是三列卡片墙。车手编号、姓名、车队与国籍建立稳定阅读顺序；详情在需要时展开。
+
+### Race Weekend：Recap Map
+
+主角是一次比赛周的叙事顺序和入口关系。Practice、Qualifying、Race、Control、Weather 与 Analysis 形成一张可导航的赛事复盘地图，不是四个平级 Dashboard 模块。
+
+### Project：Project Journal
+
+主角是版本时间线、设计决策与真实变更。版本号、日期、标题和正文形成连续文档；不在 Changelog 内继续嵌套卡片。
+
+## 10. 动效
+
+- 动效用于方向、状态变化和时间推进，不用于证明页面“高级”。
+- 页面首次进入最多使用一次轻微淡入或位移，不为每个模块设置相同的依次上移动画。
+- Hover 以颜色、透明度和轻微材质变化为主；按压最多位移 1px。
+- 表格刷新保持行位置稳定，不整表闪烁。
+- 赛道流动、倒计时和真正的实时状态可以持续运动，其余循环动画默认关闭。
+- `prefers-reduced-motion` 下，空间运动降为 150ms 以内的透明度变化。
+
+## 11. 响应式底线
+
+- 必须在 320、375、414、768px 检查排版结构。
+- `html` 与 `body` 使用 `overflow-x: clip`，但组件本身仍需解决真实溢出，不能靠裁切掩盖。
+- 所有网格轨道使用 `minmax(0, 1fr)`，文字容器设置 `min-width: 0`。
+- 可点击文字不应因宽度不足形成难以点击的两行按钮。
+- 触控目标至少 44×44px。
+- 固定或 sticky 元素不得遮挡数据、系统安全区或浏览器底部工具栏。
+- 手机端不是桌面端缩小版。应减少同时出现的列数，而不是把所有列压成小字。
+
+## 12. 禁止模式
+
+- Hero → 四张指标卡 → 三张功能卡 → 表格。
+- 页面代码、英文分类名、中文大标题、说明、状态条五层连续堆叠。
+- 装饰性的 `01 / 02 / 03`、版本戳、状态圆点和无意义英文 eyebrow。
+- 相同信息在摘要、领奖台和表格中重复出现。
+- 每个区块都带完整外框或上下两条横线。
+- 所有模块使用同一圆角、同一高度、同一进入动画。
+- 用超大中文标题弥补信息层级不清。
+- 用极小灰字容纳本该重新组织的内容。
+- 使用 mock、fallback 或缓存数据，却让界面呈现实时、官方或已验证语义。
+- 为了统一品牌，把 Atlas、赛历或数据工具强行做成同一种模板。
+
+## 13. 实施边界
+
+- `tokens.css` 继续作为代码级 Token 来源；这份文件解释 Token 的使用逻辑。
+- `event-theme.ts` 继续提供赛事自适应色，但页面必须遵守赛事色与状态色的职责边界。
+- 全局 `.card`、`.eyebrow`、`.motion-fade-up` 不得作为新页面的默认设计起点，并应在后续重构中逐步缩小影响范围。
+- 新页面先写清楚“页面职业”和数据层级，再选择组件。
+- 内页重构顺序：Live → Race Control → Lap Analysis → Weather → Results → Standings → Drivers → Race Weekend → Project。
+- 每完成一个页面，只进行一次桌面与手机联合检查、一次集中修复和一次确认；避免无止境重复审计。
+
+## 14. 验收问题
+
+交付前只问这些问题：
+
+- 不看路由名，能否从主体结构判断这是什么职业的页面？
+- 第一屏是否已经出现用户真正需要的数据或明确空状态？
+- 去掉边框后，层级是否仍然成立？
+- 赛事环境色是否存在，但没有侵占状态语义？
+- 标题、正文、标签和数字是否保持稳定比例？
+- 手机端是否通过重排解决问题，而不是缩字和裁切？
+- 数据的实时性、来源和缺失状态是否完全诚实？
+- 这个页面是否仍然属于 LAPMETRY，同时没有变成主页的复制品？
