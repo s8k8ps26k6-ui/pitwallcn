@@ -68,7 +68,7 @@ export function DataSessionSelector({
         </form>
 
         {selectedMeeting?.sessions.length ? (
-          <nav className={styles.quickNav} aria-label="当前比赛周末赛段">
+          <nav className={styles.quickNav} aria-label="当前比赛周末赛段" data-session-shortcuts>
             {selectedMeeting.sessions.map((session) => {
               const active = session.sessionKey === selectedSessionKey;
               return (

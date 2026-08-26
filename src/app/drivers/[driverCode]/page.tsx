@@ -42,18 +42,6 @@ export default async function DriverDetailPage({ params }: { params: Promise<{ d
             </div>
           </section>
 
-          <div className={styles.moduleMap}>
-            <Link className={styles.moduleLink} href="/standings">
-              <span className={styles.moduleIndex}>01</span>
-              <span><strong className={styles.moduleTitle}>完整积分榜</strong><span className={styles.moduleDescription}>查看车手与车队冠军榜。</span></span>
-              <span className={styles.moduleMeta}>SEASON CONTEXT</span>
-            </Link>
-            <Link className={styles.moduleLink} href="/lap-analysis">
-              <span className={styles.moduleIndex}>02</span>
-              <span><strong className={styles.moduleTitle}>圈速工作台</strong><span className={styles.moduleDescription}>按赛段查看真实可用的圈速和分段。</span></span>
-              <span className={styles.moduleMeta}>SESSION DATA</span>
-            </Link>
-          </div>
         </>
       ) : (
         <section className={styles.empty}>

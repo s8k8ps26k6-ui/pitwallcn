@@ -1,6 +1,5 @@
 import { BackNavigation } from "@/components/back-navigation";
 import { DataSessionSelector } from "@/components/data-session-selector";
-import { RaceWeekendReturnLink } from "@/components/race-weekend-return-link";
 import styles from "@/app/data-pages.module.css";
 import { parseSessionKey, sourceLabel, translateMeetingName, translateSessionName } from "@/lib/f1-labels";
 import { getRaceControlFeed, getRaceControlFeedBySession, getRaceControlSelectionData } from "@/lib/race-control-service";
@@ -35,7 +34,6 @@ export default async function RaceControlPage({ searchParams }: { searchParams: 
     <main className={styles.page}>
       <div className={styles.backRow}>
         <BackNavigation className={styles.back} fallbackHref="/race-weekend" fallbackLabel="返回比赛周" />
-        <RaceWeekendReturnLink session={resolved.session} />
       </div>
 
       <header className={styles.pageHead}>

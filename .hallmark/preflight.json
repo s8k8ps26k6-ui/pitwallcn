@@ -1,0 +1,9 @@
+{
+  "scanned_at": "2026-08-26",
+  "design_system": "design.md",
+  "font_stack": "Noto Sans SC Variable + existing display/body/mono token stacks",
+  "palette": "tokens.css OKLCH custom properties",
+  "motion": "gsap and lenis installed; data pages use motion-cut behaviour",
+  "spacing": "4-point --space-* token scale",
+  "framework": "Next.js 15 App Router"
+}
