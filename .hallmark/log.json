@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-08-26",
+    "scope": "repair",
+    "macrostructure": "Workbench Suite",
+    "theme": "custom",
+    "theme_axes": "dark / condensed-sans / warm",
+    "enrichment": "none",
+    "brief": "Mobile data-page corrective pass: type scale, navigation deduplication, and overflow control"
+  },
+  {
+    "date": "2026-08-26",
     "scope": "app",
     "macrostructure": "Workbench Suite",
     "theme": "custom",

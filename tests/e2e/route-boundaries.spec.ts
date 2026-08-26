@@ -248,6 +248,20 @@ test("data-product routes survive the mandated responsive widths", async ({ page
   }
 });
 
+test("session tools collapse to one selector and one back action on a phone", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop-chromium", "One browser project covers the explicit phone viewport.");
+  await page.setViewportSize({ width: 375, height: 844 });
+
+  for (const route of ["/results", "/race-control", "/lap-analysis", "/weather"]) {
+    const response = await page.goto(route);
+    expect(response?.status(), route).toBe(200);
+    await expect(page.locator("[data-back-navigation]"), `${route} back controls`).toHaveCount(1);
+    await expect(page.locator("[data-session-shortcuts]"), `${route} duplicate session strip`).toBeHidden();
+    await expect(page.locator("select[name='session']"), `${route} session selector`).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  }
+});
+
 test("news keeps its own heading without inheriting the homepage dock", async ({ page }) => {
   const issues = observeBrowserIssues(page);
   const response = await page.goto("/news");

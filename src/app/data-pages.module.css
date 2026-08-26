@@ -1,5 +1,6 @@
 /* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 · genre: atmospheric · tone: technical-austere · anchor: 255 · macrostructure: Workbench Suite · design-system: design.md · designed-as-app · contrast: pass (40–41) · nav: N2 · footer: none · slop: pass (42–45) · honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (49) · icons: pass (30) · mobile: pass (34, 49, 50–57) */
 .shell {
+  min-width: 0;
   min-height: 100svh;
   background:
     linear-gradient(90deg, var(--color-paper-2) 0, var(--color-paper) 18rem),
@@ -29,7 +30,10 @@
 .mobileNav {
   display: flex;
   gap: var(--space-2xs);
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
   padding: var(--space-2xs) var(--space-sm);
   border-block-end: var(--rule-hair) solid var(--color-rule);
   scrollbar-width: none;
@@ -96,10 +100,12 @@
 
 .frame {
   min-width: 0;
+  max-width: 100%;
   padding: var(--space-sm) var(--space-sm) var(--space-2xl);
 }
 
 .page {
+  min-width: 0;
   width: min(100%, 82rem);
   margin-inline: auto;
 }
@@ -126,6 +132,7 @@
 }
 
 .pageHead {
+  min-width: 0;
   display: grid;
   gap: var(--space-md);
   padding-block-end: var(--space-lg);
@@ -168,8 +175,8 @@
   max-width: 65ch;
   margin: var(--space-sm) 0 0;
   color: var(--color-ink-2);
-  font-size: var(--text-sm);
-  line-height: 1.75;
+  font-size: var(--text-md);
+  line-height: 1.65;
 }
 
 .source {
@@ -203,6 +210,7 @@
 }
 
 .sessionDock {
+  min-width: 0;
   display: grid;
   gap: var(--space-md);
   margin-block: var(--space-lg);
@@ -239,11 +247,13 @@
 
 .selectorForm {
   display: grid;
+  min-width: 0;
   gap: var(--space-xs);
 }
 
 .fieldLabel {
   display: grid;
+  min-width: 0;
   gap: var(--space-2xs);
   color: var(--color-muted);
   font-size: var(--text-xs);
@@ -266,6 +276,7 @@
 .searchInput {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
   padding-inline: var(--space-xs);
   background: var(--color-paper-2);
   color: var(--color-ink);
@@ -294,8 +305,11 @@
 .quickNav,
 .teamFilters {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   gap: var(--space-2xs);
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
   padding-block-end: var(--space-3xs);
   scrollbar-width: thin;
 }
@@ -796,7 +810,7 @@
   min-width: 0;
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   letter-spacing: -0.025em;
   overflow-wrap: anywhere;
 }
@@ -869,7 +883,7 @@
   margin: 0;
   color: var(--color-accent);
   font-family: var(--font-outlier);
-  font-size: var(--text-display);
+  font-size: var(--text-2xl);
   line-height: 1;
 }
 
@@ -1072,6 +1086,45 @@
 }
 
 @media (max-width: 39.99rem) {
+  .pageHead {
+    gap: var(--space-sm);
+    padding-block-end: var(--space-md);
+  }
+
+  .title {
+    font-size: var(--text-display-s);
+    line-height: 1;
+  }
+
+  .backRow {
+    margin-block-end: var(--space-md);
+  }
+
+  .sessionDock {
+    gap: var(--space-sm);
+    margin-block: var(--space-md);
+    padding-block: var(--space-sm);
+  }
+
+  /* The select already chooses the session. A second scroll strip duplicates it and causes a false page-overflow cue. */
+  .quickNav {
+    display: none;
+  }
+
+  .moduleLink {
+    padding-block: var(--space-md);
+  }
+
+  .moduleDescription {
+    margin-block-start: var(--space-2xs);
+  }
+
+  .profileHero {
+    gap: var(--space-md);
+    margin-block-start: var(--space-lg);
+    padding-block: var(--space-md);
+  }
+
   .tableWrap {
     display: none;
   }

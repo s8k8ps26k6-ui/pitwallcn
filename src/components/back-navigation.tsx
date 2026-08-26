@@ -37,7 +37,7 @@ export function BackNavigation({
   };
 
   return (
-    <button type="button" className={className} onClick={handleBack}>
+    <button data-back-navigation type="button" className={className} onClick={handleBack}>
       <span aria-hidden="true">←</span> {hasSource ? "返回上页" : fallbackLabel}
     </button>
   );
