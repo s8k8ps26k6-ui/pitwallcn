@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/noto-sans-sc/wght.css";
 import "./globals.css";
 import { SiteShell } from "@/components/site-shell";
 

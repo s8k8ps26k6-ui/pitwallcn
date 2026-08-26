@@ -1,28 +1,35 @@
 import { BackNavigation } from "@/components/back-navigation";
 import { DriverIndex } from "@/components/driver-index";
-import { drivers } from "@/lib/drivers";
+import styles from "@/app/data-pages.module.css";
+import { getDriverStandings } from "@/lib/standings-service";
 
-export default function DriversPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DriversPage() {
+  const standings = await getDriverStandings();
+
   return (
-    <main className="space-y-4">
-      <BackNavigation className="race-code inline-flex min-h-10 items-center rounded-xl border border-zinc-800 bg-black/30 px-3 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" fallbackHref="/" fallbackLabel="返回主页" />
-
-      <section className="motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="eyebrow">Driver Index</p>
-            <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">车手数据中心</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-              从这里选择车手进入详情页。当前为 Mock 数据版本，后续可扩展到完整车手名单、动漫头像与真实积分数据。
-            </p>
-          </div>
-          <div className="w-fit rounded-full border border-neonRed/50 bg-black/60 px-3 py-1 text-xs font-semibold text-neonRed shadow-[0_0_24px_rgba(255,46,46,0.14)]">
-            {drivers.length} DRIVERS · MOCK
-          </div>
+    <main className={styles.page}>
+      <div className={styles.backRow}>
+        <BackNavigation className={styles.back} fallbackHref="/" fallbackLabel="返回主页" />
+      </div>
+      <header className={styles.pageHead}>
+        <div>
+          <p className={styles.routeCode}>PADDOCK / DRIVER INDEX</p>
+          <h1 className={styles.title}>车手名录</h1>
+          <p className={styles.lede}>按车队组织当前赛季车手，重点是识别与进入资料页，而不是把名录做成三列指标卡片墙。</p>
         </div>
-      </section>
+        <p className={`${styles.source} ${standings.source === "jolpica" ? "" : styles.sourceDanger}`}>{standings.sourceLabel}</p>
+      </header>
 
-      <DriverIndex drivers={drivers} />
+      {standings.drivers.length ? (
+        <DriverIndex drivers={standings.drivers} />
+      ) : (
+        <section className={styles.empty}>
+          <h2 className={styles.emptyTitle}>车手名录数据暂不可用</h2>
+          <p>车手页现在与当前赛季排名源共用车手和车队身份数据。请求失败时不会回落到旧 Mock 名单。</p>
+        </section>
+      )}
     </main>
   );
 }

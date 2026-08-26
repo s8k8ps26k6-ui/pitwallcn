@@ -8,6 +8,14 @@ export type LiveTimingRow = {
   pitStatus: "IN" | "OUT" | "PIT";
 };
 
+export type LiveTimingSnapshot = {
+  data: LiveTimingRow[];
+  status: "unavailable" | "live" | "delayed";
+  source: string;
+  updatedAt: string | null;
+  message: string;
+};
+
 export type RaceControlMessage = {
   id: string;
   timestamp: string;

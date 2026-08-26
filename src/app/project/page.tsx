@@ -1,182 +1,87 @@
 import { BackNavigation } from "@/components/back-navigation";
+import styles from "@/app/data-pages.module.css";
 
-const changelog = [
+const entries = [
   {
-    version: "v1.7",
-    title: "品牌名切换为 LAPMETRY",
-    date: "2026-05",
+    id: "2026.08.26",
+    date: "2026-08-26",
+    title: "Design Architecture 2.0",
     items: [
-      "站点对外展示名统一为 LAPMETRY。",
-      "更新首页、顶部品牌入口、元信息和公开项目文案。",
-      "仓库名和当前 Vercel 部署地址暂时保持不变，降低改名成本。"
+      "数据页从旧 SiteShell 卡片模板迁移到统一的边缘导航与工作区。",
+      "Results、Race Control、Lap Analysis、Weather、Standings、Drivers 与 Race Weekend 分别采用适合自身任务的结构。",
+      "Live 取消 Mock 轮询与伪实时状态；积分榜取消手填积分回退。"
     ]
   },
   {
-    version: "v1.6",
-    title: "赛道天气模块上线",
-    date: "2026-05",
+    id: "2026.08",
+    date: "2026-08",
+    title: "路由职责拆分",
     items: [
-      "新增 /weather 赛道天气页面。",
-      "接入 OpenF1 weather 数据，展示赛道温度、空气温度、湿度、气压、降雨、风向与风速。",
-      "天气入口放在 LAPMETRY 标题旁边，避免主导航变成拥挤的 3×3。"
+      "主页独立拥有移动赛事快捷坞，切换到 Atlas、赛历和比赛详情时不再残留主页内容。",
+      "沉浸式路由与数据工作区分开，避免同一外壳强迫所有页面使用相同宽度和节奏。"
     ]
   },
   {
-    version: "v1.5",
-    title: "性能与加载体验优化",
-    date: "2026-05",
+    id: "LAPMETRY",
+    date: "2026-08",
+    title: "品牌迁移",
     items: [
-      "新增全站路由加载骨架屏。",
-      "优化 Results、Race Control、Lap Analysis 的 OpenF1 赛段选择器请求方式。",
-      "减少进入数据页时的等待感。"
+      "对外品牌从 GridDelta 迁移到 LAPMETRY。",
+      "保留既有仓库名与生产路由，降低品牌迁移对部署和链接的影响。"
     ]
   },
   {
-    version: "v1.4",
-    title: "首页主控台升级",
-    date: "2026-05",
+    id: "ATLAS",
+    date: "2026-07",
+    title: "赛季地图与比赛详情",
     items: [
-      "新增比赛周末作战台。",
-      "首页入口重新组织为结果、赛控、圈速、赛程的比赛周末使用流程。",
-      "新增比赛结果模块入口。"
+      "Atlas 建立全球赛历入口、欧洲节点与赛道轮廓。",
+      "比赛详情形成赛道技术图、下一赛段、日程、纪录与历史分区。",
+      "主页、赛历、Atlas 和比赛详情确立 LAPMETRY 的沉浸式产品方向。"
     ]
   },
   {
-    version: "v1.3",
-    title: "比赛结果中心上线",
+    id: "FOUNDATION",
     date: "2026-05",
+    title: "数据模块基础",
     items: [
-      "新增 /results 页面。",
-      "接入 OpenF1 session_result 数据。",
-      "支持排位赛、冲刺赛、正赛成绩表和赛段快捷切换。"
-    ]
-  },
-  {
-    version: "v1.2",
-    title: "圈速分析与赛控数据稳定化",
-    date: "2026-05",
-    items: [
-      "Lap Analysis 接入 OpenF1 laps、stints、position、intervals、drivers。",
-      "Race Control 接入 OpenF1 race_control。",
-      "修复 P1/P10/P11/P2 这类字符串排序问题，改为数字名次排序。"
-    ]
-  },
-  {
-    version: "v1.1",
-    title: "基础数据看板结构完成",
-    date: "2026-05",
-    items: [
-      "完成首页、赛程、实时计时、车手、积分榜等基础页面。",
-      "确定暗色 F1 数据看板视觉方向。",
-      "完成移动端优先的卡片式布局。"
+      "建立 Results、Race Control、Lap Analysis 与 Weather 的 OpenF1 服务层。",
+      "完成移动端路由、错误边界、加载状态和基础 E2E 边界测试。",
+      "这一阶段的通用 Dashboard 结构现已由 Architecture 2.0 逐步替换。"
     ]
   }
-] as const;
-
-const roadmap = [
-  {
-    title: "单站复盘页面",
-    description: "把结果、赛控、圈速和天气串成一个完整大奖赛复盘页面。",
-    priority: "High"
-  },
-  {
-    title: "车手详情升级",
-    description: "为车手页增加最近比赛结果、基础资料和近期表现。",
-    priority: "High"
-  },
-  {
-    title: "积分榜数据升级",
-    description: "完善车手和车队积分数据源，减少静态占位内容。",
-    priority: "Medium"
-  },
-  {
-    title: "数据缓存层",
-    description: "降低 OpenF1 网络波动和访问延迟对页面体验的影响。",
-    priority: "Medium"
-  },
-  {
-    title: "国内访问优化",
-    description: "根据实际访问情况评估镜像、缓存和部署策略。",
-    priority: "Later"
-  }
-] as const;
-
-const statusCards = [
-  ["当前版本", "v1.7"],
-  ["主要数据源", "OpenF1 + 本地赛历"],
-  ["部署状态", "Vercel Online"]
 ] as const;
 
 export default function ProjectPage() {
   return (
-    <main className="space-y-5">
-      <BackNavigation className="race-code inline-flex min-h-10 items-center rounded-xl border border-zinc-800 bg-black/30 px-3 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" fallbackHref="/" fallbackLabel="返回主页" />
-
-      <section className="motion-fade-up rounded-2xl border border-zinc-800 bg-black/30 p-5 shadow-xl shadow-black/20">
-        <div className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
-          <div>
-            <p className="eyebrow">Update Log</p>
-            <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">更新日志</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-300">
-              这里记录 LAPMETRY 的公开版本更新、主要功能变化和下一步计划。页面仅保留公开信息，不展示内部开发备注。
-            </p>
-          </div>
-          <div className="rounded-2xl border border-neonAmber/30 bg-neonAmber/10 p-4">
-            <p className="race-code text-neonAmber">Public Roadmap</p>
-            <p className="mt-2 text-2xl font-bold text-white">Race-weekend dashboard</p>
-            <p className="mt-2 text-sm leading-6 text-zinc-400">后续重点：单站复盘、车手页升级、积分榜数据和访问速度优化。</p>
-          </div>
+    <main className={`${styles.page} ${styles.journal}`}>
+      <div className={styles.backRow}>
+        <BackNavigation className={styles.back} fallbackHref="/" fallbackLabel="返回主页" />
+      </div>
+      <header className={styles.pageHead}>
+        <div>
+          <p className={styles.routeCode}>PROJECT / RELEASE JOURNAL</p>
+          <h1 className={styles.title}>项目记录</h1>
+          <p className={styles.lede}>这里记录已经进入代码的方向变化，并把每次发布绑定到可核验的实现与数据状态。</p>
         </div>
-      </section>
+        <p className={styles.source}>CURRENT ARCHITECTURE · 2.0</p>
+      </header>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {statusCards.map(([label, value]) => (
-          <article key={label} className="card motion-fade-up motion-delay-1">
-            <p className="eyebrow">{label}</p>
-            <p className="mt-3 text-lg font-semibold leading-7 text-white">{value}</p>
+      <p className={styles.journalLead}>
+        LAPMETRY 是一套围绕比赛、赛道、时间和数据来源组织的中文 F1 产品。页面可以有不同职业，但来源状态、品牌语言和交互纪律必须一致。
+      </p>
+
+      <section aria-label="LAPMETRY 更新记录">
+        {entries.map((entry) => (
+          <article className={styles.journalEntry} key={entry.id}>
+            <div>
+              <p className={styles.version}>{entry.id}</p>
+              <time className={styles.journalDate}>{entry.date}</time>
+            </div>
+            <h2>{entry.title}</h2>
+            <ul>{entry.items.map((item) => <li key={item}>{item}</li>)}</ul>
           </article>
         ))}
-      </section>
-
-      <section className="card motion-fade-up motion-delay-2">
-        <p className="eyebrow">Changelog</p>
-        <h2 className="mt-1 text-xl font-bold text-white">版本更新</h2>
-        <div className="mt-4 space-y-4">
-          {changelog.map((item) => (
-            <article key={item.version} className="rounded-2xl border border-zinc-800 bg-black/25 p-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-mono text-sm font-bold text-neonAmber">{item.version}</p>
-                  <h3 className="mt-1 text-lg font-semibold text-white">{item.title}</h3>
-                </div>
-                <span className="race-code text-zinc-500">{item.date}</span>
-              </div>
-              <ul className="mt-3 space-y-2 text-sm leading-6 text-zinc-400">
-                {item.items.map((detail) => (
-                  <li key={detail} className="rounded-xl border border-zinc-900 bg-black/20 px-3 py-2">{detail}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="card motion-fade-up motion-delay-3">
-        <p className="eyebrow">Roadmap</p>
-        <h2 className="mt-1 text-xl font-bold text-white">下一步计划</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {roadmap.map((item) => (
-            <article key={item.title} className="rounded-xl border border-zinc-800 bg-black/25 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="font-semibold text-white">{item.title}</h3>
-                <span className="rounded-full border border-zinc-700 bg-zinc-900/60 px-2 py-0.5 text-[0.65rem] font-bold tracking-[0.14em] text-zinc-400">
-                  {item.priority}
-                </span>
-              </div>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">{item.description}</p>
-            </article>
-          ))}
-        </div>
       </section>
     </main>
   );

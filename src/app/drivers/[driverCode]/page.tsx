@@ -1,92 +1,67 @@
 import Link from "next/link";
 import { BackNavigation } from "@/components/back-navigation";
-import { getDriverProfile } from "@/lib/drivers";
+import styles from "@/app/data-pages.module.css";
+import { getDriverStandings } from "@/lib/standings-service";
+
+export const dynamic = "force-dynamic";
 
 export default async function DriverDetailPage({ params }: { params: Promise<{ driverCode: string }> }) {
   const { driverCode } = await params;
-  const driver = getDriverProfile(driverCode);
-
-  const driverStats = [
-    { label: "Number", value: driver.number, hint: "车号" },
-    { label: "Team", value: driver.team, hint: "当前车队" },
-    { label: "Points", value: driver.points, hint: "赛季积分" },
-    { label: "Status", value: driver.status, hint: "积分榜位置" }
-  ];
-
-  const profileCards = [
-    { label: "Season Role", value: "POINTS FIGHT", hint: "赛季定位" },
-    { label: "Data Mode", value: "MOCK", hint: "当前数据源" },
-    { label: "Profile", value: "ACTIVE", hint: "资料状态" }
-  ];
+  const code = driverCode.toUpperCase();
+  const standings = await getDriverStandings();
+  const driver = standings.drivers.find((item) => item.code === code);
 
   return (
-    <main className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <BackNavigation className="race-code inline-flex min-h-10 items-center rounded-xl border border-zinc-800 bg-black/30 px-3 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" fallbackHref="/drivers" fallbackLabel="返回车手" />
-        <Link className="race-code inline-flex rounded-full border border-zinc-800 bg-black/30 px-3 py-1.5 text-zinc-400 transition hover:border-neonAmber hover:text-neonAmber" href="/drivers">
-          ← DRIVER INDEX
-        </Link>
+    <main className={styles.page}>
+      <div className={styles.backRow}>
+        <BackNavigation className={styles.back} fallbackHref="/drivers" fallbackLabel="返回车手" />
+        <Link className={styles.back} href="/drivers">车手名录</Link>
       </div>
 
-      <section className="motion-fade-up overflow-hidden rounded-2xl border border-zinc-800 bg-black/30 shadow-xl shadow-black/20">
-        <div className="grid md:grid-cols-[1.05fr_0.95fr]">
-          <div
-            className="relative min-h-72 bg-cover bg-center"
-            style={{ backgroundImage: `url('${driver.image}')` }}
-            aria-label="车手视觉图"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/20 to-black/80" aria-hidden="true" />
-            <div className="absolute bottom-4 left-4 rounded-full border border-pitGreen/60 bg-black/65 px-3 py-1 text-xs font-semibold text-pitGreen shadow-[0_0_24px_rgba(25,243,139,0.18)] backdrop-blur">
-              DRIVER PROFILE · MOCK DATA
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-between space-y-6 p-5 sm:p-6">
+      {driver ? (
+        <>
+          <header className={styles.pageHead}>
             <div>
-              <p className="eyebrow">Driver Detail</p>
-              <h1 className="mt-2 text-4xl font-bold text-white sm:text-5xl">{driver.code}</h1>
-              <p className="mt-2 text-lg font-semibold text-neonAmber">{driver.name}</p>
-              <p className="mt-1 text-sm font-semibold text-zinc-300">{driver.team}</p>
-              <p className="mt-3 text-sm leading-6 text-zinc-300">
-                当前展示 {driver.name} 的模拟赛季资料，包括车队、车号、积分与排名状态。单场圈速和分段数据已拆分到圈速分析页面。
-              </p>
+              <p className={styles.routeCode}>DRIVER / VERIFIED SEASON SNAPSHOT</p>
+              <h1 className={styles.title}>{driver.name}</h1>
+              <p className={styles.lede}>资料页只展示当前排名源能够确认的身份和赛季字段，不再使用通用赛车图片、模拟圈数、轮胎或“POINTS FIGHT”标签。</p>
             </div>
+            <p className={styles.source}>{driver.sourceLabel}</p>
+          </header>
 
-            <div className="grid grid-cols-2 gap-3">
-              {driverStats.map((item) => (
-                <div key={item.label} className="rounded-xl border border-zinc-800 bg-black/25 p-3">
-                  <p className="race-code">{item.label}</p>
-                  <p className="mt-2 font-mono text-2xl font-bold text-white">{item.value}</p>
-                  <p className="mt-1 text-xs text-zinc-500">{item.hint}</p>
-                </div>
-              ))}
+          <section className={styles.profileHero} aria-label={`${driver.name} 赛季资料`}>
+            <div>
+              <p className={styles.profileCode}>{driver.code}</p>
+              <p className={styles.journalLead}>{driver.team}</p>
             </div>
-          </div>
-        </div>
-      </section>
+            <div className={styles.profileFacts}>
+              <div className={styles.profileFact}><span>车号</span><strong>#{driver.number}</strong></div>
+              <div className={styles.profileFact}><span>积分榜</span><strong>P{driver.position}</strong></div>
+              <div className={styles.profileFact}><span>赛季积分</span><strong>{driver.points}</strong></div>
+              <div className={styles.profileFact}><span>分站胜场</span><strong>{driver.wins}</strong></div>
+            </div>
+          </section>
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        {profileCards.map((item, index) => (
-          <article key={item.label} className={`card motion-fade-up motion-delay-${index + 1}`}>
-            <p className="eyebrow">{item.label}</p>
-            <p className="mt-3 font-mono text-2xl font-bold text-white">{item.value}</p>
-            <p className="mt-1 text-sm text-zinc-400">{item.hint}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="card motion-fade-up motion-delay-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="eyebrow">Related Module</p>
-            <h2 className="mt-1 text-lg font-semibold text-white">查看单场圈速表现</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-400">圈速、S1/S2/S3 分段和 stint 对比数据已拆分到独立分析页。</p>
+          <div className={styles.moduleMap}>
+            <Link className={styles.moduleLink} href="/standings">
+              <span className={styles.moduleIndex}>01</span>
+              <span><strong className={styles.moduleTitle}>完整积分榜</strong><span className={styles.moduleDescription}>查看车手与车队冠军榜。</span></span>
+              <span className={styles.moduleMeta}>SEASON CONTEXT</span>
+            </Link>
+            <Link className={styles.moduleLink} href="/lap-analysis">
+              <span className={styles.moduleIndex}>02</span>
+              <span><strong className={styles.moduleTitle}>圈速工作台</strong><span className={styles.moduleDescription}>按赛段查看真实可用的圈速和分段。</span></span>
+              <span className={styles.moduleMeta}>SESSION DATA</span>
+            </Link>
           </div>
-          <Link className="w-fit rounded-full border border-neonAmber/50 bg-neonAmber/10 px-4 py-2 text-sm font-semibold text-neonAmber transition hover:bg-neonAmber/20" href="/lap-analysis">
-            打开圈速分析 →
-          </Link>
-        </div>
-      </section>
+        </>
+      ) : (
+        <section className={styles.empty}>
+          <h1 className={styles.emptyTitle}>无法确认车手 {code}</h1>
+          <p>{standings.source === "unavailable" ? "当前赛季车手数据源暂不可用。" : "当前赛季数据中没有找到这个车手代码。"}</p>
+          <Link className={styles.back} href="/drivers">返回车手名录</Link>
+        </section>
+      )}
     </main>
   );
 }

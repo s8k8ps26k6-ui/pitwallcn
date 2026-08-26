@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 const port = 3100;
 const baseURL = `http://127.0.0.1:${port}`;
+const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -25,6 +26,7 @@ export default defineConfig({
       use: {
         browserName: "chromium",
         viewport: { width: 1440, height: 900 },
+        launchOptions: chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : undefined,
       },
     },
     {
@@ -35,6 +37,7 @@ export default defineConfig({
         hasTouch: true,
         isMobile: true,
         launchOptions: {
+          ...(chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : {}),
           args: ["--disable-webgl"],
         },
       },
