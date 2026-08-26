@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/noto-sans-sc/wght.css";
 import "./globals.css";
 import { SiteShell } from "@/components/site-shell";
+import { getCurrentSeasonRace } from "@/lib/atlas/race-detail";
+import { getEventTheme } from "@/lib/event-theme";
 
 const siteUrl = "https://pitwallcn.vercel.app";
 
@@ -60,10 +62,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const currentTheme = getEventTheme(getCurrentSeasonRace().race.race.id);
+
   return (
     <html lang="zh-CN">
       <body>
-        <SiteShell>{children}</SiteShell>
+        <SiteShell dataTheme={currentTheme}>{children}</SiteShell>
       </body>
     </html>
   );

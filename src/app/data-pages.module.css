@@ -3,6 +3,8 @@
   min-width: 0;
   min-height: 100svh;
   background:
+    radial-gradient(circle at 82% 0, rgb(var(--event-accent-rgb) / 0.08), transparent 34%),
+    radial-gradient(circle at 8% 72%, color-mix(in srgb, var(--event-support) 12%, transparent), transparent 46%),
     linear-gradient(90deg, var(--color-paper-2) 0, var(--color-paper) 18rem),
     var(--color-paper);
   color: var(--color-ink);
@@ -22,7 +24,6 @@
   justify-content: space-between;
   min-height: 3.5rem;
   padding-inline: var(--space-sm);
-  border-block-end: var(--rule-hair) solid var(--color-rule);
   background: color-mix(in oklch, var(--color-paper) 92%, transparent);
   backdrop-filter: blur(18px);
 }
