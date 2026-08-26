@@ -5,15 +5,13 @@ import type { LiveTimingSnapshot } from "@/lib/types";
 export function LiveTimingTable({ snapshot }: { snapshot: LiveTimingSnapshot }) {
   return (
     <section className={styles.liveDeck} aria-labelledby="live-title">
-      <header className={styles.liveHead}>
+      <header className={styles.pageHead}>
         <div>
-          <p className={styles.liveKicker}>Timing monitor</p>
-          <h1 className={styles.liveTitle} id="live-title">实时计时</h1>
+          <h1 className={styles.title} id="live-title">实时计时</h1>
+          <p className={styles.lede}>这里仅显示可验证的实时排名、差距和圈速。</p>
         </div>
-        <p className={styles.liveStatus}>数据源离线</p>
+        <p className={`${styles.source} ${styles.sourceDanger}`}>数据源离线</p>
       </header>
-
-      <p className={styles.liveContext}>这里仅显示可验证的实时排名、差距和圈速。</p>
 
       <section className={styles.timingBoard} aria-labelledby="timing-board-title">
         <div className={styles.timingBoardMeta}>
