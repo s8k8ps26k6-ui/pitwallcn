@@ -1,0 +1,437 @@
+.pageTypography {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.backdropBoost {
+  background:
+    radial-gradient(circle at 78% 8%, color-mix(in oklch, var(--hm-accent) 8%, transparent), transparent 32%),
+    linear-gradient(132deg, color-mix(in oklch, var(--hm-accent) 1.5%, var(--hm-bg)), var(--hm-bg) 59%) !important;
+}
+
+.masthead {
+  padding-bottom: 20px !important;
+}
+
+.brand {
+  font-weight: 650 !important;
+  letter-spacing: 0.11em !important;
+}
+
+.mastheadActions {
+  gap: 20px !important;
+}
+
+.seasonMark {
+  font-weight: 500 !important;
+  letter-spacing: 0.06em !important;
+}
+
+.mastheadLink {
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+}
+
+.identityStage {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+  padding: 80px 0 60px !important;
+}
+
+.locationLine {
+  margin: 0 0 18px;
+  color: var(--hm-muted);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.6;
+}
+
+.eventTitle {
+  max-width: 16ch;
+  margin: 0;
+  color: var(--hm-ink);
+  font-size: clamp(48px, 5.4vw, 72px) !important;
+  font-weight: 620 !important;
+  letter-spacing: -0.012em !important;
+  line-height: 1.16 !important;
+  overflow-wrap: break-word;
+}
+
+.sessionHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 24px;
+  margin-top: 30px;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.sessionTitle,
+.sessionDate {
+  margin: 0;
+}
+
+.sessionTitle {
+  color: var(--hm-ink);
+  font-size: clamp(20px, 2vw, 24px);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.sessionDate {
+  color: var(--hm-muted);
+  font-size: 13px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+}
+
+.sessionBar {
+  border-top: 1px solid var(--hm-line) !important;
+  border-bottom: 0 !important;
+}
+
+.primarySessions {
+  gap: 34px !important;
+  padding: 18px 0 20px !important;
+}
+
+.primarySession {
+  gap: 10px !important;
+  min-height: 44px;
+  padding: 8px 0 !important;
+  font-size: 15px !important;
+  font-weight: 500;
+  line-height: 1.5 !important;
+}
+
+.primarySession small {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+.primarySession[data-active="true"] {
+  color: var(--hm-ink) !important;
+  font-weight: 600;
+}
+
+.otherSessions {
+  border-top: 0;
+  border-bottom: 1px solid var(--hm-line);
+}
+
+.otherSessions summary {
+  width: fit-content;
+  padding: 16px 0 22px;
+  color: var(--hm-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  cursor: pointer;
+  list-style-position: outside;
+}
+
+.otherSessions summary:hover {
+  color: var(--hm-ink);
+}
+
+.otherSessions summary:focus-visible {
+  outline: 2px solid var(--hm-focus);
+  outline-offset: 4px;
+}
+
+.compactForm {
+  grid-template-columns: minmax(0, 680px) auto !important;
+  justify-content: start;
+  gap: 18px !important;
+  padding: 2px 0 28px !important;
+}
+
+.sessionSelect {
+  border-radius: 8px !important;
+}
+
+.actionButton {
+  align-self: end;
+  justify-self: start;
+  width: auto !important;
+  min-width: 56px;
+  padding: 0 6px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--hm-accent) !important;
+  border-radius: 0 !important;
+  color: var(--hm-accent) !important;
+  background: transparent !important;
+  font-weight: 550 !important;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+}
+
+.actionButton:hover {
+  color: var(--hm-ink) !important;
+}
+
+.actionButton:focus-visible {
+  outline-color: var(--hm-focus) !important;
+}
+
+.actionButton:active {
+  color: var(--hm-muted) !important;
+}
+
+.actionButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.classification {
+  padding-top: 72px !important;
+}
+
+.classificationHeader {
+  gap: 28px !important;
+  padding-bottom: 28px !important;
+}
+
+.classificationHeader h2 {
+  font-size: clamp(28px, 2.8vw, 34px) !important;
+  font-weight: 620 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.25 !important;
+}
+
+.classificationHeader p {
+  margin-top: 10px !important;
+  line-height: 1.7 !important;
+}
+
+.sourceStamp {
+  color: var(--hm-faint) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1.5 !important;
+}
+
+.resultList {
+  margin-top: 0 !important;
+}
+
+.resultRow {
+  min-height: 104px !important;
+  padding: 22px 0 !important;
+  gap: 28px !important;
+}
+
+.position {
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+}
+
+.driverCell {
+  gap: 6px !important;
+}
+
+.driverCell strong {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.35 !important;
+}
+
+.driverCell span {
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+.metricCell {
+  gap: 6px !important;
+}
+
+.metricCell span {
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+.metricCell strong {
+  font-size: 15px !important;
+  font-weight: 550 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.5 !important;
+}
+
+.status {
+  font-size: 12px !important;
+  font-weight: 450;
+  line-height: 1.4 !important;
+}
+
+.footer {
+  margin-top: 80px !important;
+  padding-top: 20px !important;
+  line-height: 1.7 !important;
+}
+
+@media (max-width: 767px) {
+  .masthead {
+    padding-bottom: 18px !important;
+  }
+
+  .mastheadActions {
+    gap: 14px !important;
+  }
+
+  .secondaryLink {
+    display: none;
+  }
+
+  .brand {
+    font-size: 12px !important;
+  }
+
+  .identityStage {
+    padding: 52px 0 44px !important;
+  }
+
+  .locationLine {
+    margin-bottom: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .eventTitle {
+    max-width: 14ch;
+    font-size: clamp(36px, 10.5vw, 44px) !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.005em !important;
+    line-height: 1.2 !important;
+  }
+
+  .sessionHeading {
+    display: block;
+    margin-top: 24px;
+  }
+
+  .sessionTitle {
+    font-size: 20px;
+    font-weight: 580;
+    line-height: 1.45;
+  }
+
+  .sessionDate {
+    margin-top: 8px;
+    line-height: 1.55;
+  }
+
+  .primarySessions {
+    gap: 24px !important;
+    padding: 16px 0 18px !important;
+  }
+
+  .primarySession {
+    display: inline-flex !important;
+    min-height: 42px;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  .primarySession small {
+    display: none;
+  }
+
+  .otherSessions summary {
+    padding: 16px 0 22px;
+  }
+
+  .compactForm {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .actionButton {
+    min-height: 36px !important;
+  }
+
+  .classification {
+    padding-top: 52px !important;
+  }
+
+  .classificationHeader {
+    gap: 16px !important;
+    padding-bottom: 22px !important;
+  }
+
+  .classificationHeader h2 {
+    font-size: 26px !important;
+    line-height: 1.3 !important;
+  }
+
+  .sourceStamp {
+    margin-top: 2px !important;
+  }
+
+  .resultRow {
+    gap: 14px !important;
+    padding: 20px 0 !important;
+  }
+
+  .position {
+    font-size: 18px !important;
+    padding-top: 2px !important;
+  }
+
+  .driverCell {
+    gap: 5px !important;
+  }
+
+  .driverCell strong {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+  }
+
+  .driverCell span {
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+  }
+
+  .metricCell {
+    gap: 10px !important;
+    padding-top: 2px !important;
+    border-top: 0 !important;
+  }
+
+  .metricCell span {
+    font-size: 11px !important;
+  }
+
+  .metricCell strong {
+    font-size: 14px !important;
+    font-weight: 520 !important;
+  }
+
+  .status {
+    font-size: 11px !important;
+    padding-top: 3px !important;
+  }
+
+  .footer {
+    margin-top: 64px !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .eventTitle {
+    font-size: clamp(34px, 10vw, 40px) !important;
+  }
+
+  .primarySessions {
+    gap: 20px !important;
+  }
+}
