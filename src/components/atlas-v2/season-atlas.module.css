@@ -418,9 +418,10 @@
 }
 
 .focusTraceUnavailable {
-  color: #526a80;
-  font-size: 7px;
-  letter-spacing: 0.12em;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.03em;
 }
 
 .focusFavorites {
@@ -1292,4 +1293,266 @@
     align-items: center;
     font-size: 7px;
   }
+}
+
+/* Phase 2 · quiet peripheral layer. Globe rendering and node UI stay untouched. */
+.root {
+  --atlas-gold: var(--color-accent);
+  --atlas-cold: var(--color-ink);
+  --atlas-blue: var(--color-cyan);
+  --atlas-muted: var(--color-muted);
+  min-height: 100svh;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.stage {
+  position: relative;
+  background: var(--color-paper);
+}
+
+.grain,
+.frameLines,
+.scrollPrompt,
+.reservedStage {
+  display: none;
+}
+
+.vignette {
+  opacity: calc(var(--atlas-vignette-strength, 0.72) * 0.58);
+  background:
+    radial-gradient(circle at 50% 49%, transparent 52%, color-mix(in srgb, var(--color-paper) 72%, transparent) 100%),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-paper) 36%, transparent), transparent 26%, transparent 76%, color-mix(in srgb, var(--color-paper) 34%, transparent));
+}
+
+.identity {
+  top: max(2rem, env(safe-area-inset-top));
+  left: max(2.5rem, env(safe-area-inset-left));
+  width: auto;
+  font-family: var(--font-body);
+  text-transform: none;
+}
+
+.identityRule,
+.identity > span:last-child {
+  display: none;
+}
+
+.identity p {
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  font-weight: 720;
+  letter-spacing: 0.09em;
+}
+
+.identity h1 {
+  margin-top: var(--space-2xs);
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.returnToCurrent,
+.backToGlobe {
+  min-height: 2.75rem;
+  color: var(--color-ink-2);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 550;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  transition: color var(--dur-short) var(--ease-out);
+}
+
+.returnToCurrent {
+  top: max(1.3rem, env(safe-area-inset-top));
+  right: max(2.5rem, env(safe-area-inset-right));
+}
+
+.backToGlobe {
+  top: max(6rem, calc(env(safe-area-inset-top) + 5rem));
+  left: max(2.5rem, env(safe-area-inset-left));
+}
+
+.returnToCurrent:hover,
+.returnToCurrent:focus-visible,
+.backToGlobe:hover,
+.backToGlobe:focus-visible {
+  color: var(--color-ink);
+  text-shadow: none;
+}
+
+.focusPanel,
+.focusPanelCompact {
+  right: max(2.5rem, env(safe-area-inset-right));
+  bottom: max(2.5rem, env(safe-area-inset-bottom));
+  width: clamp(19rem, 22vw, 21.5rem);
+  padding: var(--space-sm) 0 var(--space-xs) var(--space-lg);
+  border-left: var(--rule-hair) solid color-mix(in srgb, var(--atlas-gold) 62%, transparent);
+  color: var(--color-ink-2);
+  font-family: var(--font-body);
+  text-transform: none;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-paper) 60%, transparent), transparent);
+  filter: none;
+}
+
+.focusPanel::before,
+.focusPanel::after {
+  display: none;
+}
+
+.focusKicker,
+.focusRound,
+.focusFooter {
+  gap: var(--space-sm);
+}
+
+.focusKicker {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+}
+
+.focusRound {
+  margin-top: var(--space-xs);
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+}
+
+.focusRound strong,
+.focusPanelCompact .focusRound strong {
+  color: var(--atlas-gold);
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.focusPanel h2,
+.focusPanelCompact h2 {
+  max-width: 100%;
+  margin-top: var(--space-2xs);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: clamp(1.15rem, 1.4vw, 1.45rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+}
+
+.focusCircuit,
+.focusPanelCompact .focusCircuit {
+  margin-top: var(--space-2xs);
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+}
+
+.focusTrace,
+.focusPanelCompact .focusTrace {
+  min-height: 2rem;
+  margin-top: var(--space-xs);
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.03em;
+}
+
+.focusTraceSvg polyline {
+  stroke: var(--atlas-gold);
+}
+
+.focusPanelCompact .focusMeta {
+  gap: var(--space-2xs);
+  margin-top: var(--space-xs);
+}
+
+.focusPanelCompact .focusMeta dt,
+.focusPanelCompact .focusMeta dd,
+.focusPanelCompact .focusMeta dd small {
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0;
+}
+
+.focusPanelCompact .focusMeta dd {
+  color: var(--color-ink-2);
+}
+
+.focusPanelCompact .focusFooter {
+  margin-top: var(--space-xs);
+  padding-top: var(--space-xs);
+  border-top-color: var(--color-rule-soft);
+}
+
+.focusEnter {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--atlas-gold);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.focusEnter:hover,
+.focusEnter:focus-visible {
+  color: var(--color-ink);
+  text-shadow: none;
+}
+
+.loadingState {
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  background: var(--color-paper);
+}
+
+.loadingOrbit {
+  border-color: var(--color-rule);
+  border-top-color: var(--atlas-gold);
+}
+
+@media (max-width: 720px) {
+  .root { min-height: 100dvh; }
+  .identity {
+    top: calc(env(safe-area-inset-top) + var(--space-sm));
+    left: calc(env(safe-area-inset-left) + var(--space-sm));
+    width: auto;
+  }
+  .identity h1 { font-size: 0.6875rem; }
+  .returnToCurrent {
+    top: calc(env(safe-area-inset-top) + 0.45rem);
+    right: calc(env(safe-area-inset-right) + var(--space-sm));
+    max-width: 10.5rem;
+    font-size: 0.6875rem;
+  }
+  .backToGlobe {
+    top: calc(env(safe-area-inset-top) + 4.5rem);
+    left: calc(env(safe-area-inset-left) + var(--space-sm));
+    font-size: 0.6875rem;
+  }
+  .focusPanel.focusPanelCompact {
+    right: calc(env(safe-area-inset-right) + var(--space-sm));
+    bottom: calc(env(safe-area-inset-bottom) + var(--space-sm));
+    left: calc(env(safe-area-inset-left) + var(--space-sm));
+    width: auto;
+    padding: var(--space-xs) 0 var(--space-2xs) var(--space-sm);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-paper) 76%, transparent), color-mix(in srgb, var(--color-paper) 24%, transparent));
+  }
+  .focusPanelCompact .focusKicker { font-size: 0.6875rem; }
+  .focusPanelCompact .focusRound { display: inline-flex; margin: var(--space-2xs) var(--space-xs) 0 0; }
+  .focusPanelCompact h2 { display: inline; font-size: var(--text-md); }
+  .focusPanelCompact .focusCircuit { margin-top: var(--space-2xs); font-size: 0.6875rem; }
+  .focusPanelCompact .focusTrace { display: none; }
+  .focusPanelCompact .focusMeta { margin-top: var(--space-2xs); }
+  .focusPanelCompact .focusMeta dt,
+  .focusPanelCompact .focusMeta dd,
+  .focusPanelCompact .focusMeta dd small { font-size: 0.6875rem; }
+  .focusPanelCompact .focusFooter { margin-top: var(--space-2xs); padding-top: var(--space-2xs); }
+  .focusEnter { min-height: 2.75rem; font-size: 0.6875rem; }
 }

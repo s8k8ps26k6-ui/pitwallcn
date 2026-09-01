@@ -1,9 +1,9 @@
 {
-  "scanned_at": "2026-08-26",
+  "scanned_at": "2026-08-31",
   "design_system": "design.md",
-  "font_stack": "Noto Sans SC Variable + existing display/body/mono token stacks",
+  "font_stack": "Barlow Condensed + Noto Sans SC Variable + JetBrains Mono via @fontsource",
   "palette": "tokens.css OKLCH custom properties",
   "motion": "gsap and lenis installed; data pages use motion-cut behaviour",
   "spacing": "4-point --space-* token scale",
-  "framework": "Next.js 15 App Router"
+  "framework": "Next.js 15.5 App Router"
 }

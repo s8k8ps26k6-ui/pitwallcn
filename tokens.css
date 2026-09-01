@@ -1,14 +1,16 @@
-/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5 · genre: atmospheric · tone: technical-austere · anchor: 255 · macrostructure: Workbench Suite · design-system: design.md · designed-as-app · contrast: pass (40–41) · nav: N2 · footer: none · slop: pass (42–45) · honest: pass (46) · chrome: pass (47) · tokens: pass (48) · responsive: pass (49) · icons: pass (30) · mobile: pass (34, 49, 50–57) */
+/* LAPMETRY Race Field · deep graphite field · editorial scale + spatial data */
 :root {
-  --color-paper: oklch(11% 0.014 255);
-  --color-paper-2: oklch(15% 0.018 255);
-  --color-paper-3: oklch(19% 0.021 255);
-  --color-ink: oklch(94% 0.012 82);
-  --color-ink-2: oklch(78% 0.014 82);
-  --color-muted: oklch(61% 0.018 255);
+  --color-paper: oklch(9.5% 0.015 255);
+  --color-paper-2: oklch(13.5% 0.018 255);
+  --color-paper-3: oklch(17.5% 0.021 255);
+  --color-paper-4: oklch(22% 0.022 255);
+  --color-ink: oklch(95% 0.01 88);
+  --color-ink-2: oklch(79% 0.014 88);
+  --color-muted: oklch(61% 0.02 255);
   --color-neutral: oklch(70% 0.018 255);
-  --color-rule: oklch(28% 0.022 255);
-  --color-rule-2: oklch(38% 0.026 255);
+  --color-rule: oklch(27% 0.023 255);
+  --color-rule-2: oklch(37% 0.027 255);
+  --color-rule-soft: oklch(52% 0.025 255 / 0.18);
   --color-accent: oklch(73% 0.115 78);
   --color-accent-soft: oklch(73% 0.115 78 / 0.12);
   --color-accent-ink: oklch(12% 0.02 78);
@@ -22,13 +24,14 @@
   --color-danger: oklch(65% 0.2 28);
   --color-danger-soft: oklch(65% 0.2 28 / 0.1);
 
-  --font-display: "Arial Narrow", "Aptos Display", "Helvetica Neue", "Noto Sans SC Variable", sans-serif;
-  --font-body: Inter, "Noto Sans SC Variable", "PingFang SC", system-ui, sans-serif;
-  --font-outlier: "SFMono-Regular", Consolas, "Liberation Mono", "Noto Sans SC Variable", monospace;
-  --display-weight: 700;
+  --font-display: "Barlow Condensed", "Noto Sans SC Variable", sans-serif;
+  --font-body: "Noto Sans SC Variable", "PingFang SC", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  --font-outlier: var(--font-mono);
+  --display-weight: 600;
   --display-style: normal;
-  --tracking-display: -0.035em;
-  --tracking-label: 0.14em;
+  --tracking-display: -0.045em;
+  --tracking-label: 0.08em;
 
   --space-3xs: 0.25rem;
   --space-2xs: 0.5rem;
@@ -37,8 +40,9 @@
   --space-md: 1.5rem;
   --space-lg: 2rem;
   --space-xl: 3rem;
-  --space-2xl: 4.5rem;
-  --space-3xl: 7rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-4xl: 9rem;
 
   /* Shared mobile-first type scale: labels 12 · body 16 · section 20 · emphasis 24 · page title 32. */
   --text-2xs: 0.6875rem;
@@ -48,24 +52,31 @@
   --text-lg: 1.25rem;
   --text-xl: 1.5rem;
   --text-2xl: 1.875rem;
-  --text-display-s: clamp(2rem, 4.5vw, 4.25rem);
-  --text-display: clamp(2.5rem, 5.5vw, 4.5rem);
+  --text-display-s: clamp(2.75rem, 5vw, 4.75rem);
+  --text-display: clamp(4rem, 9vw, 8rem);
+  --text-display-xl: clamp(6rem, 15vw, 13.5rem);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --dur-micro: 120ms;
-  --dur-short: 220ms;
-  --dur-long: 420ms;
+  --dur-short: 200ms;
+  --dur-long: 400ms;
+  --dur-cinematic: 620ms;
 
   --rule-hair: 1px;
   --rule-fine: 2px;
-  --radius-control: 0.625rem;
-  --radius-card: 1rem;
+  --radius-control: 0.5rem;
+  --radius-panel: 0.875rem;
+  --radius-card: var(--radius-panel);
   --radius-feature: 1.25rem;
   --radius-pill: 999px;
   --radius-input: var(--radius-control);
-  --shadow-card: 0 1.5rem 4rem oklch(6% 0.01 255 / 0.3);
+  --shadow-panel: 0 1.5rem 4rem oklch(4% 0.01 255 / 0.32);
+  --shadow-card: var(--shadow-panel);
+
+  --layout-gutter: clamp(1.25rem, 5vw, 5rem);
+  --layout-max: 92rem;
 
   --z-menu: 100;
   --z-skip: 500;

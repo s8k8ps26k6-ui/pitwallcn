@@ -1,5 +1,27 @@
 [
   {
+    "date": "2026-08-31",
+    "scope": "route-refinement",
+    "macrostructure": "Map / Diagram",
+    "theme": "custom",
+    "theme_axes": "deep blue-black / event-adaptive accent / condensed-sans",
+    "enrichment": "verified circuit geometry",
+    "brief": "Race Detail composition refinement: circuit enters with identity, verified metrics gain spatial baselines, and the profile becomes a factual registry.",
+    "slop_test": "static gates passed: production build, typecheck, token-only CSS, factual copy, no card grid or unverified circuit parameters; rendered viewport acceptance pending because the browser could not access the local preview",
+    "pre_emit": "P5 H4 E4 S5 R5 V5"
+  },
+  {
+    "date": "2026-08-31",
+    "scope": "route",
+    "macrostructure": "Map / Diagram",
+    "theme": "custom",
+    "theme_axes": "deep blue-black / event-adaptive accent / condensed-sans",
+    "enrichment": "none",
+    "brief": "Circuit Intelligence first viewport and archival transition: verified circuit geometry owns the composition while unverified session and records data remain explicitly absent.",
+    "slop_test": "targeted review complete: token-only CSS, no card grid, no unverified circuit parameters; visual acceptance pending",
+    "pre_emit": "P5 H5 E5 S5 R5 V5"
+  },
+  {
     "date": "2026-08-27",
     "scope": "app",
     "macrostructure": "In-context route transition + task-first data field",

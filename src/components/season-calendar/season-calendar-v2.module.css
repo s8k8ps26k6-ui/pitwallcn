@@ -1,0 +1,767 @@
+/* LAPMETRY Race Field · Calendar continuous season index */
+.page {
+  position: relative;
+  min-height: 100dvh;
+  padding: 0 var(--layout-gutter) var(--space-xl);
+  overflow-x: clip;
+  color: var(--color-ink);
+  background: var(--color-paper);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 36% 24% at 68% 38%,
+      rgb(var(--event-accent-rgb) / 0.07),
+      transparent 72%
+    ),
+    linear-gradient(
+      120deg,
+      var(--color-paper),
+      var(--color-paper-2) 58%,
+      var(--color-paper)
+    );
+}
+
+.header,
+.seasonHead,
+.seasonScale,
+.columnGuide,
+.list,
+.footer {
+  position: relative;
+  z-index: 1;
+  width: min(100%, var(--layout-max));
+  margin-inline: auto;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4.5rem;
+  border-bottom: var(--rule-hair) solid var(--color-rule-soft);
+  background: color-mix(in srgb, var(--color-paper) 92%, transparent);
+  backdrop-filter: blur(0.75rem);
+}
+
+.brand {
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  font-weight: 560;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav a:hover,
+.nav a:active {
+  color: var(--event-accent);
+}
+
+.brand:focus-visible,
+.nav a:focus-visible,
+.seasonPosition a:focus-visible,
+.row:focus-visible {
+  outline: var(--rule-fine) solid var(--color-focus);
+  outline-offset: var(--rule-hair);
+}
+
+.seasonHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.32fr);
+  gap: var(--space-2xl);
+  align-items: end;
+  padding: var(--space-xl) 0 var(--space-lg);
+}
+
+.seasonTitle p,
+.seasonPosition > span {
+  margin: 0;
+  color: var(--event-accent);
+  font-size: var(--text-xs);
+  font-weight: 620;
+}
+
+.seasonTitle h1 {
+  min-width: 0;
+  margin: var(--space-2xs) 0 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: clamp(2.75rem, 5vw, 4.5rem);
+  font-style: normal;
+  font-weight: 720;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.seasonTitle > span {
+  display: block;
+  max-width: 34rem;
+  margin-top: var(--space-sm);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+}
+
+.seasonPosition {
+  min-width: 0;
+  padding-left: var(--space-lg);
+  border-left: var(--rule-hair) solid var(--color-rule-soft);
+}
+
+.seasonPosition strong {
+  display: block;
+  margin-top: var(--space-xs);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 4vw, 3.75rem);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.seasonPosition strong small {
+  color: var(--color-muted);
+  font-size: 0.36em;
+  letter-spacing: 0;
+}
+
+.seasonPosition p {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+.seasonPosition a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  margin-top: var(--space-xs);
+  color: var(--event-accent);
+  font-size: var(--text-xs);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.seasonScale {
+  padding: var(--space-md) 0 var(--space-lg);
+}
+
+.scaleLine {
+  position: absolute;
+  top: calc(var(--space-md) + 0.25rem);
+  right: 0;
+  left: 0;
+  height: var(--rule-hair);
+  background: linear-gradient(
+    to right,
+    var(--event-accent) 0 var(--season-progress),
+    var(--color-rule-2) var(--season-progress) 100%
+  );
+}
+
+.seasonScale ol {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(22, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.seasonScale li {
+  display: grid;
+  min-width: 0;
+  height: var(--space-sm);
+  place-items: start center;
+}
+
+.seasonScale li:first-child {
+  place-items: start;
+}
+
+.seasonScale li:last-child {
+  place-items: start end;
+}
+
+.seasonScale li span {
+  width: 0.5rem;
+  height: 0.5rem;
+  border: var(--rule-hair) solid var(--color-rule-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+}
+
+.seasonScale li[data-scale-status="completed"] span {
+  border-color: var(--color-muted);
+  background: var(--color-muted);
+}
+
+.seasonScale li[data-scale-status="live"] span,
+.seasonScale li[data-scale-status="next"] span {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-color: var(--event-accent);
+  background: var(--event-accent);
+  transform: translateY(-0.125rem);
+}
+
+.columnGuide,
+.row {
+  display: grid;
+  grid-template-columns:
+    4.25rem minmax(16rem, 1fr) minmax(11rem, 14rem) 8.75rem
+    7rem 1.5rem;
+  column-gap: var(--space-md);
+}
+
+.columnGuide {
+  align-items: center;
+  min-height: 2.75rem;
+  border-block: var(--rule-hair) solid var(--color-rule-soft);
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.columnGuide span:nth-child(1) {
+  grid-column: 1;
+}
+
+.columnGuide span:nth-child(2) {
+  grid-column: 2;
+}
+
+.columnGuide span:nth-child(3) {
+  grid-column: 3;
+}
+
+.columnGuide span:nth-child(4) {
+  grid-column: 4;
+}
+
+.columnGuide span:nth-child(5) {
+  grid-column: 5;
+}
+
+.list {
+  margin-block: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0.375rem;
+  width: var(--rule-hair);
+  background: var(--color-rule-soft);
+  content: "";
+}
+
+.rowShell {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+  min-height: 7.25rem;
+  align-items: center;
+  padding: var(--space-sm) 0;
+  border-bottom: var(--rule-hair) solid var(--color-rule-soft);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    opacity var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
+}
+
+.row::before {
+  position: absolute;
+  top: 50%;
+  left: 0.125rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border: var(--rule-hair) solid var(--color-rule-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  content: "";
+  transform: translateY(-50%);
+}
+
+.row:hover {
+  background: color-mix(in srgb, var(--color-paper-3) 44%, transparent);
+}
+
+.row:active {
+  color: var(--event-accent);
+}
+
+.rowIndex {
+  grid-column: 1;
+  padding-left: var(--space-md);
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.rowIndex small,
+.rowDate small {
+  margin-right: var(--space-3xs);
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 560;
+}
+
+.rowTitle {
+  display: grid;
+  grid-column: 2;
+  gap: var(--space-3xs);
+  min-width: 0;
+}
+
+.location {
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.location i {
+  margin-right: var(--space-2xs);
+  font-size: var(--text-sm);
+  font-style: normal;
+}
+
+.raceName {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.circuitName {
+  overflow: hidden;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trace {
+  grid-column: 3;
+  width: min(100%, 12rem);
+  height: 5.5rem;
+  overflow: visible;
+}
+
+.trace polyline {
+  fill: none;
+  stroke: var(--color-rule-2);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.rowDate {
+  display: grid;
+  grid-column: 4;
+  gap: var(--space-2xs);
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+
+.rowStatus {
+  display: flex;
+  grid-column: 5;
+  align-items: center;
+  gap: var(--space-2xs);
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+  font-weight: 620;
+  white-space: nowrap;
+}
+
+.rowStatus i {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+
+.rowArrow {
+  grid-column: 6;
+  color: var(--color-muted);
+  font-size: var(--text-lg);
+}
+
+.row[data-calendar-status="completed"] {
+  opacity: 1;
+}
+
+.row[data-calendar-status="completed"] .raceName {
+  color: var(--color-ink-2);
+}
+
+.row[data-calendar-status="completed"] .location,
+.row[data-calendar-status="completed"] .circuitName,
+.row[data-calendar-status="completed"] .rowDate {
+  color: var(--color-neutral);
+}
+
+.row[data-calendar-status="completed"] .trace polyline {
+  stroke: var(--color-rule-2);
+  opacity: 0.88;
+}
+
+.row[data-calendar-status="completed"] .rowStatus {
+  color: var(--color-muted);
+  opacity: 0.7;
+}
+
+.row[data-calendar-status="completed"]::before {
+  border-color: var(--color-muted);
+  background: var(--color-muted);
+}
+
+.row[data-calendar-focus] {
+  min-height: 11rem;
+  grid-template-rows: auto auto;
+  background: linear-gradient(
+    90deg,
+    rgb(var(--event-accent-rgb) / 0.11),
+    transparent 72%
+  );
+}
+
+.row[data-calendar-focus]::before {
+  width: 0.75rem;
+  height: 0.75rem;
+  left: 0;
+  border-color: var(--event-accent);
+  background: var(--event-accent);
+}
+
+.row[data-calendar-focus] .rowIndex,
+.row[data-calendar-focus] .rowStatus,
+.row[data-calendar-focus] .rowArrow {
+  color: var(--event-accent);
+}
+
+.row[data-calendar-focus] .trace polyline {
+  stroke: var(--event-accent);
+  stroke-width: 2.5;
+}
+
+.focusDetail {
+  display: grid;
+  grid-column: 2 / 6;
+  grid-row: 2;
+  grid-template-columns: minmax(14rem, 1fr) auto;
+  gap: var(--space-lg);
+  align-items: end;
+  min-width: 0;
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: var(--rule-hair) solid rgb(var(--event-accent-rgb) / 0.34);
+}
+
+.focusDetail > span {
+  display: grid;
+  gap: var(--space-3xs);
+}
+
+.focusDetail small {
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+}
+
+.focusDetail strong {
+  color: var(--color-ink);
+  font-size: var(--text-md);
+  font-weight: 650;
+}
+
+.focusDetail time {
+  margin-top: var(--space-3xs);
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.focusDetail b {
+  color: var(--event-accent);
+  font-size: var(--text-sm);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.focusDetail b i {
+  margin-left: var(--space-xs);
+  font-style: normal;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-lg) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 900px) {
+  .columnGuide,
+  .row {
+    grid-template-columns:
+      3.75rem minmax(13rem, 1fr) minmax(8rem, 10rem) 7.5rem
+      6.5rem 1.25rem;
+    column-gap: var(--space-sm);
+  }
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding-inline: var(--space-sm);
+  }
+
+  .header {
+    min-height: 4rem;
+  }
+
+  .brand,
+  .nav a {
+    font-size: var(--text-xs);
+  }
+
+  .nav {
+    gap: var(--space-sm);
+  }
+
+  .seasonHead {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-sm);
+    align-items: start;
+    padding: var(--space-lg) 0 var(--space-md);
+  }
+
+  .seasonTitle p {
+    font-size: var(--text-xs);
+  }
+
+  .seasonTitle h1 {
+    font-size: 2.5rem;
+  }
+
+  .seasonTitle > span {
+    max-width: 17rem;
+    margin-top: var(--space-xs);
+    font-size: var(--text-xs);
+  }
+
+  .seasonPosition {
+    width: 5.5rem;
+    padding-left: var(--space-sm);
+  }
+
+  .seasonPosition strong {
+    font-size: 2rem;
+  }
+
+  .seasonPosition p {
+    display: none;
+  }
+
+  .seasonPosition a {
+    min-height: 2.75rem;
+    margin-top: var(--space-2xs);
+    white-space: normal;
+  }
+
+  .seasonScale {
+    padding: var(--space-sm) 0 var(--space-md);
+  }
+
+  .scaleLine {
+    top: calc(var(--space-sm) + 0.25rem);
+  }
+
+  .seasonScale li span {
+    width: 0.375rem;
+    height: 0.375rem;
+  }
+
+  .seasonScale li[data-scale-status="live"] span,
+  .seasonScale li[data-scale-status="next"] span {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+
+  .columnGuide {
+    display: none;
+  }
+
+  .list {
+    border-top: var(--rule-hair) solid var(--color-rule-soft);
+  }
+
+  .list::before {
+    left: 0.25rem;
+  }
+
+  .row {
+    grid-template-areas:
+      "index title trace"
+      "index date status"
+      "focus focus focus";
+    grid-template-columns: 2.75rem minmax(0, 1fr) 5.75rem;
+    grid-template-rows: auto auto;
+    gap: var(--space-xs) var(--space-xs);
+    min-height: 7.75rem;
+    padding: var(--space-sm) 0;
+  }
+
+  .row::before {
+    left: 0;
+  }
+
+  .rowIndex {
+    grid-area: index;
+    align-self: start;
+    padding: var(--space-3xs) 0 0 var(--space-sm);
+    font-size: var(--text-md);
+  }
+
+  .rowIndex small {
+    display: none;
+  }
+
+  .rowTitle {
+    grid-area: title;
+    align-self: start;
+  }
+
+  .location,
+  .circuitName,
+  .rowDate,
+  .rowStatus {
+    font-size: var(--text-xs);
+  }
+
+  .raceName {
+    font-size: var(--text-md);
+    white-space: normal;
+  }
+
+  .trace {
+    grid-area: trace;
+    width: 5.75rem;
+    height: 4rem;
+  }
+
+  .rowDate {
+    grid-area: date;
+    align-self: end;
+    display: block;
+  }
+
+  .rowDate small {
+    display: none;
+  }
+
+  .rowStatus {
+    grid-area: status;
+    align-self: end;
+    justify-self: end;
+    gap: var(--space-3xs);
+  }
+
+  .rowArrow {
+    display: none;
+  }
+
+  .row[data-calendar-focus] {
+    min-height: 14.5rem;
+    grid-template-rows: auto auto auto;
+  }
+
+  .row[data-calendar-focus]::before {
+    left: -0.125rem;
+  }
+
+  .focusDetail {
+    grid-area: focus;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-sm);
+    align-items: end;
+    margin-top: var(--space-2xs);
+    padding: var(--space-sm) 0 0 var(--space-sm);
+  }
+
+  .focusDetail b {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.75rem;
+  }
+
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row {
+    transition: none;
+  }
+}

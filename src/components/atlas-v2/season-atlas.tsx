@@ -51,8 +51,6 @@ const AtlasDebugPanel = dynamic(
   { ssr: false },
 );
 
-export type AtlasScrollStage = "global-core" | "season-data-reserved";
-
 type WebGLState = "checking" | "ready" | "blocked";
 
 const ATLAS_RETURN_STATE_KEY = "gd:atlas-return-state";
@@ -248,7 +246,6 @@ export function SeasonAtlas() {
   const [viewMode, setViewMode] = useState<AtlasViewMode>("global");
   const [navigationVersion, setNavigationVersion] = useState(0);
   const [autoFocusVersion, setAutoFocusVersion] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [renderSettings, setRenderSettings] = useState<AtlasRenderSettings>(
     ATLAS_RENDER_DEFAULTS,
   );
@@ -371,9 +368,6 @@ export function SeasonAtlas() {
   }, [focusedCircuit]);
   const showEuropeSummary =
     viewMode === "europe-focus" && !selectedRace && !hoveredRace;
-  const scrollStage: AtlasScrollStage =
-    scrollProgress > 0.72 ? "season-data-reserved" : "global-core";
-
   const handleHoverTarget = useCallback((targetId: string | null) => {
     setHoveredTargetId(targetId);
   }, []);
@@ -447,27 +441,7 @@ export function SeasonAtlas() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleBackToGlobe, viewMode]);
 
-  useEffect(() => {
-    const syncScroll = () => {
-      const root = rootRef.current;
-      if (!root) return;
-      const bounds = root.getBoundingClientRect();
-      const range = Math.max(1, root.offsetHeight - window.innerHeight);
-      const progress = Math.min(1, Math.max(0, -bounds.top / range));
-      setScrollProgress(progress);
-    };
-
-    syncScroll();
-    window.addEventListener("scroll", syncScroll, { passive: true });
-    window.addEventListener("resize", syncScroll);
-    return () => {
-      window.removeEventListener("scroll", syncScroll);
-      window.removeEventListener("resize", syncScroll);
-    };
-  }, []);
-
   const rootStyle = {
-    "--atlas-scroll-progress": scrollProgress.toFixed(3),
     "--atlas-vignette-strength": renderSettings.vignetteStrength.toFixed(2),
     "--atlas-grid-opacity": renderSettings.gridOverlay ? "1" : "0",
   } as CSSProperties;
@@ -477,7 +451,6 @@ export function SeasonAtlas() {
       ref={rootRef}
       className={styles.root}
       style={rootStyle}
-      data-atlas-scroll-stage={scrollStage}
       data-atlas-node-count={races.length}
       data-atlas-calendar-entry-count={calendarEntries.length}
       data-atlas-mode={viewMode}
@@ -711,21 +684,10 @@ export function SeasonAtlas() {
                 >
                   ENTER RACE WEEK CONTROL ↗
                 </Link>
-                {selectedRace ? (
-                  <button type="button" onClick={() => setFocusExpanded(true)}>
-                    ENTER RACE WEEK CONTROL →
-                  </button>
-                ) : null}
               </div>
             </>
           )}
         </aside>
-
-        <div className={styles.scrollPrompt} aria-hidden="true">
-          <span className={styles.scrollGlyph} />
-          <p>继续滚动进入赛季数据</p>
-          <small>SEASON DATA / NEXT STAGE</small>
-        </div>
 
         <p className={styles.srInstructions}>
           交互式 2026 F1 地球。拖动旋转，滚轮缩放，轻触或点击赛站锁定焦点，
@@ -733,10 +695,6 @@ export function SeasonAtlas() {
         </p>
       </section>
 
-      <section className={styles.reservedStage} aria-label="Season data stage reserved">
-        <span>GDL / STAGE 02</span>
-        <p>SEASON DATA INTERFACE RESERVED</p>
-      </section>
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { readRaceOutlook } from "@/lib/race-outlook";
 
 type RaceDetailPageProps = {
   params: Promise<{ season: string; eventId: string }>;
+  searchParams: Promise<{ review?: "desktop" | "mobile" }>;
 };
 
 export function generateStaticParams() {
@@ -18,12 +19,13 @@ export async function generateMetadata({ params }: RaceDetailPageProps) {
   const { season, eventId } = await params;
   const race = season === "2026" ? getRaceByEventId(eventId) : null;
   return {
-    title: race ? `${race.race.name} | Race Week Control` : "Race Week Control",
+    title: race ? `${race.race.name} | Circuit Intelligence` : "Circuit Intelligence",
   };
 }
 
-export default async function RaceDetailPage({ params }: RaceDetailPageProps) {
+export default async function RaceDetailPage({ params, searchParams }: RaceDetailPageProps) {
   const { season, eventId } = await params;
+  const { review } = await searchParams;
   if (season !== "2026") notFound();
   const race = getRaceByEventId(eventId);
   if (!race) notFound();
@@ -33,5 +35,9 @@ export default async function RaceDetailPage({ params }: RaceDetailPageProps) {
     ?? readRaceOutlook(race.eventId, "fp2")
     ?? readRaceOutlook(race.eventId, "fp1");
 
-  return <RaceDetailView race={race} outlook={outlook} />;
+  return (
+    <div className={`review-frame review-${review ?? "native"}`}>
+      <RaceDetailView race={race} outlook={outlook} />
+    </div>
+  );
 }

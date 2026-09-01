@@ -37,7 +37,13 @@ const navGroups = [
   },
 ] as const;
 
-export function SiteShell({ children, dataTheme }: { children: React.ReactNode; dataTheme: EventTheme }) {
+export function SiteShell({
+  children,
+  dataTheme,
+}: {
+  children: React.ReactNode;
+  dataTheme: EventTheme;
+}) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const navAreaRef = useRef<HTMLDivElement>(null);
@@ -48,6 +54,7 @@ export function SiteShell({ children, dataTheme }: { children: React.ReactNode; 
     pathname.startsWith("/atlas-v2") ||
     pathname.startsWith("/news") ||
     pathname.startsWith("/schedule") ||
+    pathname.startsWith("/race-weekend") ||
     pathname.startsWith("/races/");
 
   useEffect(() => {
@@ -74,14 +81,21 @@ export function SiteShell({ children, dataTheme }: { children: React.ReactNode; 
 
   if (isImmersiveRoute) {
     return (
-      <div className={`gd-site-shell min-h-screen bg-gdBg text-gdText${isHomepage ? " gd-site-shell--home-dock" : ""}`}>
-        <Suspense fallback={null}><NavigationMemory /></Suspense>
-        <div id="main-content" tabIndex={-1}>{children}</div>
+      <div
+        className={`gd-site-shell min-h-screen bg-gdBg text-gdText${isHomepage ? " gd-site-shell--home-dock" : ""}`}
+      >
+        <Suspense fallback={null}>
+          <NavigationMemory />
+        </Suspense>
+        <div id="main-content" tabIndex={-1}>
+          {children}
+        </div>
       </div>
     );
   }
 
-  const isActive = (href: string) => href === "/" ? pathname === href : pathname.startsWith(href);
+  const isActive = (href: string) =>
+    href === "/" ? pathname === href : pathname.startsWith(href);
 
   const shellStyle = {
     "--color-accent": dataTheme.accent,
@@ -93,7 +107,9 @@ export function SiteShell({ children, dataTheme }: { children: React.ReactNode; 
 
   return (
     <div className={styles.shell} style={shellStyle}>
-      <Suspense fallback={null}><NavigationMemory /></Suspense>
+      <Suspense fallback={null}>
+        <NavigationMemory />
+      </Suspense>
       <div className={styles.navArea} ref={navAreaRef}>
         <header className={styles.mobileHeader} data-site-header>
           <HomeBrandLink className={styles.brand} ariaLabel="LAPMETRY 首页">
@@ -116,9 +132,17 @@ export function SiteShell({ children, dataTheme }: { children: React.ReactNode; 
         </header>
 
         {menuOpen ? (
-          <nav className={styles.mobileMenu} id="data-route-menu" aria-label="主导航">
+          <nav
+            className={styles.mobileMenu}
+            id="data-route-menu"
+            aria-label="主导航"
+          >
             {navGroups.map((group) => (
-              <section className={styles.navGroup} key={group.label} aria-label={group.label}>
+              <section
+                className={styles.navGroup}
+                key={group.label}
+                aria-label={group.label}
+              >
                 <p className={styles.navGroupLabel}>{group.label}</p>
                 <div className={styles.navGroupLinks}>
                   {group.items.map((item) => (
@@ -139,7 +163,9 @@ export function SiteShell({ children, dataTheme }: { children: React.ReactNode; 
         ) : null}
       </div>
 
-      <div className={styles.frame} id="main-content" tabIndex={-1}>{children}</div>
+      <div className={styles.frame} id="main-content" tabIndex={-1}>
+        {children}
+      </div>
     </div>
   );
 }
