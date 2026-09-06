@@ -1,5 +1,4 @@
 import { HomepageV3 } from "@/components/homepage-v3/homepage-v3";
-import { MobileRaceDock } from "@/components/mobile-race-dock";
 
 export const dynamic = "force-dynamic";
 import {
@@ -26,8 +25,8 @@ export default function Home() {
         race={current.race}
         phase={current.phase}
         raceRail={raceRail}
+        seasonCount={season.length}
       />
-      <MobileRaceDock />
     </>
   );
 }
