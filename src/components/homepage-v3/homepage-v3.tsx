@@ -5,9 +5,10 @@ import type { Route } from "next";
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { HomeBrandLink } from "@/components/home-brand-link";
-import { formatRaceDateRange, formatLocalDateTime, getCountryFlag, getPrimaryRaceMoment, type UnifiedRace } from "@/lib/atlas/race-detail";
+import { formatRaceDateRange, formatLocalDateTime, getPrimaryRaceMoment, type UnifiedRace } from "@/lib/atlas/race-detail";
 import { getEventTheme } from "@/lib/event-theme";
 import { CircuitField } from "./circuit-field";
+import { HomeCountryFlag } from "./home-country-flag";
 import styles from "./homepage-v3.module.css";
 
 export function HomepageV3({race, phase, raceRail, seasonCount}: {
@@ -39,12 +40,13 @@ export function HomepageV3({race, phase, raceRail, seasonCount}: {
         <nav aria-label="主要导航"><Link href="/schedule">赛历</Link><Link href="/atlas-v2">Atlas</Link></nav>
       </header>
       <div className={styles.identity}>
-        <p className={styles.formula}><span aria-label={race.race.country}>{getCountryFlag(race.race.country)}</span> Formula 1 <span className={styles.round}>R{race.race.round}</span></p>
+        <p className={styles.formula}><HomeCountryFlag country={race.race.country} /> Formula 1 <span className={styles.round}>R{race.race.round}</span></p>
         <h1 className={styles.title} data-long={title.length > 16}>{title}<span>Grand Prix</span></h1>
         <p className={styles.dates}>{formatRaceDateRange(race)} {race.season}</p>
       </div>
       <CircuitField outline={race.circuit?.outline} desktop={false} title={race.race.circuitName}/>
       <CircuitField outline={race.circuit?.outline} desktop title={race.race.circuitName}/>
+      <CircuitField outline={race.circuit?.outline} desktop={false} landscape title={race.race.circuitName}/>
       <p className={styles.length}><strong>{race.circuit?.lengthKm?.toFixed(3) ?? "—"}</strong><span>KM</span></p>
       <p className={styles.laps}><strong>{race.circuit?.laps ?? "—"}</strong><span>LAPS</span></p>
       <div className={styles.session}>
