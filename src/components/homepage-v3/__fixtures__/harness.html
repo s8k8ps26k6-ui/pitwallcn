@@ -1,0 +1,30 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Homepage recovery browser fixture</title>
+<style>body{margin:0;background:#080c0e;color:white;font:14px Arial}#controls{padding:8px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}iframe{display:block;border:0;background:#11191b}select,button{font:inherit}label{display:flex;gap:5px}#result{white-space:pre-wrap;font:12px monospace;padding:12px}</style>
+<div id="controls">
+<label>Event<select id="event"><option value="madrid">Madrid</option><option value="italy">Monza</option><option value="japan">Suzuka</option><option value="monaco">Monaco</option><option value="great-britain">Silverstone</option></select></label>
+<label>Viewport<select id="viewport"><option>390x844</option><option>414x896</option><option>844x390</option><option>812x375</option><option>1440x900</option><option>320x740</option><option>375x812</option></select></label>
+<label>Edge<select id="edge"><option value="normal">Normal</option><option value="empty">Empty geometry</option><option value="long">Long title</option><option value="missing">Missing metadata</option></select></label>
+<label><input type="checkbox" id="enlarge">200% font</label>
+<button id="rotate">Rotate without reload</button><button id="check">Check layout</button>
+</div><iframe id="fixture" title="Live Homepage fixture"></iframe><pre id="result"></pre>
+<script>
+const field=document.getElementById('fixture');
+function size(){const [w,h]=document.getElementById('viewport').value.split('x');field.style.width=w+'px';field.style.height=h+'px';}
+function render(){size();const event=document.getElementById('event').value,edge=document.getElementById('edge').value,enlarge=document.getElementById('enlarge').checked;
+field.srcdoc=`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>*{box-sizing:border-box}html,body{margin:0}body{background:#11191b}</style><body data-event="${event}" data-edge="${edge}" data-enlarge="${enlarge}"><div id="root"></div><script src="/homepage-fixture/bundle.js"><\/script>`;}
+for(const id of ['event','edge','enlarge'])document.getElementById(id).addEventListener('change',render);
+document.getElementById('viewport').addEventListener('change',size);
+document.getElementById('rotate').onclick=()=>{const w=field.style.width;field.style.width=field.style.height;field.style.height=w;};
+document.getElementById('check').onclick=()=>{
+ const doc=field.contentDocument,win=field.contentWindow;
+ const rect=selector=>{const n=doc.querySelector(selector);if(!n)return null;const r=n.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
+ const areas=Object.fromEntries(['header','.identity','[data-home-field]','.metrics','.session','.season'].map(s=>[s,rect(s)]));
+ const intersects=(a,b)=>a&&b&&Math.min(a.right,b.right)-Math.max(a.x,b.x)>.5&&Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)>.5;
+ const collisions=Object.entries(areas).filter(([s])=>s!=='[data-home-field]').filter(([,r])=>intersects(areas['[data-home-field]'],r)).map(([s])=>s);
+ const svg=doc.querySelector('[data-home-field] svg'),path=svg?.querySelector('g path');
+ const header=doc.querySelector('header'),style=win.getComputedStyle(header);
+ const geometry=path?.getBBox(),vb=svg?.viewBox.baseVal;
+ const visualContained=!geometry||geometry.x>=32-.1&&geometry.y>=32-.1&&geometry.x+geometry.width+32<=vb.width+.1&&geometry.y+geometry.height+48<=vb.height+.1;
+ document.getElementById('result').textContent=JSON.stringify({event:doc.body.dataset.event,viewport:[win.innerWidth,win.innerHeight],scrollY:win.scrollY,visualViewport:win.visualViewport&&[win.visualViewport.width,win.visualViewport.height],header:{display:style.display,visibility:style.visibility,opacity:style.opacity,rect:areas.header},horizontalOverflow:doc.documentElement.scrollWidth>win.innerWidth,collisions,visualContained,areas,rounds:doc.querySelector('.season')?.textContent},null,2);
+};render();
+</script></html>

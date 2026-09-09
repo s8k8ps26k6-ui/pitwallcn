@@ -26,3 +26,8 @@ is known; add verified generator output when the source becomes available.
 The renderer applies the source aspect once, then a **single uniform scale** into
 the available viewport. Stroke, depth and bounded Gaussian shadow are included
 in visual padding. Every layout uses the same fitting function and SVG.
+
+In wide fields only, the helper chooses a rigid quarter-turn when it improves
+uniform scale by more than 10%. This is a geometry/viewport calculation shared by
+all events, not manually assigned track rotations. It preserves lengths, angles
+and aspect; portrait uses the source north-up orientation.

@@ -1,9 +1,18 @@
-import { getCountryFlag } from "@/lib/atlas/race-detail";
+import { getCountryCode } from "@/lib/atlas/race-detail";
+import flags from "./country-flags.json";
 
-/** The Monza flag must not depend on regional-indicator emoji support. */
+const supportedCountries = new Set(["Australia", "China", "Japan", "United States", "Canada", "Monaco", "Spain", "Austria", "United Kingdom", "Belgium", "Hungary", "Netherlands", "Azerbaijan", "Singapore", "Mexico", "Brazil", "Qatar", "United Arab Emirates"]);
+
+/** Local SVG images, never system regional-indicator glyphs or runtime fetches. */
 export function HomeCountryFlag({ country }: { country: string }) {
   if (country !== "Italy") {
-    return <span role="img" aria-label={country}>{getCountryFlag(country)}</span>;
+    const code = getCountryCode(country);
+    const svg = supportedCountries.has(country) ? flags[code as keyof typeof flags] : undefined;
+    if (!svg) return <span aria-label={country}>{code || country}</span>;
+    // SVG image documents isolate their internal IDs and cannot execute scripts.
+    return <svg viewBox="0 0 24 18" width="24" height="18" role="img" aria-label={country} focusable="false" style={{ flexShrink: 0 }}>
+      <image width="24" height="18" href={`data:image/svg+xml,${encodeURIComponent(svg)}`}/>
+    </svg>;
   }
 
   return (

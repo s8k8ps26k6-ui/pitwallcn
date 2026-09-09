@@ -110,3 +110,32 @@ test("production selection remains unpinned", () => {
   assert.match(source,/getSeasonRaces\(\)/);
   assert.ok(!source.includes("fixture"));
 });
+
+test("all current countries use SVG; unknown country never emits emoji", () => {
+  for (const country of new Set(races.map(r => r.race.country))) {
+    const html = renderToStaticMarkup(createElement(HomeCountryFlag,{country}));
+    assert.match(html,/<svg/);
+    assert.ok(!/[\u{1F1E6}-\u{1F1FF}]/u.test(html));
+  }
+  const html = renderToStaticMarkup(createElement(HomeCountryFlag,{country:"Unknown"}));
+  assert.ok(html.includes("UN"));
+  assert.ok(!/[\u{1F1E6}-\u{1F1FF}]/u.test(html));
+});
+
+test("missing or invalid metrics never create dash-unit pairs; valid data survives", () => {
+  const base = races.find(r => r.race.id === "italy");
+  for (const [lengthKm,laps] of [[undefined,undefined],[5.793,undefined],[undefined,53],[NaN,0],[Infinity,-1],[5.793,53]]) {
+    const race = {...base,circuit:{...base.circuit,lengthKm,laps}};
+    const html = renderToStaticMarkup(createElement(HomepageV3,{race,phase:"next",raceRail:[race],seasonCount:races.length}));
+    assert.ok(!/<strong>—<\/strong>/.test(html));
+    assert.equal(html.includes("赛道参数待确认"),!(lengthKm===5.793&&laps===53));
+    if(lengthKm===5.793) assert.ok(html.includes("5.793"));
+    if(laps===53) assert.ok(html.includes("53"));
+  }
+});
+
+test("a wide field may rotate rigidly, while portrait preserves source orientation", () => {
+  const outline=[[0,0],[1,0],[1,1],[0,1]];
+  assert.equal(fitCircuit(outline,900,400,.6).rotated,true);
+  assert.equal(fitCircuit(outline,342,354,.6).rotated,false);
+});
