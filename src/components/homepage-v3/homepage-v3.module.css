@@ -76,20 +76,20 @@
 @media(max-width:767px){.page{margin-bottom:calc(-84px - env(safe-area-inset-bottom))}}
 @media(max-width:359px){.scene{padding-inline:max(18px,env(safe-area-inset-left),env(safe-area-inset-right))}.header nav{gap:6px}.brand{font-size:1rem}}
 @media(min-width:1024px){
-  .scene{grid-template-areas:"header header" "identity identity" "circuit details" "season season" "hint hint" "footer footer";
-    grid-template-columns:minmax(0,3fr) minmax(260px,1fr);column-gap:36px;row-gap:24px;padding-inline:max(4%,env(safe-area-inset-left),env(safe-area-inset-right))}
-  .identity{padding-top:32px}
+  .scene{grid-template-areas:"header header" "circuit identity" "circuit details" "season season" "footer hint";
+    grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr);column-gap:12px;row-gap:12px;align-content:start;padding-inline:max(4%,env(safe-area-inset-left),env(safe-area-inset-right))}
+  .identity{padding-top:56px;align-self:end;padding-bottom:24px}
   .brand{font-size:1.25rem}.header nav{gap:46px}
   .formula{justify-content:flex-start}.round{margin-left:16px;font-size:.75rem;color:var(--home-muted)}
-  .title{font-size:clamp(2.75rem,4.72vw,4.25rem)}
-  .title span{display:inline}.title span::before{content:" "}
+  .title{font-size:clamp(2.5rem,3.6vw,3.25rem);margin-top:16px!important}
+  .title span{display:block}
   .dates{font-size:.875rem}
-  .circuitViewport{height:clamp(360px,46svh,520px)}
-  .details{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:40px}
+  .circuitViewport{height:clamp(520px,calc(100svh - 200px),780px);width:100%;max-width:700px;justify-self:end}
+  .details{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:24px;padding-top:12px}
   .metrics{flex-direction:row;flex-wrap:wrap;gap:36px}.length strong,.laps strong{font-size:2.125rem}
   .session h2{font-size:2rem}.sessionTime,.session time{font-size:.875rem}
   .currentRace strong{font-size:1.625rem}
-  .season{padding-block:16px}.continueHint{min-height:24px}
+  .season{padding-block:4px;grid-template-columns:minmax(44px,1fr) minmax(0,2fr) minmax(44px,1fr);width:80%;justify-self:center}.continueHint{min-height:24px}.sceneFooter{align-self:center}
   .continuation{padding:36px 4% 48px;flex-direction:row;gap:48px}
   .continuation::before{left:4%;right:4%;top:46px;bottom:auto;width:auto;height:1px}
   .continuation a{flex:1;display:flex;flex-direction:column;padding:0;gap:12px}
@@ -99,14 +99,14 @@
 /* Independent short-wide composition. Header remains a normal grid row. */
 @media(orientation:landscape) and (min-width:640px) and (max-width:1023px) and (max-height:500px){
   .scene{grid-template-areas:"header header header" "identity circuit details" "season season season" "hint hint footer";
-    grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1.15fr);
-    gap:12px 16px;padding:calc(4px + env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left))}
-  .brand{font-size:1rem}.header nav{gap:20px}
+    grid-template-columns:minmax(0,.9fr) minmax(0,1.7fr) minmax(0,1.1fr);
+    gap:2px 10px;padding:calc(0px + env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left))}
+  .brand{font-size:1rem}.header nav{gap:20px}.header,.header a{min-height:32px}
   .formula{font-size:.75rem;gap:6px;flex-wrap:wrap}
   .formula svg{width:18px;height:12px}
   .title{font-size:clamp(1.625rem,3.5vw,2rem);margin-top:12px!important;letter-spacing:-1px}
   .dates{font-size:.75rem;margin-top:12px!important}
-  .circuitViewport{height:max(240px,calc(100svh - 140px))}
+  .circuitViewport{height:max(240px,calc(100svh - 90px))}
   .details{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:center}
   .metrics{flex-direction:row;flex-wrap:wrap;gap:20px}.length strong,.laps strong{font-size:1.5rem}
   .sessionLabel{margin-top:8px!important;font-size:.75rem}

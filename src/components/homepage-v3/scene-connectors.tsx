@@ -28,10 +28,27 @@ export function SceneConnectors({ eventId }: { eventId: string }) {
           const anchor = scene.querySelector(`[data-home-anchor="${kind}"]`);
           const target = scene.querySelector(`[data-home-target="${kind}"]`);
           if (!anchor || !target) continue;
-          const from = point(anchor, "center");
+          let from = point(anchor, "center");
           const box = target.getBoundingClientRect();
           // Approach the reserved content edge, never its text center.
           const to = point(target, box.left - origin.left > from.x + 24 ? "left" : "top");
+          // Wide compositions use the nearest rendered centerline point, so
+          // a track's rightmost vertex cannot create an unnecessarily long line.
+          // This only reads the fitted path; it never changes circuit geometry.
+          if (scene.clientWidth >= 640) {
+            const path = scene.querySelector<SVGPathElement>('[data-home-field] g path:not([transform])');
+            const matrix = path?.getScreenCTM();
+            if (path && matrix) {
+              const length = path.getTotalLength();
+              let distance = Infinity;
+              for (let i = 0; i < 128; i++) {
+                const sample = path.getPointAtLength(length * i / 128).matrixTransform(matrix);
+                const candidate = { x: sample.x - origin.left, y: sample.y - origin.top };
+                const nextDistance = Math.hypot(candidate.x - to.x, candidate.y - to.y);
+                if (nextDistance < distance) { from = candidate; distance = nextDistance; }
+              }
+            }
+          }
           result.push({ from, to, kind });
         }
         const current = scene.querySelector('[data-home-target="season"]');
