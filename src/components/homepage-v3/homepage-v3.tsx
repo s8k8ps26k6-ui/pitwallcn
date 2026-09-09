@@ -44,11 +44,12 @@ export function HomepageV3({race, phase, raceRail, seasonCount}: {
         <h1 className={styles.title} data-long={title.length > 16}>{title}<span>Grand Prix</span></h1>
         <p className={styles.dates}>{formatRaceDateRange(race)} {race.season}</p>
       </div>
-      <CircuitField outline={race.circuit?.outline} desktop={false} title={race.race.circuitName}/>
-      <CircuitField outline={race.circuit?.outline} desktop title={race.race.circuitName}/>
-      <CircuitField outline={race.circuit?.outline} desktop={false} landscape title={race.race.circuitName}/>
-      <p className={styles.length}><strong>{race.circuit?.lengthKm?.toFixed(3) ?? "—"}</strong><span>KM</span></p>
-      <p className={styles.laps}><strong>{race.circuit?.laps ?? "—"}</strong><span>LAPS</span></p>
+      <CircuitField outline={race.circuit?.outline} circuitKey={race.race.id} title={race.race.circuitName}/>
+      <div className={styles.details}>
+      <div className={styles.metrics} data-home-metrics>
+        <p className={styles.length}><strong>{race.circuit?.lengthKm?.toFixed(3) ?? "—"}</strong><span>KM</span></p>
+        <p className={styles.laps}><strong>{race.circuit?.laps ?? "—"}</strong><span>LAPS</span></p>
+      </div>
       <div className={styles.session}>
         <p className={styles.status}><i aria-hidden="true"/>{moment.isTimeConfirmed ? (phase === "current" ? "比赛周进行中" : "赛程已确认") : "赛程待确认"}</p>
         <p className={styles.sessionLabel}>Next Session</p>
@@ -58,9 +59,12 @@ export function HomepageV3({race, phase, raceRail, seasonCount}: {
           : <p className={styles.sessionTime}>具体赛段时间待官方确认</p>}
         <Link className={styles.weekendLink} href={href(race)}>查看比赛周 <span aria-hidden="true">↗</span></Link>
       </div>
+      </div>
+      <nav className={styles.season} aria-label="当前赛季位置">
       <Link href={href(race)} className={styles.currentRace}><strong>{race.race.city}</strong><span>R{race.race.round} · {race.race.country}</span></Link>
       {previous && <Link className={styles.previous} href={href(previous)} aria-label={`R${previous.race.round} ${previous.race.name}`}>R{previous.race.round}</Link>}
       {next && <Link className={styles.next} href={href(next)} aria-label={`R${next.race.round} ${next.race.name}`}>R{next.race.round}</Link>}
+      </nav>
       <a className={styles.continueHint} href="#season-continuation">赛季继续 <span aria-hidden="true">↓</span></a>
       <div className={styles.sceneFooter}><span>{race.season} · {race.race.round} / {seasonCount}</span><time suppressHydrationWarning>{now ? now.toLocaleTimeString("en-GB", {hour:"2-digit",minute:"2-digit",timeZone:"UTC"}) : "—"} UTC</time></div>
     </div>

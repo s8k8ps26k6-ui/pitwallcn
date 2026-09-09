@@ -17,141 +17,99 @@
   linear-gradient(154deg,transparent 22%,color-mix(in srgb,var(--home-ambient) 12%,transparent) 22.2%,transparent 57%),
   linear-gradient(154deg,transparent 48%,#070d1040 48.2%,transparent 74%);}
 .surface::after{content:"";position:absolute;inset:0;opacity:.027;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' d='M0 0h180v180H0z'/%3E%3C/svg%3E")}
-.scene{position:relative;max-width:1600px;margin:auto;height:868px;box-sizing:content-box;
-  border-top:env(safe-area-inset-top,0px) solid transparent;
-  border-left:env(safe-area-inset-left,0px) solid transparent;
-  border-right:env(safe-area-inset-right,0px) solid transparent}
-.header{position:absolute;z-index:3;top:24px;left:6.15%;right:6.15%;display:flex;align-items:center;justify-content:space-between;gap:16px;height:44px}
-.brand{font-size:18px;font-weight:700;letter-spacing:-.6px}
+.scene{position:relative;max-width:1600px;margin:auto;min-height:100svh;box-sizing:border-box;
+  display:grid;grid-template-areas:"header" "identity" "circuit" "details" "season" "hint" "footer";
+  grid-template-columns:minmax(0,1fr);gap:24px;
+  padding:calc(20px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
+.scene>*{min-width:0}
+.header{grid-area:header;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:44px}
+.brand{font-size:1.125rem;font-weight:700;letter-spacing:-.6px}
 .header nav{display:flex;gap:16px;color:var(--home-muted)}
 .header a{display:flex;align-items:center;min-height:44px;white-space:nowrap}
 .header nav a{min-width:44px;justify-content:center}
-.identity{position:absolute;z-index:2;top:103px;left:6.15%;right:6.15%}
-.formula{display:flex;align-items:center;gap:10px;min-height:28.5px;font-size:14px}
-.formula>span:first-child{font-size:19px}
+.identity{grid-area:identity}
+.formula{display:flex;align-items:center;gap:10px;min-height:28px;font-size:.875rem}
+.formula svg{flex:none}
 .round{margin-left:auto;font-weight:600}
-.title{font-family:var(--home-font);font-size:46px;font-weight:400;line-height:1.1;letter-spacing:-1.5px;margin-top:24px!important;overflow-wrap:anywhere}
+.title{font-family:var(--home-font);font-size:clamp(2.25rem,11.8vw,2.875rem);font-weight:400;line-height:1.08;letter-spacing:-1.5px;margin-top:20px!important;overflow-wrap:anywhere}
 .title span{display:block}
-.title[data-long=true]{font-size:36px}
-.dates{font-size:12px;color:var(--home-muted);margin-top:14px!important}
-.mobileField,.desktopField,.landscapeField{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.desktopField,.landscapeField{display:none}
-.relationships{fill:none;stroke:var(--home-line);stroke-width:1;opacity:.58}
-.relationships path:first-child{opacity:.45}
+.dates{font-size:.75rem;color:var(--home-muted);margin-top:14px!important;line-height:1.6}
+.circuitViewport{grid-area:circuit;position:relative;height:clamp(280px,42svh,380px);min-width:0}
+.circuitSvg{display:block;width:100%;height:100%;pointer-events:none}
 .trackAccent{stroke:var(--home-signal)}
-.currentDot{fill:var(--home-signal)}
-.seasonDots{fill:var(--home-line)}
-.length,.laps{position:absolute;z-index:2;display:flex;gap:8px}
-.length{top:329px;left:6.15%;flex-direction:column;gap:2px}
-.laps{top:368px;left:66.4%;align-items:baseline}
-.length strong,.laps strong{font-size:24px;line-height:1.2;font-weight:600}
-.length span,.laps span{font-size:12px;color:var(--home-muted)}
-.session{position:absolute;z-index:2;top:478px;left:41%;right:4%;font-size:12px}
-.status{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.details{grid-area:details;display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+.metrics{display:flex;gap:clamp(28px,10vw,64px);flex-wrap:wrap;align-items:baseline}
+.length,.laps{display:flex;flex-direction:column;gap:3px}
+.length strong,.laps strong{font-size:1.5rem;line-height:1.2;font-weight:600}
+.length span,.laps span{font-size:.75rem;color:var(--home-muted)}
+.session{font-size:.875rem;min-width:0}
+.status{display:flex;align-items:center;gap:8px;line-height:1.5}
 .status i{width:6px;height:6px;background:var(--home-signal);border-radius:50%;flex:none}
-.sessionLabel{color:var(--home-muted);font-size:14px;margin-top:20px!important}
-.session h2{font-family:var(--home-font);font-size:23px;font-weight:600;line-height:1.25;margin:7px 0 6px}
-.sessionTime,.session time{color:var(--home-muted);font-size:12px;line-height:1.6}
-.weekendLink{display:inline-flex;gap:16px;align-items:center;min-height:44px;margin-top:10px;font-size:14px;white-space:nowrap}
+.sessionLabel{color:var(--home-muted);font-size:.875rem;margin-top:16px!important}
+.session h2{font-family:var(--home-font);font-size:1.5rem;font-weight:600;line-height:1.25;margin:7px 0 6px;overflow-wrap:anywhere}
+.sessionTime,.session time{color:var(--home-muted);font-size:.75rem;line-height:1.6}
+.weekendLink{display:inline-flex;gap:16px;align-items:center;min-height:44px;margin-top:8px;font-size:.875rem}
 .weekendLink span{font-size:27px;font-weight:400}
-.currentRace{position:absolute;left:24%;top:638px;display:flex;flex-direction:column;gap:16px;min-height:64px}
-.currentRace strong{font-size:16px;font-weight:600;margin-left:12px}
-.currentRace span{font-size:14px}
-.previous,.next{position:absolute;display:flex;align-items:center;justify-content:center;width:44px;height:44px;font-size:12px;color:var(--home-muted)!important}
-.previous{left:3%;top:702px}.next{right:5%;top:728px}
-.continueHint{position:absolute;right:12%;top:780px;min-height:44px;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--home-muted)!important}
-.sceneFooter{position:absolute;bottom:12px;left:6.15%;right:6.15%;display:flex;justify-content:space-between;color:var(--home-muted);font-size:12px}
+.season{grid-area:season;display:grid;grid-template-columns:minmax(44px,1fr) minmax(0,3fr) minmax(44px,1fr);align-items:center;gap:16px;padding-block:20px}
+.currentRace{grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:8px;min-height:44px;justify-self:center;overflow-wrap:anywhere}
+.currentRace strong{font-size:1.125rem;font-weight:600}
+.currentRace span{font-size:.875rem}
+.previous,.next{grid-row:1;display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;font-size:.75rem;color:var(--home-muted)!important}
+.previous{grid-column:1}.next{grid-column:3}
+.continueHint{grid-area:hint;justify-self:end;min-height:44px;display:flex;gap:8px;align-items:center;font-size:.75rem;color:var(--home-muted)!important}
+.sceneFooter{grid-area:footer;display:flex;justify-content:space-between;gap:16px;color:var(--home-muted);font-size:.75rem}
 .continuation{position:relative;max-width:1328px;margin:auto;padding:18px 24px 28px;display:flex;flex-direction:column;gap:26px;scroll-margin-top:20px}
 .continuation::before{content:"";position:absolute;left:31px;top:28px;bottom:48px;width:1px;background:var(--home-line);opacity:.35}
-.continuation a{position:relative;padding-left:36px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;min-width:0}
-.continuation .stop{grid-column:1/-1;font-size:12px;color:var(--home-muted)}
+.continuation a{position:relative;padding-left:36px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px 12px;min-width:0}
+.continuation .stop{font-size:.75rem;color:var(--home-muted)}
 .stop i{position:absolute;left:4px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--home-line)}
 .continuation [aria-current] .stop i{background:var(--home-signal)}
-.continuation strong{font-size:22px;font-weight:500;grid-column:1/-1}
-.continuation a>span:not(.stop){font-size:13px;line-height:1.5;overflow-wrap:anywhere}
-.continuation time{font-size:12px;color:var(--home-muted);align-self:end}
-.footer{max-width:1328px;margin:auto;padding:8px 24px calc(28px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;gap:20px;font-size:12px;color:var(--home-muted)}
-.footer a{min-height:44px;display:flex;align-items:center;white-space:nowrap}
-.missingCircuit{position:absolute;top:310px;left:20%}
-@media(max-width:767px){
-  .page{margin-bottom:calc(-84px - env(safe-area-inset-bottom))}
-}
-@media(max-width:359px){
-  .title{font-size:40px}.title[data-long=true]{font-size:30px}
-  .session h2{font-size:20px}.session{left:40%;right:3%}
-  .length strong,.laps strong{font-size:21px}
-  .header nav{gap:6px}.brand{font-size:16px}
-}
-@media(min-width:768px){
-  .scene{height:900px}
-  .header{top:22px;left:4%;right:4%}
-  .brand{font-size:20px}.header nav{gap:46px}
-  .identity{top:130px;left:4%;right:auto;max-width:85%}
-  .formula{justify-content:flex-start}.round{margin-left:16px;font-size:12px;color:var(--home-muted)}
-  .title{font-size:clamp(44px,4.72vw,68px);margin-top:25px!important;line-height:1.1}
+.continuation strong{font-size:1.375rem;font-weight:500}
+.continuation a>span:not(.stop){font-size:.875rem;line-height:1.5;overflow-wrap:anywhere}
+.continuation time{font-size:.75rem;color:var(--home-muted)}
+.footer{max-width:1328px;margin:auto;padding:8px 24px calc(28px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;font-size:.75rem;color:var(--home-muted)}
+.footer a{min-height:44px;display:flex;align-items:center}
+.missingCircuit{display:grid;place-content:center;height:100%;color:var(--home-muted);font-size:.875rem}
+@media(max-width:767px){.page{margin-bottom:calc(-84px - env(safe-area-inset-bottom))}}
+@media(max-width:359px){.scene{padding-inline:max(18px,env(safe-area-inset-left),env(safe-area-inset-right))}.header nav{gap:6px}.brand{font-size:1rem}}
+@media(min-width:1024px){
+  .scene{grid-template-areas:"header header" "identity identity" "circuit details" "season season" "hint hint" "footer footer";
+    grid-template-columns:minmax(0,3fr) minmax(260px,1fr);column-gap:36px;row-gap:24px;padding-inline:max(4%,env(safe-area-inset-left),env(safe-area-inset-right))}
+  .identity{padding-top:32px}
+  .brand{font-size:1.25rem}.header nav{gap:46px}
+  .formula{justify-content:flex-start}.round{margin-left:16px;font-size:.75rem;color:var(--home-muted)}
+  .title{font-size:clamp(2.75rem,4.72vw,4.25rem)}
   .title span{display:inline}.title span::before{content:" "}
-  .title[data-long=true]{font-size:clamp(36px,4vw,58px)}
-  .dates{font-size:14px}
-  .mobileField{display:none}.desktopField{display:block}
-  .length{left:14.45%;top:366px}.laps{left:67.22%;top:376px}
-  .length strong,.laps strong{font-size:34px}.length span,.laps span{font-size:14px}
-  .session{left:43.75%;top:469px;right:12%;font-size:14px}
-  .sessionLabel{font-size:15px;margin-top:16px!important}
-  .session h2{font-size:32px}.sessionTime,.session time{font-size:14px}
-  .weekendLink{font-size:16px;margin-top:8px}
-  .currentRace{left:35.07%;top:704px;gap:10px}
-  .currentRace strong{font-size:26px;margin:0}
-  .previous{left:5.4%;top:805px}.next{right:6.6%;top:769px}
-  .continueHint{right:8%;top:810px}
-  .sceneFooter{left:4%;right:4%;bottom:28px;font-size:13px}
+  .dates{font-size:.875rem}
+  .circuitViewport{height:clamp(360px,46svh,520px)}
+  .details{align-content:center;gap:40px}
+  .metrics{gap:36px}.length strong,.laps strong{font-size:2.125rem}
+  .session h2{font-size:2rem}.sessionTime,.session time{font-size:.875rem}
+  .currentRace strong{font-size:1.625rem}
+  .season{padding-block:16px}.continueHint{min-height:24px}
   .continuation{padding:36px 4% 48px;flex-direction:row;gap:48px}
   .continuation::before{left:4%;right:4%;top:46px;bottom:auto;width:auto;height:1px}
   .continuation a{flex:1;display:flex;flex-direction:column;padding:0;gap:12px}
   .continuation .stop{padding-left:20px;background:#151e20;width:60px}
-  .continuation a>span:not(.stop){font-size:14px}
-  .continuation time{align-self:start}
   .footer{padding-inline:4%}
 }
-@media(min-width:768px) and (max-width:1023px){
-  .session{left:44%;right:8%}.session h2{font-size:27px}
-  .length{left:12%}.length strong,.laps strong{font-size:27px}
-}
-/* Short, wide viewports have their own track projection and composition. */
-@media (orientation:landscape) and (min-width:640px) and (max-width:1023px) and (max-height:500px){
-  .scene{height:max(340px,calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)));
-    border-bottom:env(safe-area-inset-bottom,0px) solid transparent}
-  .header{top:4px;left:4%;right:4%}
-  .brand{font-size:16px}.header nav{gap:20px;font-size:12px}
-  .identity{top:14.1%;left:4%;right:auto;width:27%;max-width:none}
-  .formula{font-size:11px;gap:8px;min-height:21px}
-  .formula>span:first-child{font-size:15px}.formula>svg{width:18px;height:12px}
-  .round{margin-left:auto;font-size:11px;color:var(--home-muted)}
-  .title,.title[data-long=true]{font-size:clamp(26px,4.03vw,34px);line-height:1.02;letter-spacing:-1px;margin-top:15px!important}
-  .title span{display:block}.title span::before{content:none}
-  .dates{font-size:11px;margin-top:12px!important}
-  .mobileField,.desktopField{display:none}.landscapeField{display:block}
-  .length{left:68.5%;top:27.44%;gap:0}
-  .laps{left:80%;top:29.5%;gap:5px}
-  .length strong{font-size:26px}.laps strong{font-size:24px}
-  .length span,.laps span{font-size:11px}
-  .session{left:68.5%;right:4%;top:44.36%;font-size:11px}
-  .sessionLabel{font-size:12px;margin-top:10px!important}
-  .session h2{font-size:clamp(19px,2.84vw,24px);line-height:1.15;margin:6px 0 2px}
-  .sessionTime,.session time{font-size:11px;line-height:1.5}
-  .weekendLink{font-size:12px;gap:12px;margin-top:0;min-height:36px}
-  .weekendLink span{font-size:23px}
-  .currentRace{left:51%;top:83%;min-height:44px;gap:1px}
-  .currentRace strong{font-size:14px;margin-left:8px}
-  .currentRace span{font-size:11px}
-  .previous{left:24%;top:86%}.next{right:10.3%;top:86%}
-  .previous,.next{height:32px;font-size:11px}
-  .continueHint,.sceneFooter{display:none}
-  .missingCircuit{top:38%;left:34%;font-size:12px}
-  .continuation{padding:28px 4% 36px;flex-direction:row;gap:24px}
-  .continuation::before{left:4%;right:4%;top:38px;bottom:auto;width:auto;height:1px}
-  .continuation a{flex:1;min-width:0;display:flex;flex-direction:column;padding:0;gap:10px}
-  .continuation .stop{padding-left:20px;background:#151e20;width:60px}
-  .continuation strong{font-size:20px}.continuation time{align-self:start}
-  .footer{padding-inline:4%}
+/* Independent short-wide composition. Header remains a normal grid row. */
+@media(orientation:landscape) and (min-width:640px) and (max-width:1023px) and (max-height:500px){
+  .scene{grid-template-areas:"header header header" "identity circuit details" "season season season" "hint hint footer";
+    grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1.15fr);
+    gap:12px 16px;padding:calc(4px + env(safe-area-inset-top)) max(24px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left))}
+  .brand{font-size:1rem}.header nav{gap:20px}
+  .formula{font-size:.75rem;gap:6px;flex-wrap:wrap}
+  .formula svg{width:18px;height:12px}
+  .title{font-size:clamp(1.625rem,3.5vw,2rem);margin-top:12px!important;letter-spacing:-1px}
+  .dates{font-size:.75rem;margin-top:12px!important}
+  .circuitViewport{height:max(240px,calc(100svh - 140px))}
+  .details{gap:12px;align-content:center}
+  .metrics{gap:20px}.length strong,.laps strong{font-size:1.5rem}
+  .sessionLabel{margin-top:8px!important;font-size:.75rem}
+  .session h2{font-size:1.375rem}.status{font-size:.75rem}
+  .weekendLink{margin-top:0;font-size:.75rem}
+  .season{padding-block:0}.currentRace{gap:2px}.currentRace strong{font-size:1rem}.currentRace span{font-size:.75rem}
+  .continueHint{min-height:24px}.sceneFooter{align-self:center}
 }
 @media(prefers-reduced-motion:reduce){.page *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}

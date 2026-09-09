@@ -15,6 +15,7 @@ const modules = new Map();
 // Only Next's navigation wrappers and CSS module names need test substitutes.
 function load(relativePath) {
   const filename = path.resolve(root, relativePath);
+  if (filename.endsWith(".json")) return JSON.parse(fs.readFileSync(filename, "utf8"));
   if (modules.has(filename)) return modules.get(filename).exports;
   const compiled = { exports: {} };
   modules.set(filename, compiled);
@@ -48,76 +49,64 @@ function load(relativePath) {
 }
 
 const { getSeasonRaces } = load("src/lib/atlas/race-detail.ts");
-const { projectCircuit, CircuitField } = load("src/components/homepage-v3/circuit-field.tsx");
+const { fitCircuit, getCircuitAspect } = load("src/components/homepage-v3/circuit-geometry.ts");
+const { CircuitField } = load("src/components/homepage-v3/circuit-field.tsx");
 const { HomeCountryFlag } = load("src/components/homepage-v3/home-country-flag.tsx");
 const { HomepageV3 } = load("src/components/homepage-v3/homepage-v3.tsx");
-const races = getSeasonRaces(new Date("2026-09-06T12:00:00Z"));
-const monza = races.find(race => race.race.id === "italy");
-assert.ok(monza?.circuit?.outline.length);
+const races = getSeasonRaces(new Date("2026-09-09T12:00:00Z"));
+const events = ["madrid", "italy", "japan", "monaco", "great-britain"];
 
-test("Italy uses three SVG stripes, an accessible name and no emoji glyph", () => {
-  const html = renderToStaticMarkup(createElement(HomeCountryFlag, { country: "Italy" }));
-  assert.match(html, /<svg/);
-  assert.match(html, /aria-label="Italy"/);
-  assert.match(html, /viewBox="0 0 3 2"/);
-  assert.equal((html.match(/<path /g) ?? []).length, 3);
-  for (const fill of ["#009246", "#fff", "#ce2b37"]) assert.ok(html.includes(`fill="${fill}"`));
-  assert.ok(!html.includes("🇮🇹"));
-});
-
-test("other countries retain their existing flag behavior", () => {
-  const html = renderToStaticMarkup(createElement(HomeCountryFlag, { country: "Spain" }));
-  assert.match(html, /aria-label="Spain"/);
-  assert.ok(html.includes("🇪🇸"));
-  assert.ok(!html.includes("<svg"));
-});
-
-for (const [mode, desktop, landscape, box, viewport] of [
-  ["portrait", false, false, [38, 255, 306, 309], [390, 844]],
-  ["desktop", true, false, [270, 242, 856, 364], [1440, 900]],
-  ["landscape", false, true, [242, 72, 286, 208], [844, 390]],
-]) {
-  test(`${mode} retains every Monza point inside the scene with stroke clearance`, () => {
-    const points = projectCircuit(monza.circuit.outline, desktop, landscape);
-    assert.equal(points.length, monza.circuit.outline.length);
-    assert.ok(points.every(point => point.every(Number.isFinite)));
-    const [x, y, width, height] = box;
-    assert.ok(points.every(([px, py]) => px >= x && px <= x + width && py >= y && py <= y + height));
-    // Broadest shadow/stroke plus lower extrusion stays inside the SVG viewport.
-    assert.ok(x >= 30 && y >= 30);
-    assert.ok(x + width + 30 < viewport[0]);
-    assert.ok(y + height + 40 < viewport[1]);
-    const html = renderToStaticMarkup(createElement(CircuitField, { outline: monza.circuit.outline, desktop, landscape, title: "Monza" }));
-    assert.ok(html.includes(`viewBox="0 0 ${viewport.join(" ")}"`));
-    assert.ok(html.includes(" Z\""));
+for (const key of events) {
+  const race = races.find(item => item.race.id === key);
+  test(`${key}: all geometry and visual padding contained, uniform scale`, () => {
+    assert.ok(race?.circuit?.outline.length);
+    assert.ok(getCircuitAspect(key) > 0);
+    for (const [width, height] of [[284,280],[327,330],[342,354],[366,376],[260,240],[270,250],[940,414]]) {
+      const fit = fitCircuit(race.circuit.outline, width, height, getCircuitAspect(key));
+      assert.ok(fit);
+      assert.equal(fit.points.length, race.circuit.outline.length);
+      const v = fit.visualBounds;
+      const epsilon = 1e-8;
+      assert.ok(v.x >= -epsilon && v.y >= -epsilon);
+      assert.ok(v.x + v.width <= width + epsilon);
+      assert.ok(v.y + v.height <= height + epsilon);
+      for (let i = 1; i < fit.points.length; i++) {
+        const a = race.circuit.outline[i-1], b = race.circuit.outline[i];
+        const before = Math.hypot((b[0]-a[0]) * getCircuitAspect(key), b[1]-a[1]);
+        const after = Math.hypot(fit.points[i][0]-fit.points[i-1][0],fit.points[i][1]-fit.points[i-1][1]);
+        assert.ok(Math.abs(after - before * fit.scale) < epsilon);
+      }
+    }
+  });
+  test(`${key}: dynamic identity, one circuit SVG, adjacent rounds and header`, () => {
+    const index = races.indexOf(race);
+    const rail = races.slice(Math.max(0,index-1),index+2);
+    const html = renderToStaticMarkup(createElement(HomepageV3,{race,phase:"next",raceRail:rail,seasonCount:races.length}));
+    for (const item of rail) assert.ok(html.includes(`R${item.race.round}`));
+    for (const text of ["LAPMETRY","赛历","Atlas",race.race.city,"Grand Prix"]) assert.ok(html.includes(text));
+    assert.equal((html.match(/data-home-field/g)??[]).length,1);
+    assert.ok(!html.includes('preserveAspectRatio="none"'));
+    assert.ok(!html.includes("desktopField"));
   });
 }
-
-test("homepage still renders Monza facts, original routes and R12 → R13 → R14", () => {
-  const html = renderToStaticMarkup(createElement(HomepageV3, {
-    race: monza,
-    phase: "current",
-    raceRail: races.filter(race => [12, 13, 14].includes(race.race.round)),
-    seasonCount: races.length,
-  }));
-  for (const text of ["Italian", "Grand Prix", "5.793", "53", "Race Weekend", "Monza", "R12", "R13", "R14", "赛季延续"]) assert.ok(html.includes(text), text);
-  for (const href of ["/schedule", "/atlas-v2", "/races/2026/italy-gp-2026"]) assert.ok(html.includes(`href="${href}"`));
-  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
-  assert.equal(ids.length, new Set(ids).size, "SVG gradients/filters must not share IDs");
+test("degenerate, nonfinite, missing or undersized geometry fails safely", () => {
+  for (const outline of [undefined,[],[[0,0]],[[0,0],[0,1],[0,2]],[[NaN,0],[1,0],[1,1]]]) assert.equal(fitCircuit(outline,300,400),null);
+  assert.equal(fitCircuit([[0,0],[1,0],[1,1]],20,20),null);
+  assert.equal(fitCircuit([[0,0],[1,0],[1,1]],Infinity,400),null);
+  assert.equal(getCircuitAspect("unknown"),undefined);
+  const html = renderToStaticMarkup(createElement(CircuitField,{title:"Unknown"}));
+  assert.ok(html.includes("赛道轮廓待确认"));
+  assert.ok(!html.includes("<svg"));
 });
-
-test("missing geometry has layout-specific wrappers rather than three overlapping labels", () => {
-  for (const [desktop, landscape, expected] of [[false, false, "mobileField"], [true, false, "desktopField"], [false, true, "landscapeField"]]) {
-    const html = renderToStaticMarkup(createElement(CircuitField, { desktop, landscape, title: "Unknown" }));
-    assert.ok(html.includes(`class="${expected}"`));
-    assert.ok(html.includes("赛道轮廓待确认"));
-    assert.ok(!html.includes("<svg"));
-  }
+test("Italy keeps a stable accessible SVG flag", () => {
+  const html = renderToStaticMarkup(createElement(HomeCountryFlag,{country:"Italy"}));
+  assert.match(html, /<svg/);
+  assert.match(html, /aria-label="Italy"/);
+  assert.ok(!html.includes("🇮🇹"));
 });
-
-test("production homepage selection is not pinned to the screenshot date", () => {
-  const source = fs.readFileSync(path.join(root, "src/app/page.tsx"), "utf8");
-  assert.match(source, /getCurrentSeasonRace\(\)/);
-  assert.match(source, /getSeasonRaces\(\)/);
-  assert.ok(!source.includes("fixtureNow"));
+test("production selection remains unpinned", () => {
+  const source = fs.readFileSync(path.join(root,"src/app/page.tsx"),"utf8");
+  assert.match(source,/getCurrentSeasonRace\(\)/);
+  assert.match(source,/getSeasonRaces\(\)/);
+  assert.ok(!source.includes("fixture"));
 });

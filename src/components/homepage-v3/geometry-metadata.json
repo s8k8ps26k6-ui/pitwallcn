@@ -1,0 +1,116 @@
+{
+  "circuits": {
+    "abu-dhabi": {
+      "aspect": 0.4693642314144852,
+      "maxVertexError": 0.00006156862929603824,
+      "sourceId": "ae-2009"
+    },
+    "australia": {
+      "aspect": 0.8160000353358864,
+      "maxVertexError": 0.00006653448122722446,
+      "sourceId": "au-1953"
+    },
+    "austria": {
+      "aspect": 1.5849673650754337,
+      "maxVertexError": 0.00006429058264527409,
+      "sourceId": "at-1969"
+    },
+    "azerbaijan": {
+      "aspect": 1.3683351587212516,
+      "maxVertexError": 0.00006594301699104204,
+      "sourceId": "az-2016"
+    },
+    "barcelona-catalunya": {
+      "aspect": 0.8168415126308072,
+      "maxVertexError": 0.00006639101302098966,
+      "sourceId": "es-1991"
+    },
+    "belgium": {
+      "aspect": 0.6169661169446382,
+      "maxVertexError": 0.0000591499110428696,
+      "sourceId": "be-1925"
+    },
+    "canada": {
+      "aspect": 0.32488693446954264,
+      "maxVertexError": 0.00006135449041288109,
+      "sourceId": "ca-1978"
+    },
+    "china": {
+      "aspect": 1.1405258348964513,
+      "maxVertexError": 0.00006471184078279241,
+      "sourceId": "cn-2004"
+    },
+    "great-britain": {
+      "aspect": 0.5986996254317768,
+      "maxVertexError": 0.00006401368113711267,
+      "sourceId": "gb-1948"
+    },
+    "hungary": {
+      "aspect": 0.8836270660435629,
+      "maxVertexError": 0.00006930504426091526,
+      "sourceId": "hu-1986"
+    },
+    "italy": {
+      "aspect": 0.5793860593878998,
+      "maxVertexError": 0.00006154077459652894,
+      "sourceId": "it-1922"
+    },
+    "japan": {
+      "aspect": 1.8730545108442134,
+      "maxVertexError": 0.00005780917127477149,
+      "sourceId": "jp-1962"
+    },
+    "las-vegas": {
+      "aspect": 0.5996712174930496,
+      "maxVertexError": 0.00006330660723472231,
+      "sourceId": "us-2023"
+    },
+    "madrid": {
+      "aspect": 0.6207362584422543,
+      "maxVertexError": 0.00006938063751194824,
+      "sourceId": "es-2026"
+    },
+    "mexico": {
+      "aspect": 1.385211396525272,
+      "maxVertexError": 0.0000616314885914838,
+      "sourceId": "mx-1962"
+    },
+    "miami": {
+      "aspect": 2.5151464415846108,
+      "maxVertexError": 0.00007002896240360896,
+      "sourceId": "us-2022"
+    },
+    "monaco": {
+      "aspect": 0.7551333485058475,
+      "maxVertexError": 0.00006590251949359478,
+      "sourceId": "mc-1929"
+    },
+    "netherlands": {
+      "aspect": 1.1733387802205884,
+      "maxVertexError": 0.00006355865013567701,
+      "sourceId": "nl-1948"
+    },
+    "qatar": {
+      "aspect": 0.847056442365331,
+      "maxVertexError": 0.00006704557934810675,
+      "sourceId": "qa-2004"
+    },
+    "sao-paulo": {
+      "aspect": 0.6317076912269626,
+      "maxVertexError": 0.00006913717208720688,
+      "sourceId": "br-1940"
+    },
+    "singapore": {
+      "aspect": 1.543110101020512,
+      "maxVertexError": 0.00006565381041765719,
+      "sourceId": "sg-2008"
+    },
+    "united-states": {
+      "aspect": 1.744472549174597,
+      "maxVertexError": 0.00006966950343671148,
+      "sourceId": "us-2012"
+    }
+  },
+  "projection": "local-equirectangular-mean-latitude",
+  "source": "https://raw.githubusercontent.com/bacinger/f1-circuits/394d8fbe70ef2c0b0c8d23ff7bee61fa09606055/f1-circuits.geojson"
+}
