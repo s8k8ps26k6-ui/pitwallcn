@@ -21,10 +21,16 @@ document.getElementById('check').onclick=()=>{
  const areas=Object.fromEntries(['header','.identity','[data-home-field]','.metrics','.session','.season'].map(s=>[s,rect(s)]));
  const intersects=(a,b)=>a&&b&&Math.min(a.right,b.right)-Math.max(a.x,b.x)>.5&&Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)>.5;
  const collisions=Object.entries(areas).filter(([s])=>s!=='[data-home-field]').filter(([,r])=>intersects(areas['[data-home-field]'],r)).map(([s])=>s);
- const svg=doc.querySelector('[data-home-field] svg'),path=svg?.querySelector('g path');
+ const svg=doc.querySelector('[data-home-field] svg'),path=svg?.querySelector('g path:not([transform])');
  const header=doc.querySelector('header'),style=win.getComputedStyle(header);
  const geometry=path?.getBBox(),vb=svg?.viewBox.baseVal;
  const visualContained=!geometry||geometry.x>=32-.1&&geometry.y>=32-.1&&geometry.x+geometry.width+32<=vb.width+.1&&geometry.y+geometry.height+48<=vb.height+.1;
- document.getElementById('result').textContent=JSON.stringify({event:doc.body.dataset.event,viewport:[win.innerWidth,win.innerHeight],scrollY:win.scrollY,visualViewport:win.visualViewport&&[win.visualViewport.width,win.visualViewport.height],header:{display:style.display,visibility:style.visibility,opacity:style.opacity,rect:areas.header},horizontalOverflow:doc.documentElement.scrollWidth>win.innerWidth,collisions,visualContained,areas,rounds:doc.querySelector('.season')?.textContent},null,2);
+ const source=JSON.parse(doc.body.dataset.geometry), canonical=source.canonical;
+ const matrix=path?.getScreenCTM(), rendered=path?.getBoundingClientRect();
+ const points=path?.getAttribute('d').match(/-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/gi)?.map(Number);
+ const normalized=canonical&&points?canonical.points.map((p,i)=>[(points[i*2]-geometry.x)/geometry.width,(points[i*2+1]-geometry.y)/geometry.width]):[];
+ const expected=canonical?.points.map(p=>[(p[0]-canonical.bounds.x)/canonical.bounds.width,(p[1]-canonical.bounds.y)/canonical.bounds.width]);
+ const geometryAudit=canonical&&geometry?{source:source.raw,canonical:canonical.bounds,sourceAspect:canonical.bounds.width/canonical.bounds.height,field:[areas['[data-home-field]'].width,areas['[data-home-field]'].height],fitted:[geometry.width,geometry.height],final:[rendered.width,rendered.height],finalAspect:rendered.width/rendered.height,scaleX:rendered.width/canonical.bounds.width,scaleY:rendered.height/canonical.bounds.height,matrix:{a:matrix.a,b:matrix.b,c:matrix.c,d:matrix.d},topology:points.length===canonical.points.length*2&&path.getAttribute('d').endsWith('Z'),maxNormalizedError:Math.max(...normalized.flatMap((p,i)=>p.map((v,j)=>Math.abs(v-expected[i][j]))))}:null;
+ document.getElementById('result').textContent=JSON.stringify({geometryAudit,event:doc.body.dataset.event,viewport:[win.innerWidth,win.innerHeight],scrollY:win.scrollY,visualViewport:win.visualViewport&&[win.visualViewport.width,win.visualViewport.height],header:{display:style.display,visibility:style.visibility,opacity:style.opacity,rect:areas.header},horizontalOverflow:doc.documentElement.scrollWidth>win.innerWidth,collisions,visualContained,areas,rounds:doc.querySelector('.season')?.textContent},null,2);
 };render();
 </script></html>

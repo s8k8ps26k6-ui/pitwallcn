@@ -1,3 +1,4 @@
+import { canonicalCircuit, getCircuitAspect, getBounds } from "../circuit-geometry";
 import { createRoot } from "react-dom/client";
 import { HomepageV3 } from "../homepage-v3";
 import { getSeasonRaces } from "@/lib/atlas/race-detail";
@@ -11,5 +12,6 @@ const race = structuredClone(selected);
 if (settings.edge === "empty" && race.circuit) race.circuit.outline = [];
 if (settings.edge === "long") race.race.name = "A Very Long International Motorsport Championship Grand Prix";
 if (settings.edge === "missing" && race.circuit) { race.circuit.lengthKm = undefined; race.circuit.laps = undefined; }
+settings.geometry = JSON.stringify({ raw: getBounds(race.circuit?.outline ?? []), canonical: canonicalCircuit(race.circuit?.outline,getCircuitAspect(race.race.id)) });
 document.documentElement.style.fontSize = settings.enlarge === "true" ? "32px" : "16px";
 createRoot(document.getElementById("root")!).render(<HomepageV3 race={race} phase="next" raceRail={races.slice(Math.max(0,index-1),index+2)} seasonCount={races.length}/>);

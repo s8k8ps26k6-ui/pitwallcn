@@ -13,30 +13,27 @@ export function getBounds(points: readonly Point[]): Bounds | null {
 export function getCircuitAspect(key?: string) {
   return key && key in metadata.circuits ? metadata.circuits[key as keyof typeof metadata.circuits].aspect : undefined;
 }
-/** Restore source coordinate aspect before fitting; unknown sources retain their
- * normalized shape. Uniform fitting never depends on event-specific CSS. */
+/** Canonical shape is independent of viewport: restore source aspect once. */
+export function canonicalCircuit(outline: readonly Point[] | undefined, aspect = 1) {
+  if (!Number.isFinite(aspect) || aspect <= 0) return null;
+  const points: Point[] = outline?.map(([x, y]) => [x * aspect, 1 - y] as const) ?? [];
+  const bounds = getBounds(points);
+  return bounds ? { points, bounds } : null;
+}
+/** Only translation and one positive uniform scale may depend on the viewport. */
 export function fitCircuit(outline: readonly Point[] | undefined, width: number, height: number, aspect = 1) {
-  if (!Number.isFinite(width) || !Number.isFinite(height) || !Number.isFinite(aspect) || aspect <= 0) return null;
-  let source: Point[] = outline?.map(([x, y]) => [x * aspect, 1 - y] as const) ?? [];
-  let bounds = getBounds(source);
+  if (!Number.isFinite(width) || !Number.isFinite(height)) return null;
+  const canonical = canonicalCircuit(outline, aspect);
   const aw = width - VISUAL_PADDING.left - VISUAL_PADDING.right;
   const ah = height - VISUAL_PADDING.top - VISUAL_PADDING.bottom;
-  if (!bounds || aw <= 0 || ah <= 0) return null;
-  // In a wide visual field, a rigid quarter-turn can use substantially more
-  // space. Derived only from geometry and viewport, never event-specific tuning.
-  const normalScale = Math.min(aw / bounds.width, ah / bounds.height);
-  const rotatedScale = Math.min(aw / bounds.height, ah / bounds.width);
-  const rotated = aw / ah > 1.25 && rotatedScale > normalScale * 1.1;
-  if (rotated) {
-    source = source.map(([x, y]) => [-y, x] as const);
-    bounds = getBounds(source)!;
-  }
+  if (!canonical || aw <= 0 || ah <= 0) return null;
+  const { points: source, bounds } = canonical;
   const scale = Math.min(aw / bounds.width, ah / bounds.height);
   const offset: Point = [VISUAL_PADDING.left + (aw - bounds.width * scale) / 2 - bounds.x * scale,
     VISUAL_PADDING.top + (ah - bounds.height * scale) / 2 - bounds.y * scale];
   const points = source.map(([x, y]) => [x * scale + offset[0], y * scale + offset[1]] as const);
   const fitted = getBounds(points)!;
-  return { points, scale, offset, rotated, bounds: fitted,
+  return { points, scale, offset, bounds: fitted,
     visualBounds: { x: fitted.x - VISUAL_PADDING.left, y: fitted.y - VISUAL_PADDING.top,
       width: fitted.width + VISUAL_PADDING.left + VISUAL_PADDING.right,
       height: fitted.height + VISUAL_PADDING.top + VISUAL_PADDING.bottom },

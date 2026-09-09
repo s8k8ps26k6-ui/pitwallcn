@@ -49,7 +49,7 @@ function load(relativePath) {
 }
 
 const { getSeasonRaces } = load("src/lib/atlas/race-detail.ts");
-const { fitCircuit, getCircuitAspect } = load("src/components/homepage-v3/circuit-geometry.ts");
+const { fitCircuit, getCircuitAspect, canonicalCircuit } = load("src/components/homepage-v3/circuit-geometry.ts");
 const { CircuitField } = load("src/components/homepage-v3/circuit-field.tsx");
 const { HomeCountryFlag } = load("src/components/homepage-v3/home-country-flag.tsx");
 const { HomepageV3 } = load("src/components/homepage-v3/homepage-v3.tsx");
@@ -134,8 +134,24 @@ test("missing or invalid metrics never create dash-unit pairs; valid data surviv
   }
 });
 
-test("a wide field may rotate rigidly, while portrait preserves source orientation", () => {
-  const outline=[[0,0],[1,0],[1,1],[0,1]];
-  assert.equal(fitCircuit(outline,900,400,.6).rotated,true);
-  assert.equal(fitCircuit(outline,342,354,.6).rotated,false);
-});
+for (const key of events) {
+  test(`${key}: canonical ordered geometry and aspect invariant across viewports`, () => {
+    const outline = races.find(r => r.race.id === key).circuit.outline;
+    const aspect = getCircuitAspect(key);
+    const canonical = canonicalCircuit(outline, aspect);
+    const source = canonical.bounds;
+    for (const [width, height] of [[342,354.48],[288,250],[940,414]]) {
+      const fit = fitCircuit(outline,width,height,aspect);
+      const scaleX = fit.bounds.width / source.width;
+      const scaleY = fit.bounds.height / source.height;
+      assert.ok(Math.abs(scaleX-scaleY)<1e-8);
+      assert.ok(Math.abs(fit.bounds.width/fit.bounds.height-source.width/source.height)<1e-8);
+      assert.equal(fit.points.length,canonical.points.length);
+      fit.points.forEach((point,index) => {
+        // Recover ordered canonical vertices with one scale, rejecting rotation,
+        // reflection, reordered topology, and viewport-specific deformation.
+        for (const axis of [0,1]) assert.ok(Math.abs((point[axis]-fit.offset[axis])/fit.scale-canonical.points[index][axis])<1e-8);
+      });
+    }
+  });
+}

@@ -27,7 +27,8 @@ The renderer applies the source aspect once, then a **single uniform scale** int
 the available viewport. Stroke, depth and bounded Gaussian shadow are included
 in visual padding. Every layout uses the same fitting function and SVG.
 
-In wide fields only, the helper chooses a rigid quarter-turn when it improves
-uniform scale by more than 10%. This is a geometry/viewport calculation shared by
-all events, not manually assigned track rotations. It preserves lengths, angles
-and aspect; portrait uses the source north-up orientation.
+Canonical orientation is fixed across all viewports. Only translation and a
+positive uniform scale depend on available space. A previous quarter-turn
+optimization inverted the bounding aspect in wide fields; it has been removed.
+Cross-viewport tests recover every ordered canonical vertex, rejecting rotations,
+reflections and non-uniform scaling as well as aspect changes.
