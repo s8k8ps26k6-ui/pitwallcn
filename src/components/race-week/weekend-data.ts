@@ -22,8 +22,10 @@ export async function loadWeekend(race: UnifiedRace, nowIso: string, requestedKe
       if (verified.length) { sessions = verified; scheduleSource = 'openf1'; }
     }
   } catch { /* Preserve the calendar's confirmation flags and missing-time states. */ }
-  const weekend = deriveWeekend(sessions, nowIso);
-  const selected = weekend.sessions.find(s => s.sessionKey === requestedKey) ?? weekend.sessions[weekend.focus];
+  const localToday = new Intl.DateTimeFormat('en-CA', { timeZone: race.circuit?.timeZone ?? 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(nowIso));
+  const eventDateElapsed = localToday > race.race.endDate;
+  const weekend = deriveWeekend(sessions, nowIso, undefined, eventDateElapsed);
+  const selected = weekend.sessions.find(s => s.sessionKey === requestedKey) ?? weekend.sessions[weekend.focus] ?? weekend.sessions.at(-1);
   const weatherEntries = await Promise.all(weekend.sessions.map(async session => {
     if (!session.sessionKey || Date.parse(session.start) > Date.parse(nowIso)) return null;
     const weather = await getWeatherBySession(session.sessionKey);
@@ -31,5 +33,5 @@ export async function loadWeekend(race: UnifiedRace, nowIso: string, requestedKe
   }));
   const weather = Object.fromEntries(weatherEntries.filter(entry => entry !== null));
   const control = selected?.sessionKey && Date.parse(selected.start) <= Date.parse(nowIso) ? await getRaceControlFeedBySession(selected.sessionKey) : null;
-  return { weekend, scheduleSource, selectedKey: selected?.key, weather, control, nowIso };
+  return { weekend, eventDateElapsed, scheduleSource, selectedKey: selected?.key, weather, control, nowIso };
 }

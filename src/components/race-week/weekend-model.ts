@@ -10,7 +10,7 @@ export type SessionState = 'upcoming' | 'scheduled' | 'elapsed' | 'completed' | 
 export type WeekendState = 'pre-event' | 'active-session' | 'between-sessions' | 'completed' | 'unconfirmed';
 
 /** Calendar intervals describe scheduled activity, never establish a live feed. */
-export function deriveWeekend(sessions: WeekendSession[], nowIso: string, liveSessionKey?: number) {
+export function deriveWeekend(sessions: WeekendSession[], nowIso: string, liveSessionKey?: number, eventDateElapsed = false) {
   const now = Date.parse(nowIso);
   const ordered = [...sessions].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   const states: SessionState[] = ordered.map(session => {
@@ -24,8 +24,8 @@ export function deriveWeekend(sessions: WeekendSession[], nowIso: string, liveSe
   const next = ordered.findIndex((session, i) => session.confirmed && states[i] === 'upcoming');
   const allComplete = states.length > 0 && states.every(state => state === 'completed');
   const anyStarted = states.some(state => state !== 'upcoming');
-  const state: WeekendState = allComplete ? 'completed' : active >= 0 ? 'active-session' : !ordered.some(s => s.confirmed) ? 'unconfirmed' : !anyStarted ? 'pre-event' : 'between-sessions';
-  const focus = active >= 0 ? active : next >= 0 ? next : Math.max(0, ordered.length - 1);
+  const state: WeekendState = allComplete || eventDateElapsed ? 'completed' : active >= 0 ? 'active-session' : !ordered.some(s => s.confirmed) ? 'unconfirmed' : !anyStarted ? 'pre-event' : 'between-sessions';
+  const focus = active >= 0 ? active : next >= 0 ? next : allComplete ? Math.max(0, ordered.length - 1) : eventDateElapsed ? -1 : 0;
   return { sessions: ordered, states, state, focus };
 }
 
