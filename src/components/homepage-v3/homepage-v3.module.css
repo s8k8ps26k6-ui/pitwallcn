@@ -85,7 +85,9 @@
   .title span{display:block}
   .dates{font-size:.875rem}
   .circuitViewport{height:clamp(520px,calc(100svh - 200px),780px);width:100%;max-width:700px;justify-self:end}
-  .details{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:24px;padding-top:12px}
+  .details{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;gap:18px;padding-top:8px}
+  .pendingMetrics{line-height:1.5;opacity:.8}
+  .connectors [data-kind="session"]{opacity:.65}
   .metrics{flex-direction:row;flex-wrap:wrap;gap:36px}.length strong,.laps strong{font-size:2.125rem}
   .session h2{font-size:2rem}.sessionTime,.session time{font-size:.875rem}
   .currentRace strong{font-size:1.625rem}

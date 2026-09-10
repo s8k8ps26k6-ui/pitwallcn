@@ -78,6 +78,6 @@ export function SceneConnectors({ eventId }: { eventId: string }) {
       window.removeEventListener("resize", measure); document.fonts?.removeEventListener("loadingdone", measure); };
   }, [eventId]);
   return <svg ref={layer} className={styles.connectors} aria-hidden="true">
-    {lines.map(({ from, to, kind }) => <path key={kind} d={`M${from.x} ${from.y} Q${from.x} ${to.y} ${to.x} ${to.y}`}/>)}
+    {lines.map(({ from, to, kind }) => <path key={kind} data-kind={kind} d={`M${from.x} ${from.y} Q${from.x} ${to.y} ${to.x} ${to.y}`}/>)}
   </svg>;
 }
