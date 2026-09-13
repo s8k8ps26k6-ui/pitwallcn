@@ -8,6 +8,7 @@ import type { WeekendData } from './weekend-data';
 import { shortSessionName } from './weekend-model';
 import styles from './race-week.module.css';
 import { RaceEnvironment } from './race-environment';
+import { deriveEnvironmentState } from './environment/environment-model';
 import { WeekendRefresh } from './weekend-refresh';
 function local(iso: string, zone: string, options: Intl.DateTimeFormatOptions) {
     return new Intl.DateTimeFormat('zh-CN', { timeZone: zone, ...options }).format(new Date(iso));
@@ -37,7 +38,7 @@ export function RaceWeekView({ race, races, data, invalidEvent }: {
     const lastMessage = data.control?.source === 'openf1' ? data.control.data[0] : null;
     return <div className={styles.viewport}><main id="main-content" className={styles.page} data-weekend-state={weekend.state} data-event={race.race.id}>
     <WeekendRefresh />
-    <RaceEnvironment circuitId={race.circuitId}/>
+    <RaceEnvironment circuitId={race.circuitId} state={deriveEnvironmentState({ weekend: weekend.state, reliableLive: live, nowIso: data.nowIso, timeZone: race.circuit?.timeZone, observation: selectedWeather })}/>
     <header className={styles.header}>
       <HomeBrandLink className={styles.brand} ariaLabel="返回 LAPMETRY 首页">LAPMETRY</HomeBrandLink>
       <nav aria-label="主导航"><Link href="/race-weekend" aria-current="page">比赛周</Link><Link href="/schedule">赛历</Link><Link href="/atlas-v2">Atlas</Link></nav>

@@ -1,0 +1,23 @@
+.root {
+  --rw-sky-top: #131b22;
+  --rw-sky-horizon: #272e33;
+  --rw-trajectory: .4;
+  --rw-reflection: .12;
+  --rw-haze: .4;
+  --rw-night-shade: 0;
+}
+.root[data-phase='live'] { --rw-trajectory: .86; --rw-reflection: .3; }
+.root[data-phase='scheduled'] { --rw-trajectory: .5; }
+.root[data-phase='pre-session'] { --rw-trajectory: .35; }
+.root[data-phase='between-sessions'] { --rw-trajectory: .3; }
+.root[data-phase='completed'] { --rw-trajectory: .19; --rw-reflection: .06; }
+.root[data-phase='completed'] svg { filter: saturate(.65); }
+.root[data-time='day'] { --rw-sky-top: #202a32; --rw-sky-horizon: #384044; --rw-haze: .35; }
+.root[data-time='late-afternoon'] { --rw-sky-top: #242b30; --rw-sky-horizon: #49403a; --rw-haze: .5; }
+.root[data-time='dusk'] { --rw-sky-top: #181e2a; --rw-sky-horizon: #39323b; --rw-haze: .6; }
+.root[data-time='night'] { --rw-sky-top: #0b111b; --rw-sky-horizon: #1e2935; --rw-night-shade: .16; }
+.root[data-weather='wet'] { --rw-reflection: .7; --rw-haze: .8; }
+.root[data-weather='cloudy'] { --rw-sky-horizon: #30373e; --rw-haze: .8; }
+.root[data-weather='dry'] { --rw-reflection: .04; }
+.stateOverlay { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .root, .root * { animation: none; transition: none; } }

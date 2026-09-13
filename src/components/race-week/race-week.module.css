@@ -26,7 +26,6 @@
 /* Fidelity correction: environment, trajectory and state share one continuous field. */
 .environment{height:620px;mask-image:linear-gradient(#000 66%,transparent)}
 .environment svg{opacity:1}
-.page[data-weekend-state=completed] .environment{filter:saturate(.65)}
 .scene{min-height:272px;padding-bottom:34px}
 .identity h1{font-size:32px}.identity p{font-size:13px}.identity>span,.identity>small{font-size:11px}.identity p{margin-bottom:10px}
 .overview{position:relative;padding:14px 0 12px 28px;border-left:1px solid #ffffff24;text-align:left;min-width:205px;background:linear-gradient(90deg,#080d10b3,transparent)}
