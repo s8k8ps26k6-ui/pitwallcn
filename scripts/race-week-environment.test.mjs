@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { createElement } from 'react';
 
 const require = createRequire(import.meta.url);
 const root = new URL('../src/components/race-week/environment/', import.meta.url);
@@ -23,12 +24,13 @@ test('canonical venue registry isolates Suzuka and uses safe fallbacks', () => {
   for (const id of ['unknown', '', 'constructor', '__proto__']) assert.equal(resolveVenue(id), 'trackside-fallback');
 });
 test('venue modules render distinct geometry, without Suzuka landmark leakage', async () => {
-  const suzuka = renderToStaticMarkup((await moduleFrom('suzuka.tsx')).SuzukaEnvironment());
+  const renderSvg = element => renderToStaticMarkup(createElement('svg', null, element));
+  const suzuka = renderSvg((await moduleFrom('suzuka.tsx')).SuzukaEnvironment());
   assert.match(suzuka, /translate\(571 220\)/);
-  const monza = renderToStaticMarkup((await moduleFrom('monza.tsx')).MonzaEnvironment());
-  const monaco = renderToStaticMarkup((await moduleFrom('monaco.tsx')).MonacoEnvironment());
+  const monza = renderSvg((await moduleFrom('monza.tsx')).MonzaEnvironment());
+  const monaco = renderSvg((await moduleFrom('monaco.tsx')).MonacoEnvironment());
   const fallback = (await moduleFrom('fallback.tsx')).FallbackEnvironment;
-  const all = [monza, monaco, renderToStaticMarkup(fallback({urban:true})), renderToStaticMarkup(fallback({urban:false}))];
+  const all = [monza, monaco, renderSvg(fallback({urban:true})), renderSvg(fallback({urban:false}))];
   assert.equal(new Set(all).size, 4);
   for (const svg of all) {
     assert.doesNotMatch(svg, /translate\(571 220\)|M908 221 1440 18|rw-stand-clip/);
@@ -36,6 +38,21 @@ test('venue modules render distinct geometry, without Suzuka landmark leakage', 
   }
   const base = fs.readFileSync(new URL('shared-base.tsx', root), 'utf8');
   assert.doesNotMatch(base, /rw-stand-clip|rw-seats|571 220|M908 221 1440 18/);
+});
+test('spatial families own camera geometry; shared base and state own no fixed road', async () => {
+  const { spatialField } = await moduleFrom('spatial-family.ts');
+  const families = ['suzuka', 'monza', 'monaco'].map(venue => spatialField(venue));
+  assert.equal(new Set(families.map(field => field.family)).size, 3);
+  assert.equal(new Set(families.map(field => JSON.stringify(field.haze))).size, 3);
+  const base = fs.readFileSync(new URL('shared-base.tsx', root), 'utf8');
+  const state = fs.readFileSync(new URL('state-layer.tsx', root), 'utf8');
+  assert.doesNotMatch(base + state, /M0 392|M400 534|EnvironmentSurface|PermanentTrackField/);
+  for (const name of ['monza.tsx', 'monaco.tsx']) {
+    const source = fs.readFileSync(new URL(name, root), 'utf8');
+    assert.doesNotMatch(source, /PermanentTrackField|M0 392|631 351/);
+    assert.match(source, /data-spatial-field/);
+    assert.match(source, /var\(--rw-reflection\)/);
+  }
 });
 const input = { weekend:'active-session', reliableLive:false, nowIso:'2026-09-13T10:00:00Z', timeZone:'Europe/Rome' };
 test('state lighting never promotes a schedule interval to LIVE', () => {

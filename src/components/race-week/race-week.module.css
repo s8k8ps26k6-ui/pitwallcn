@@ -24,7 +24,7 @@
 @container raceweek (max-width:650px){.detailLinks{justify-content:flex-start;gap:16px}.page{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}}
 
 /* Fidelity correction: environment, trajectory and state share one continuous field. */
-.environment{height:620px;mask-image:linear-gradient(#000 66%,transparent)}
+.environment{height:680px;mask-image:linear-gradient(#000 53%,#000b 76%,transparent)}
 .environment svg{opacity:1}
 .scene{min-height:272px;padding-bottom:34px}
 .identity h1{font-size:32px}.identity p{font-size:13px}.identity>span,.identity>small{font-size:11px}.identity p{margin-bottom:10px}
