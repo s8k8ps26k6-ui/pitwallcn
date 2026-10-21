@@ -11,7 +11,7 @@ LAPMETRY is an independent, unofficial Chinese-language Formula 1 data and race-
 - **Repository homepage URL:** https://pitwallcn.vercel.app (as configured in GitHub settings; availability not verified here)
 - **Project type:** community-oriented fan-made software, not affiliated with Formula 1 or FIA.
 
-> **Development and licensing status:** This is a publicly visible development repository. A software license has not yet been approved by the maintainer, so public visibility does not by itself grant permission to reuse or redistribute the code. Stable features on `main` and experimental development branches may differ. See [maintainer evidence and pending steps](docs/OPEN_SOURCE_MAINTENANCE.md).
+> **License and development status:** The project's original source code and project-authored documentation on branches containing [LICENSE](LICENSE) are licensed under MIT. This does **not** license third-party photos, textures, fonts, geographic data, trademarks, upstream datasets or other externally owned content. See [third-party notices](THIRD_PARTY_NOTICES.md) for exclusions and unresolved provenance. Stable features on `main` and experimental development branches may differ; check the branch you are using.
 
 ## Project scope and status
 
@@ -180,7 +180,7 @@ A GitHub Actions quality workflow runs lint, TypeScript checks, unit tests and b
 - [Third-party source and rights inventory](THIRD_PARTY_NOTICES.md): documented inputs and assets still needing permission checks.
 - [Pull requests](https://github.com/s8k8ps26k6-ui/pitwallcn/pulls) and [issues](https://github.com/s8k8ps26k6-ui/pitwallcn/issues) are the source of record for contributions and triage.
 
-**License decision pending.** Before this repository is described as open-source software, the maintainer must choose an appropriate license and complete a third-party asset rights review. See the outstanding checklist in `docs/OPEN_SOURCE_MAINTENANCE.md`. Please discuss substantial outside code submissions first.
+**License:** [MIT](LICENSE) for original source code and project-authored documentation. **Third-party materials are not covered by that grant.** Some bundled photographs still lack confirmed provenance, so do not redistribute them on the assumption that the MIT grant includes them. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the remaining release checklist in [docs/OPEN_SOURCE_MAINTENANCE.md](docs/OPEN_SOURCE_MAINTENANCE.md).
 
 ## Notes
 
