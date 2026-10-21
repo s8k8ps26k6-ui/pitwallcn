@@ -11,7 +11,7 @@ LAPMETRY is an independent, unofficial Chinese-language Formula 1 data and race-
 - **Repository homepage URL:** https://pitwallcn.vercel.app (as configured in GitHub settings; availability not verified here)
 - **Project type:** community-oriented fan-made software, not affiliated with Formula 1 or FIA.
 
-> **License and development status:** The project's original source code and project-authored documentation on branches containing [LICENSE](LICENSE) are licensed under MIT. This does **not** license third-party photos, textures, fonts, geographic data, trademarks, upstream datasets or other externally owned content. See [third-party notices](THIRD_PARTY_NOTICES.md) for exclusions and unresolved provenance. Stable features on `main` and experimental development branches may differ; check the branch you are using.
+> **License and development status:** The project's original source code and project-authored documentation on branches containing [LICENSE](LICENSE) are licensed under MIT. This does **not** license third-party photos, textures, fonts, geographic data, trademarks, upstream datasets or other externally owned content. See [third-party notices](THIRD_PARTY_NOTICES.md) for third-party exclusions and separately reserved, maintainer-owned photography. Stable features on `main` and experimental development branches may differ; check the branch you are using.
 
 ## Project scope and status
 
@@ -180,7 +180,7 @@ A GitHub Actions quality workflow runs lint, TypeScript checks, unit tests and b
 - [Third-party source and rights inventory](THIRD_PARTY_NOTICES.md): documented inputs and assets still needing permission checks.
 - [Pull requests](https://github.com/s8k8ps26k6-ui/pitwallcn/pulls) and [issues](https://github.com/s8k8ps26k6-ui/pitwallcn/issues) are the source of record for contributions and triage.
 
-**License:** [MIT](LICENSE) for original source code and project-authored documentation. **Third-party materials are not covered by that grant.** Some bundled photographs still lack confirmed provenance, so do not redistribute them on the assumption that the MIT grant includes them. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the remaining release checklist in [docs/OPEN_SOURCE_MAINTENANCE.md](docs/OPEN_SOURCE_MAINTENANCE.md).
+**License:** [MIT](LICENSE) for original source code and project-authored documentation. **Third-party materials are not covered by that grant.** The maintainer reports personally taking the three photographs in `public/images/`; these images are **all rights reserved, not MIT licensed**. Do not redistribute them on the assumption that the software license includes them. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the remaining release checklist in [docs/OPEN_SOURCE_MAINTENANCE.md](docs/OPEN_SOURCE_MAINTENANCE.md).
 
 ## Notes
 
