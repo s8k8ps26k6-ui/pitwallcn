@@ -50,6 +50,8 @@ Before licensing, audit asset sources and third-party materials such as:
 - icons, custom graphics, fonts and external snippets;
 - OpenF1/API data terms, attribution and redistribution permissions.
 
+See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for the actual asset inventory, including three tracked JPGs whose provenance still requires confirmation.
+
 A code license cannot grant rights that belong to someone else. External assets should be removed, replaced with permitted assets, or clearly separated and documented as independently licensed or excluded where appropriate.
 
 ## Remaining steps (not yet complete)
