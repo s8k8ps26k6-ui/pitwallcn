@@ -1,6 +1,6 @@
 # Third-party sources and rights review
 
-LAPMETRY is unofficial, independent fan software. This inventory is for maintainer review; it does **not** itself grant rights to reuse, relicense, distribute or imply endorsement of external content.
+LAPMETRY is unofficial, independent fan software. The [MIT License](LICENSE) applies only to source code and documentation whose copyright is held by the LAPMETRY maintainer(s) or duly licensed to LAPMETRY under MIT. **Third-party images, textures, datasets, fonts, trademarks and independently licensed dependencies are excluded from that license grant** and remain subject to their owners' rights and terms. This inventory does not itself grant rights to reuse, relicense, distribute or imply endorsement of external content.
 
 ## Documented inputs
 
@@ -23,18 +23,19 @@ The following tracked images do not have a matching source/usage-rights record i
 - `public/images/feature-ferrari.jpg`
 - `public/images/hero.jpg`
 
-**Do not assume these photographs are owned by the maintainer or redistributable.** Locate their originals, confirm the creator and license, and either document permission/attribution, substitute owned or appropriately licensed imagery, or remove them before publishing an open-source license that could appear to cover them.
+**These three photographs are NOT covered by the project's MIT grant.** Ownership and redistribution rights have not been established. Do not redistribute them based on the repository LICENSE. Locate the original creators and usage terms; document actual permissions or replace/remove these assets before distributing a complete application bundle that includes them.
 
 ## External dependencies
 
 JavaScript packages, type declarations and any externally sourced fonts remain under their respective licenses. Use the package lock and dependency license inventory to verify conditions when releasing or redistributing bundles.
 
-## Required before open-source licensing
+## Status and outstanding rights review
 
-- [ ] Choose and approve an OSI-recognized code license as repository owner.
-- [ ] Decide and document whether graphics, photographs and other assets have separate terms or are excluded.
-- [ ] Confirm rights for the three listed `public/images` photographs.
-- [ ] Review NASA media usage rules, provider attribution, trade dress and logo use.
-- [ ] Verify all notices and permissions are compatible with planned redistribution.
+- [x] Repository owner approved MIT for original source code; standard LICENSE added on the OSS readiness branch.
+- [x] Third-party graphics, photographs, textures, data and other materials explicitly excluded from the project's original-code MIT grant.
+- [ ] Confirm rights for the three listed `public/images` photographs before redistributing them in a bundle.
+- [ ] Review NASA media usage guidance, data-provider attribution, trade dress and logo use.
+- [ ] Verify notices and redistribution permissions for any additional third-party materials.
+- [ ] Merge reviewed changes into the default branch and verify GitHub's license identification.
 
-Do not represent this repository as fully open source until these decisions are made and the license is merged to the default branch.
+An MIT license for original code does **not** mean that all repository assets can be freely reused, nor that an external bundled release has passed rights review.
