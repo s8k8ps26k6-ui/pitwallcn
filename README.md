@@ -177,6 +177,7 @@ A GitHub Actions quality workflow runs lint, TypeScript checks, unit tests and b
 - [Contribution guide](CONTRIBUTING.md): how to propose changes and record validation evidence.
 - [Security policy](SECURITY.md): responsible vulnerability reporting.
 - [Maintainer activity and evidence](docs/OPEN_SOURCE_MAINTENANCE.md): where to inspect code, tests, PRs, and ongoing work.
+- [Third-party source and rights inventory](THIRD_PARTY_NOTICES.md): documented inputs and assets still needing permission checks.
 - [Pull requests](https://github.com/s8k8ps26k6-ui/pitwallcn/pulls) and [issues](https://github.com/s8k8ps26k6-ui/pitwallcn/issues) are the source of record for contributions and triage.
 
 **License decision pending.** Before this repository is described as open-source software, the maintainer must choose an appropriate license and complete a third-party asset rights review. See the outstanding checklist in `docs/OPEN_SOURCE_MAINTENANCE.md`. Please discuss substantial outside code submissions first.
