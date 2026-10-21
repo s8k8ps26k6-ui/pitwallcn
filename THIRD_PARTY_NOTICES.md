@@ -15,15 +15,19 @@ LAPMETRY is unofficial, independent fan software. The [MIT License](LICENSE) app
 
 Original source URLs and the sources already recorded for the Atlas are in [public/atlas-v2/SOURCES.md](public/atlas-v2/SOURCES.md).
 
-## Assets with provenance requiring confirmation
+## Original project photography — not MIT licensed
 
-The following tracked images do not have a matching source/usage-rights record identified during this repository pass:
+On 2026-10-21, the repository maintainer confirmed that the following three photographs were **personally taken by them**:
 
 - `public/images/driver-redbull.jpg`
 - `public/images/feature-ferrari.jpg`
 - `public/images/hero.jpg`
 
-**These three photographs are NOT covered by the project's MIT grant.** Ownership and redistribution rights have not been established. Do not redistribute them based on the repository LICENSE. Locate the original creators and usage terms; document actual permissions or replace/remove these assets before distributing a complete application bundle that includes them.
+**Photo copyright:** © the LAPMETRY repository maintainer / photographer. **All rights reserved.** These photos are made available for display as part of the LAPMETRY website, but the project's MIT software license **does not** grant third parties permission to copy, redistribute, sell, modify or separately use these photos. Contact the copyright holder for permission before reusing them.
+
+This authorship record is based on the maintainer's declaration, not an independent verification of original files or metadata. Ownership of the photography does not necessarily grant rights to third-party logos, event footage, trademarks, artwork, or recognizable individuals depicted in a photo. Any event, venue and commercial-use restrictions still apply where relevant.
+
+For an independently distributable version of the website, either obtain permission to redistribute these photos or replace them with redistributable assets. Their presence in a publicly accessible repository is not itself an invitation to republish them.
 
 ## External dependencies
 
@@ -33,7 +37,8 @@ JavaScript packages, type declarations and any externally sourced fonts remain u
 
 - [x] Repository owner approved MIT for original source code; standard LICENSE added on the OSS readiness branch.
 - [x] Third-party graphics, photographs, textures, data and other materials explicitly excluded from the project's original-code MIT grant.
-- [ ] Confirm rights for the three listed `public/images` photographs before redistributing them in a bundle.
+- [x] Record maintainer's authorship declaration for three `public/images` photographs; keep photography outside MIT under separate all-rights-reserved terms.
+- [ ] Obtain additional permission (or replace images) before third parties redistribute the photography as part of a bundled application.
 - [ ] Review NASA media usage guidance, data-provider attribution, trade dress and logo use.
 - [ ] Verify notices and redistribution permissions for any additional third-party materials.
 - [ ] Merge reviewed changes into the default branch and verify GitHub's license identification.
