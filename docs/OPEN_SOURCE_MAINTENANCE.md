@@ -41,7 +41,7 @@ Any user numbers, stars, download counts, deployments, revenue or community reac
 
 ## Licensing and third-party rights
 
-**Decision required:** The maintainer must choose and approve an OSI-recognized license before representing this repository as an open-source project. A public repository alone is not sufficient.
+**License approved:** The repository owner selected [MIT](../LICENSE) for the project's original source code and project-authored documentation on branches containing that license. This grant does not extend to third-party materials, and a public repository alone does not establish permission to redistribute everything it contains.
 
 Before licensing, audit asset sources and third-party materials such as:
 
@@ -56,8 +56,10 @@ A code license cannot grant rights that belong to someone else. External assets 
 
 ## Remaining steps (not yet complete)
 
-- [ ] Maintainer selects and approves a code license, after checking asset rights.
-- [ ] License is added to the default branch.
+- [x] Maintainer approved MIT for original source code; the LICENSE file is present in the OSS readiness branch.
+- [x] Third-party assets explicitly excluded from the project's original-code MIT grant in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+- [ ] Review the actual rights of three photographs in `public/images/` before redistribution.
+- [ ] Merge LICENSE and updated notices to the default branch after review.
 - [ ] Current stable functionality is selectively reviewed and merged from development branches.
 - [ ] Deployment URL and end-to-end access are verified.
 - [ ] GitHub About description and repository topics are filled in by the maintainer.
