@@ -50,7 +50,7 @@ Before licensing, audit asset sources and third-party materials such as:
 - icons, custom graphics, fonts and external snippets;
 - OpenF1/API data terms, attribution and redistribution permissions.
 
-See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for the actual asset inventory, including three tracked JPGs whose provenance still requires confirmation.
+See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for the actual asset inventory, including three maintainer-shot photographs that are separately reserved, not MIT licensed.
 
 A code license cannot grant rights that belong to someone else. External assets should be removed, replaced with permitted assets, or clearly separated and documented as independently licensed or excluded where appropriate.
 
@@ -58,7 +58,8 @@ A code license cannot grant rights that belong to someone else. External assets 
 
 - [x] Maintainer approved MIT for original source code; the LICENSE file is present in the OSS readiness branch.
 - [x] Third-party assets explicitly excluded from the project's original-code MIT grant in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
-- [ ] Review the actual rights of three photographs in `public/images/` before redistribution.
+- [x] Record the maintainer's declaration that all three `public/images/` photographs were personally shot; they remain all-rights-reserved and outside the MIT grant.
+- [ ] Obtain the photographer's separate redistribution permission or replace these photos before publishing a complete redistributable bundle.
 - [ ] Merge LICENSE and updated notices to the default branch after review.
 - [ ] Current stable functionality is selectively reviewed and merged from development branches.
 - [ ] Deployment URL and end-to-end access are verified.
