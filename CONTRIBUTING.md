@@ -2,7 +2,7 @@
 
 Thanks for your interest in LAPMETRY. This is an independently maintained, unofficial motorsport data and visualization project. Contributions should improve data integrity, usability, performance, accessibility, or documentation rather than create artificial engagement.
 
-> **Licensing status:** The maintainer has not yet selected an open-source license for this repository. A public GitHub repository is not automatically open source. Please discuss substantial external code contributions in an issue **before** submitting them; no permission beyond GitHub's standard platform terms is implied until a license is adopted.
+> **Code license:** Original source code and project-authored documentation are published under the [MIT License](LICENSE) on branches containing that file. This does not grant rights in third-party photographs, maps, fonts, data or trademarks. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). For substantial changes, please discuss the approach in an issue before opening a pull request.
 
 ## Before opening a pull request
 
@@ -11,6 +11,7 @@ Thanks for your interest in LAPMETRY. This is an independently maintained, unoff
 3. Keep changes focused. Avoid unrelated visual redesigns, API changes, or dependency updates.
 4. Never commit secrets, access tokens, real credentials, personal information, or third-party assets without redistribution rights.
 5. Respect the project's source attribution and the trademarks of Formula 1, FIA, their teams and drivers.
+6. By submitting original code or documentation for inclusion, confirm that you have the right to contribute it under the project's MIT License. Do not submit materials you cannot license; third-party assets require separate express permission and proper notices.
 
 ## Development
 
