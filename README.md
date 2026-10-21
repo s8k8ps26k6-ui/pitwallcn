@@ -1,20 +1,29 @@
 # LAPMETRY
 
-LAPMETRY — F1 Race Data Command Center
+**Motorsport first. Data second.**
 
-中文 F1 数据指挥台。LAPMETRY is an unofficial Formula 1 data dashboard for Chinese F1 fans.
+LAPMETRY 是一个面向中文 F1 观众的独立数据与赛道可视化项目（F1 / Motorsport Data Intelligence）。它将比赛日程、成绩、赛控信息、圈速、天气与赛季空间信息组织为可以探索的网页体验。
 
-Live site:
+LAPMETRY is an independent, unofficial Chinese-language Formula 1 data and race-context visualization project. It combines race data interfaces with an interactive season Atlas and circuit-oriented experiences.
 
-```text
-https://pitwallcn-57ny.vercel.app
-```
+- **Repository:** https://github.com/s8k8ps26k6-ui/pitwallcn
+- **Demo URL documented in the project:** https://pitwallcn-57ny.vercel.app (availability must be verified independently)
+- **Repository homepage URL:** https://pitwallcn.vercel.app (as configured in GitHub settings; availability not verified here)
+- **Project type:** community-oriented fan-made software, not affiliated with Formula 1 or FIA.
 
-Repository:
+> **License and development status:** The project's original source code and project-authored documentation on branches containing [LICENSE](LICENSE) are licensed under MIT. This does **not** license third-party photos, textures, fonts, geographic data, trademarks, upstream datasets or other externally owned content. See [third-party notices](THIRD_PARTY_NOTICES.md) for third-party exclusions and separately reserved, maintainer-owned photography. Stable features on `main` and experimental development branches may differ; check the branch you are using.
 
-```text
-https://github.com/s8k8ps26k6-ui/pitwallcn
-```
+## Project scope and status
+
+| Area | What is in the repository |
+| --- | --- |
+| Race data | Routes and services for results, race control, lap analysis, weather, drivers and standings |
+| Race context | Race calendar, race-weekend views and route-specific presentation |
+| Atlas and circuits | Season Atlas, circuit outlines, race-detail helpers and associated unit tests |
+| Product work | Design and architecture notes, prototypes and separate development branches |
+| Maintenance | Issues, pull requests, contribution and security guidance, and automated code-quality checks |
+
+**Important:** A route or prototype existing in the source does not guarantee that every live dataset, session or deployment URL is currently operational. Some features use static or mock data, while others depend on OpenF1 availability. We aim to communicate missing or delayed data explicitly.
 
 ## Current Modules
 
@@ -28,6 +37,9 @@ https://github.com/s8k8ps26k6-ui/pitwallcn
 - `/drivers` Driver index and detail pages
 - `/standings` Drivers and constructors standings interface
 - `/live` Live timing interface prototype
+- `/atlas-v2` Interactive 2026 season Atlas route
+- `/project` Product and design change log
+- `/races` Race-oriented routes and detail experiences (see source for supported paths)
 
 ## Data Sources
 
@@ -45,7 +57,10 @@ https://github.com/s8k8ps26k6-ui/pitwallcn
 - OpenF1 API
 - Vercel deployment
 
-## Public Changelog
+## Historical Changelog (README notes)
+
+The following entries describe earlier product milestones. They are **not** independently published GitHub Releases, and the current architecture includes later work on separate branches.
+
 
 ### v1.8 Race Weekend Recap
 
@@ -139,16 +154,38 @@ Start production server:
 npm run start
 ```
 
-Run linting:
+Run local quality checks:
 
 ```bash
 npm run lint
+npm run typecheck
+npm run test:unit
+npm run build
 ```
+
+Browser E2E checks (optional; installs a Chromium browser first):
+
+```bash
+npm run test:e2e:install
+npm run test:e2e
+```
+
+A GitHub Actions quality workflow runs lint, TypeScript checks, unit tests and build checks for pull requests and pushes to `main`. Each check's result must be verified in its actual workflow run.
+
+## Contributions, maintenance and security
+
+- [Contribution guide](CONTRIBUTING.md): how to propose changes and record validation evidence.
+- [Security policy](SECURITY.md): responsible vulnerability reporting.
+- [Maintainer activity and evidence](docs/OPEN_SOURCE_MAINTENANCE.md): where to inspect code, tests, PRs, and ongoing work.
+- [Third-party source and rights inventory](THIRD_PARTY_NOTICES.md): documented inputs and assets still needing permission checks.
+- [Pull requests](https://github.com/s8k8ps26k6-ui/pitwallcn/pulls) and [issues](https://github.com/s8k8ps26k6-ui/pitwallcn/issues) are the source of record for contributions and triage.
+
+**License:** [MIT](LICENSE) for original source code and project-authored documentation. **Third-party materials are not covered by that grant.** The maintainer reports personally taking the three photographs in `public/images/`; these images are **all rights reserved, not MIT licensed**. Do not redistribute them on the assumption that the software license includes them. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the remaining release checklist in [docs/OPEN_SOURCE_MAINTENANCE.md](docs/OPEN_SOURCE_MAINTENANCE.md).
 
 ## Notes
 
 LAPMETRY avoids unnecessary frontend third-party resources where possible. Major external data requests are handled through service files, which makes future caching and mirror deployment easier.
 
-## Disclaimer
+## Disclaimer and third-party rights
 
-LAPMETRY is an unofficial fan-made project. It is not affiliated with Formula 1, FIA, OpenF1, any Formula 1 team or any driver. Data availability depends on public data sources and may be incomplete for some sessions.
+LAPMETRY is an unofficial fan-made project. It is not affiliated with Formula 1, FIA, OpenF1, any Formula 1 team or any driver. Formula 1 and related marks belong to their respective owners. Third-party APIs, fonts, imagery, geographic data and other assets remain subject to their own terms; including them in this repository does not imply that the maintainer can relicense them. Data availability depends on upstream sources and may be incomplete or delayed for some sessions.
