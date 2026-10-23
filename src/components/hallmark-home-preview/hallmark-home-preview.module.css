@@ -1,0 +1,505 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Split Studio · theme: bespoke LAPMETRY telemetry · enrichment: restrained track hero · nav: N9 · footer: Ft2 */
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V5 */
+
+.page {
+  --paper: #071019;
+  --paper-2: #0b1621;
+  --paper-3: #0f1d29;
+  --ink: #edf3f4;
+  --ink-2: #bdcbd1;
+  --muted: #7f949e;
+  --rule: rgb(167 197 209 / 0.16);
+  --rule-strong: rgb(167 197 209 / 0.3);
+  --accent: #d7b56d;
+  --accent-ink: #10120f;
+  --signal: #69a6bd;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+  --radius: 8px;
+  min-height: 100dvh;
+  overflow-x: clip;
+  color: var(--ink-2);
+  background:
+    radial-gradient(circle at 72% 24%, rgb(105 166 189 / 0.09), transparent 31rem),
+    var(--paper);
+  padding: var(--space-4) clamp(16px, 4vw, 64px) var(--space-6);
+}
+
+.navbar,
+.hero,
+.telemetry,
+.contentGrid,
+.footer {
+  width: min(100%, 1360px);
+  margin-inline: auto;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.brand,
+.navLinks a,
+.footer a,
+.telemetry a,
+.primary,
+.secondary,
+.raceItem {
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.brand {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  font-size: 12px;
+}
+
+.navLinks a {
+  color: var(--ink-2);
+}
+
+.navLinks span {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.navLinks a:focus-visible,
+.brand:focus-visible,
+.footer a:focus-visible,
+.telemetry a:focus-visible,
+.primary:focus-visible,
+.secondary:focus-visible,
+.raceItem:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+  align-items: center;
+  gap: clamp(32px, 7vw, 112px);
+  min-height: min(690px, calc(100dvh - 70px));
+  padding-block: var(--space-8);
+}
+
+.heroCopy {
+  min-width: 0;
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.kicker span:first-child {
+  color: var(--accent);
+}
+
+.place {
+  margin: var(--space-5) 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.hero h1 {
+  max-width: 11ch;
+  margin: var(--space-3) 0 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: clamp(52px, 7vw, 104px);
+  font-weight: 760;
+  letter-spacing: -0.065em;
+  line-height: 0.88;
+}
+
+.hero h1 span {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--muted);
+  font-size: 0.48em;
+  font-weight: 560;
+  letter-spacing: -0.035em;
+}
+
+.circuit {
+  margin: var(--space-5) 0 0;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding-inline: var(--space-5);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.primary {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.secondary {
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+}
+
+.primary:active,
+.secondary:active,
+.telemetry a:active,
+.raceItem:active {
+  transform: translateY(1px);
+}
+
+.trackStage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: clamp(330px, 44vw, 560px);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.trackGlow {
+  position: absolute;
+  width: min(65%, 420px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(215 181 109 / 0.12), transparent 68%);
+  filter: blur(8px);
+}
+
+.track {
+  position: relative;
+  z-index: 1;
+  width: min(82%, 610px);
+  height: 82%;
+  overflow: visible;
+  filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.26));
+}
+
+.track polyline {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.track circle {
+  fill: var(--accent);
+}
+
+.trackMeta {
+  position: absolute;
+  right: 0;
+  bottom: var(--space-4);
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.telemetry {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr auto;
+  align-items: center;
+  min-height: 88px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.telemetry > div {
+  min-width: 0;
+  padding: var(--space-4) var(--space-5) var(--space-4) 0;
+}
+
+.telemetry > div + div {
+  padding-left: var(--space-5);
+  border-left: 1px solid var(--rule);
+}
+
+.telemetry span,
+.sectionHead span {
+  display: block;
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 9px;
+  letter-spacing: 0.09em;
+}
+
+.telemetry strong {
+  display: block;
+  margin-top: var(--space-2);
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.telemetry .mono {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.telemetry a {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+  gap: var(--space-7);
+  padding-block: var(--space-8);
+}
+
+.seasonPanel,
+.dataPanel {
+  min-width: 0;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.sectionHead h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.raceRail {
+  display: grid;
+}
+
+.raceItem {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 70px;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.raceItem > span,
+.raceItem time {
+  color: var(--muted);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 10px;
+}
+
+.raceItem strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 620;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activeRace {
+  color: var(--ink);
+}
+
+.activeRace > span {
+  color: var(--accent);
+}
+
+.dataList {
+  margin: 0;
+}
+
+.dataList div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 56px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.dataList dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.dataList dd {
+  margin: 0;
+  color: var(--ink);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dataNote {
+  max-width: 52ch;
+  margin: var(--space-5) 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.footer a {
+  color: var(--ink-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .navLinks a:hover,
+  .footer a:hover,
+  .telemetry a:hover,
+  .raceItem:hover {
+    color: var(--ink);
+  }
+
+  .secondary:hover {
+    border-color: var(--accent);
+  }
+
+  .primary:hover {
+    filter: brightness(1.05);
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: calc(var(--space-3) + env(safe-area-inset-top)) var(--space-4) calc(var(--space-7) + env(safe-area-inset-bottom));
+  }
+
+  .navLinks {
+    gap: var(--space-3);
+  }
+
+  .navLinks span {
+    display: none;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    min-height: 0;
+    padding-block: var(--space-7);
+  }
+
+  .hero h1 {
+    max-width: 9ch;
+    font-size: clamp(48px, 15vw, 72px);
+  }
+
+  .heroActions {
+    flex-wrap: wrap;
+  }
+
+  .trackStage {
+    min-height: 300px;
+  }
+
+  .telemetry {
+    grid-template-columns: 1fr 1fr;
+    padding-bottom: var(--space-3);
+  }
+
+  .telemetry > div {
+    padding: var(--space-4) var(--space-3) var(--space-4) 0;
+  }
+
+  .telemetry > div + div {
+    padding-left: var(--space-3);
+  }
+
+  .telemetry > div:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .telemetry a {
+    justify-self: end;
+  }
+
+  .contentGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-7);
+    padding-block: var(--space-7);
+  }
+
+  .footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary:active,
+  .secondary:active,
+  .telemetry a:active,
+  .raceItem:active {
+    transform: none;
+  }
+}
