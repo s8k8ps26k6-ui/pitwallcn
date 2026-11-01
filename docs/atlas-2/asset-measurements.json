@@ -1,0 +1,30 @@
+[
+  {
+    "file": "public/atlas-v2/earth-day.png",
+    "bytes": 1912469,
+    "width": 2048,
+    "height": 1024,
+    "estimatedRGBA8WithMipmapsBytes": 11184811
+  },
+  {
+    "file": "public/atlas-v2/earth-night.jpg",
+    "bytes": 794479,
+    "width": 3600,
+    "height": 1800,
+    "estimatedRGBA8WithMipmapsBytes": 34560000
+  },
+  {
+    "file": "public/atlas-v2/earth-clouds.jpg",
+    "bytes": 829367,
+    "width": 2048,
+    "height": 1024,
+    "estimatedRGBA8WithMipmapsBytes": 11184811
+  },
+  {
+    "file": "public/atlas-v2/earth-day-8192.png",
+    "bytes": 24147269,
+    "width": 8192,
+    "height": 4096,
+    "estimatedRGBA8WithMipmapsBytes": 178956971
+  }
+]

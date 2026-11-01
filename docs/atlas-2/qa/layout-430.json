@@ -1,0 +1,26 @@
+{
+  "canvas": 0,
+  "cssViewport": {
+    "bottom": 932,
+    "height": 932,
+    "left": 0,
+    "right": 430,
+    "top": 0,
+    "width": 430,
+    "x": 0,
+    "y": 0
+  },
+  "rootScroll": 0,
+  "sheet": {
+    "bottom": 932,
+    "height": 848,
+    "left": 0,
+    "right": 430,
+    "top": 84,
+    "width": 430,
+    "x": 0,
+    "y": 84
+  },
+  "stop": "full",
+  "windowScroll": 0
+}

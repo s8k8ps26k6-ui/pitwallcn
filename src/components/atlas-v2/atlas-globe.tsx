@@ -57,6 +57,9 @@ type AtlasGlobeProps = {
   onHoverTarget: (targetId: string | null) => void;
   onSelectTarget: (targetId: string) => void;
   onSceneReady: () => void;
+  /** Opt-in prototype measurements; no production behavior change. */
+  diagnostics?: boolean;
+  fitGlobe?: boolean;
 };
 
 type SceneProps = AtlasGlobeProps;
@@ -1973,7 +1976,7 @@ function SubtleBloom({ enabled, strength }: { enabled: boolean; strength: number
   );
 }
 
-function ViewportSync({ compact }: { compact: boolean }) {
+function ViewportSync({ compact, fitGlobe }: { compact: boolean; fitGlobe?: boolean }) {
   const { camera, gl, size } = useThree();
 
   useEffect(() => {
@@ -1986,6 +1989,9 @@ function ViewportSync({ compact }: { compact: boolean }) {
       gl.setSize(width, height, false);
       if (camera instanceof THREE.PerspectiveCamera) {
         camera.aspect = width / Math.max(height, 1);
+        if (fitGlobe) {
+          camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(25)) / Math.min(1, camera.aspect)));
+        }
         camera.updateProjectionMatrix();
       }
     };
@@ -2003,7 +2009,7 @@ function ViewportSync({ compact }: { compact: boolean }) {
       window.cancelAnimationFrame(resizeFrame);
       window.removeEventListener("orientationchange", onOrientationChange);
     };
-  }, [camera, compact, gl, size.height, size.width]);
+  }, [camera, compact, fitGlobe, gl, size.height, size.width]);
 
   return null;
 }
@@ -2035,6 +2041,7 @@ function AtlasScene({
   onHoverTarget,
   onSelectTarget,
   onSceneReady,
+  fitGlobe,
 }: SceneProps) {
   const stationAnchors = useMemo<StationAnchor[]>(
     () =>
@@ -2150,7 +2157,7 @@ function AtlasScene({
     <>
       <color attach="background" args={["#01040a"]} />
       <fog attach="fog" args={["#01040a", 15, 39]} />
-      <ViewportSync compact={compact} />
+      <ViewportSync compact={compact} fitGlobe={fitGlobe} />
       <RendererCalibration exposure={renderSettings.exposure} />
       <ambientLight intensity={0.14} />
       <SolarDirectionalLight sunDirection={solarDirection} />
@@ -2258,6 +2265,33 @@ function AtlasScene({
   );
 }
 
+/** CPU frame intervals and renderer counters, not GPU timings or device FPS. */
+function AtlasDiagnostics() {
+  const { gl } = useThree();
+  const first = useRef(true);
+  const previous = useRef(0);
+  useEffect(() => {
+    const canvas = gl.domElement;
+    canvas.dataset.atlasMountedAt = String(performance.now());
+    return () => { canvas.dataset.atlasDisposedAt = String(performance.now()); };
+  }, [gl]);
+  useFrame(() => {
+    const canvas = gl.domElement;
+    const now = performance.now();
+    if (first.current) {
+      first.current = false;
+      // The following RAF observes a completed submission, after this render.
+      requestAnimationFrame(() => { canvas.dataset.atlasFirstFrameAt = String(performance.now()); });
+    }
+    if (previous.current) canvas.dataset.atlasFrameInterval = String(now - previous.current);
+    previous.current = now;
+    canvas.dataset.atlasDrawCalls = String(gl.info.render.calls);
+    canvas.dataset.atlasTextures = String(gl.info.memory.textures);
+    canvas.dataset.atlasGeometries = String(gl.info.memory.geometries);
+  });
+  return null;
+}
+
 export function AtlasGlobe(props: AtlasGlobeProps) {
   const initialCamera = useMemo(() => latLonToVector3(31, 5, 7.45), []);
 
@@ -2286,6 +2320,7 @@ export function AtlasGlobe(props: AtlasGlobeProps) {
     >
       <Suspense fallback={null}>
         <AtlasScene {...props} />
+        {props.diagnostics && <AtlasDiagnostics />}
       </Suspense>
     </Canvas>
   );
