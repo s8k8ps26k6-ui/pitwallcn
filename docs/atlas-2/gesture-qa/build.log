@@ -1,0 +1,58 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> grid-delta-cn@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.19
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 4.1s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/36) ...
+   Generating static pages (9/36)
+   Generating static pages (18/36)
+   Generating static pages (27/36)
+ ✓ Generating static pages (36/36)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                    5.08 kB         124 kB
+├ ○ /_not-found                             1 kB         103 kB
+├ ƒ /api/f1/live                           143 B         103 kB
+├ ƒ /api/f1/race-control                   143 B         103 kB
+├ ƒ /api/f1/standings                      143 B         103 kB
+├ ƒ /api/openf1/[endpoint]                 143 B         103 kB
+├ ○ /atlas-v2                            6.04 kB         445 kB
+├ ○ /atlas-v2/prototype                    150 B         445 kB
+├ ƒ /atlas-v2/prototype/qa                 150 B         445 kB
+├ ƒ /drivers                             3.13 kB         109 kB
+├ ƒ /drivers/[driverCode]                3.11 kB         109 kB
+├ ƒ /lap-analysis                        2.03 kB         108 kB
+├ ƒ /live                                2.03 kB         108 kB
+├ ○ /news                                1.39 kB         107 kB
+├ ○ /project                             1.99 kB         104 kB
+├ ƒ /race-control                        2.03 kB         108 kB
+├ ƒ /race-weekend                           2 kB         108 kB
+├ ● /races/[season]/[eventId]            5.57 kB         125 kB
+├   ├ /races/2026/australia-gp-2026
+├   ├ /races/2026/china-gp-2026
+├   ├ /races/2026/japan-gp-2026
+├   └ [+19 more paths]
+├ ƒ /races/[season]/[eventId]/outlook    1.27 kB         104 kB
+├ ƒ /results                             2.03 kB         108 kB
+├ ○ /robots.txt                            143 B         103 kB
+├ ○ /schedule                            2.48 kB         121 kB
+├ ○ /sitemap.xml                           143 B         103 kB
+├ ƒ /standings                           2.03 kB         108 kB
+└ ƒ /weather                             2.03 kB         108 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/1255-5c680abb9db89955.js      46.2 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  └ other shared chunks (total)          2.02 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
