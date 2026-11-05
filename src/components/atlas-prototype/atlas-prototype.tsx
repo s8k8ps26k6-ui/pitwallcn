@@ -1,6 +1,6 @@
 'use client';
 
-import { Component, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react';
+import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { AtlasGlobe, EUROPE_ENTRY_ID, type AtlasViewMode } from '../atlas-v2/atlas-globe';
 import { getSeason2026, getSeasonRaceSelection2026 } from '@/lib/atlas/season-2026';
@@ -8,8 +8,9 @@ import { getSeasonCalendarEntries2026 } from '@/lib/atlas/events-2026';
 import { getCircuitForRace } from '@/lib/atlas/circuit-registry';
 import { ATLAS_RENDER_DEFAULTS } from '@/lib/atlas/render-settings';
 import { getSessionLabel } from '@/lib/atlas/race-detail';
-import { sessionScheduleState, snapSheet, SHEET_STOPS, type SheetStop } from '@/lib/atlas/prototype-state';
+import { sessionScheduleState } from '@/lib/atlas/prototype-state';
 import styles from './atlas-prototype.module.css';
+import { useAtlasViewport, useRaceSheet } from './use-race-sheet';
 
 class GlobeBoundary extends Component<{children: ReactNode; fallback: ReactNode}, {failed: boolean}> {
   state = {failed:false};
@@ -32,10 +33,10 @@ export function AtlasPrototype({viewport}: {viewport?: {width:number; height:num
   const [mode, setMode] = useState<AtlasViewMode>('global');
   const [navigation, setNavigation] = useState(0);
   const [focusVersion, setFocusVersion] = useState(1);
-  const [stop, setStop] = useState<SheetStop>('collapsed');
-  const [drag, setDrag] = useState<number | null>(null);
-  const dragRef = useRef<{y:number; time:number; stop:SheetStop} | null>(null);
   const rootRef = useRef<HTMLElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const { sheetRef, zoneRef, bodyRef, peekRef, stop, settle, toggle } = useRaceSheet(compact);
+  useAtlasViewport(viewportRef);
   useEffect(() => {
     const refresh = () => setNow(new Date());
     const sync = () => { setCompact((rootRef.current?.getBoundingClientRect().width ?? window.innerWidth) <= 800); setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches); };
@@ -50,9 +51,11 @@ export function AtlasPrototype({viewport}: {viewport?: {width:number; height:num
     } catch { supported = false; }
     setWebgl(supported ? 'supported' : 'blocked');
     refresh(); sync(); visibility();
+    const resizeObserver = new ResizeObserver(sync);
+    if (rootRef.current) resizeObserver.observe(rootRef.current);
     const timer = window.setInterval(refresh, 60_000);
     window.addEventListener('resize', sync); document.addEventListener('visibilitychange', visibility); window.addEventListener('focus', refresh);
-    return () => { clearInterval(timer); window.removeEventListener('resize', sync); document.removeEventListener('visibilitychange', visibility); window.removeEventListener('focus', refresh); };
+    return () => { resizeObserver.disconnect(); clearInterval(timer); window.removeEventListener('resize', sync); document.removeEventListener('visibilitychange', visibility); window.removeEventListener('focus', refresh); };
   }, []);
   // Only the mounted scene receives context listeners; the preflight context is released.
   useEffect(() => {
@@ -83,35 +86,31 @@ export function AtlasPrototype({viewport}: {viewport?: {width:number; height:num
   const onReady = useCallback(() => setReady(true), []);
   const select = useCallback((id: string) => {
     if (id === EUROPE_ENTRY_ID) { setMode('europe-focus'); setNavigation(v=>v+1); return; }
-    setSelectedId(id); setMode('station-focus'); setNavigation(v=>v+1); setStop(s => s === 'full' ? 'partial' : s);
+    setSelectedId(id); setMode('station-focus'); setNavigation(v=>v+1);
   }, []);
   const navigate = (nextMode: AtlasViewMode) => { setMode(nextMode); setNavigation(v=>v+1); };
   const reset = () => { setSelectedId(null); setMode('global'); setNavigation(v=>v+1); setFocusVersion(v=>v+1); };
-  const down = (event: PointerEvent<HTMLButtonElement>) => { if (!compact) return; event.currentTarget.setPointerCapture(event.pointerId); dragRef.current = {y:event.clientY,time:performance.now(),stop}; setDrag(0); };
-  const move = (event: PointerEvent<HTMLButtonElement>) => { if (dragRef.current) setDrag(Math.max(-220,Math.min(220,event.clientY-dragRef.current.y))); };
-  const up = (event: PointerEvent<HTMLButtonElement>) => {
-    const start = dragRef.current; if (!start) return;
-    const delta = event.clientY-start.y;
-    setStop(Math.abs(delta) < 5 ? SHEET_STOPS[(SHEET_STOPS.indexOf(start.stop)+1)%3] : snapSheet(start.stop,delta,delta/Math.max(1,performance.now()-start.time))); dragRef.current=null; setDrag(null);
-  };
   const fallback = <div className={styles.fallback} role="status">地球渲染不可用<span>可继续选择赛事并查看赛历。请尝试重新加载或启用 WebGL。</span></div>;
-  return <div className={styles.viewport} style={viewport ? {width:viewport.width, height:viewport.height, right:'auto', bottom:'auto'} : undefined}><main ref={rootRef} className={styles.root} data-sheet={stop} aria-label="Atlas 2.0 比赛周原型">
+  return <div ref={viewportRef} className={styles.viewport} style={viewport ? {width:viewport.width, height:viewport.height, right:'auto', bottom:'auto'} : undefined}><main ref={rootRef} className={styles.root} data-sheet={stop} aria-label="Atlas 2.0 比赛周原型">
     <div className={styles.globe} data-testid="globe-stage">
       {webgl === 'blocked' && fallback}
-      {now && webgl === 'supported' && <GlobeBoundary fallback={fallback}><AtlasGlobe races={races} hoveredTargetId={hoveredId} hoveredRace={races.find(r=>r.id===hoveredId) ?? null} selectedRace={selectedId ? race : null} currentRace={automatic.race} autoFocusRace={automatic.race} autoFocusVersion={focusVersion} viewMode={mode} navigationVersion={navigation} reducedMotion={reduced} compact={compact} active={visible && !contextLost && !(compact && stop === 'full')} renderSettings={ATLAS_RENDER_DEFAULTS} onHoverTarget={setHoveredId} onSelectTarget={select} onSceneReady={onReady} diagnostics={measure} fitGlobe /></GlobeBoundary>}
+      {now && webgl === 'supported' && <GlobeBoundary fallback={fallback}><AtlasGlobe races={races} hoveredTargetId={hoveredId} hoveredRace={races.find(r=>r.id===hoveredId) ?? null} selectedRace={selectedId ? race : null} currentRace={automatic.race} autoFocusRace={automatic.race} autoFocusVersion={focusVersion} viewMode={mode} navigationVersion={navigation} reducedMotion={reduced} compact={compact} active={visible && !contextLost && !(compact && stop === 'expanded')} renderSettings={ATLAS_RENDER_DEFAULTS} onHoverTarget={setHoveredId} onSelectTarget={select} onSceneReady={onReady} diagnostics={measure} fitGlobe /></GlobeBoundary>}
     </div>
     <header className={styles.header}><Link href="/" className={styles.brand}>LAPMETRY<span>ATLAS / 2026</span></Link><span className={styles.prototype}>EXPERIMENT 02</span><Link href="/atlas-v2">返回 Atlas ↗</Link></header>
     <div className={styles.caption}><span>SEASON EXPLORER</span><h1>每一站，<br/>同一个世界。</h1><p>旋转地球 · 轻触赛事节点</p></div>
     <nav className={styles.controls} aria-label="地球视角"><button aria-pressed={mode==='global'} onClick={()=>navigate('global')}>全球</button><button aria-pressed={mode==='europe-focus'} onClick={()=>navigate('europe-focus')}>欧洲赛季</button><button onClick={reset}>当前赛程 ↗</button></nav>
     {((webgl !== 'blocked' && !ready) || contextLost) && <div className={styles.loading} role="status">{contextLost ? '图形上下文中断 · 等待恢复' : '正在准备地球影像'}</div>}
-    <aside className={styles.sheet} data-testid="race-sheet" data-stop={stop} aria-label="比赛周信息" style={{'--drag':`${drag ?? 0}px`,'--drag-duration':drag === null ? '280ms' : '0ms'} as CSSProperties}>
-      <button className={styles.handle} aria-label="拖动或切换比赛周面板" aria-expanded={stop!=='collapsed'} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={()=>{dragRef.current=null;setDrag(null);}} onClick={(event)=>{if(event.detail===0) setStop(SHEET_STOPS[(SHEET_STOPS.indexOf(stop)+1)%3]);}} onKeyDown={event=>{if(event.key==='ArrowUp'){event.preventDefault();setStop(snapSheet(stop,-100,-1));} if(event.key==='ArrowDown'){event.preventDefault();setStop(snapSheet(stop,100,1));}}}><span/></button>
+    <aside ref={sheetRef} className={styles.sheet} data-testid="race-sheet" data-stop={stop} aria-label="比赛周信息">
+      <span ref={peekRef} className={styles.peekMeasure} aria-hidden="true" />
+      <div ref={zoneRef} className={styles.gestureZone} data-testid="sheet-gesture-zone">
+      <button data-sheet-handle className={styles.handle} aria-label="拖动或切换比赛周面板" aria-controls="atlas-race-week-content" aria-expanded={stop==='expanded'} onClick={toggle} onKeyDown={event=>{if(event.key==='ArrowUp'){event.preventDefault();settle('expanded');} if(event.key==='ArrowDown' || event.key==='Escape'){event.preventDefault();settle('collapsed');}}}><span/></button>
       <div className={styles.summary}>
         <div className={styles.eyebrow}><span>{now ? phase : '正在读取赛历'}</span><span>ROUND {String(race.round).padStart(2,'0')} / {races.length}</span></div>
-        <div className={styles.titleRow}><div><h2>{now ? race.city.toUpperCase() : 'ATLAS'}</h2><p>{now ? race.name : 'Season explorer'}</p></div><button className={styles.expand} aria-label={stop==='full' ? '收起面板' : '展开面板'} onClick={()=>setStop(stop==='full'?'collapsed':SHEET_STOPS[SHEET_STOPS.indexOf(stop)+1])}>{stop==='full'?'↓':'↑'}</button></div>
+        <div className={styles.titleRow}><div><h2>{now ? race.city.toUpperCase() : 'ATLAS'}</h2><p>{now ? race.name : 'Season explorer'}</p></div><button className={styles.expand} aria-label={stop==='expanded' ? '收起面板' : '展开面板'} aria-expanded={stop==='expanded'} aria-controls="atlas-race-week-content" onClick={toggle}>{stop==='expanded'?'↓':'↑'}</button></div>
         <p className={styles.sessionHint}>{nextSession ? `下一节 · ${getSessionLabel(nextSession, entry.sessions.indexOf(nextSession), race.isSprint)} · ${formatTime(nextSession.startTime,circuit?.timeZone ?? 'UTC')}` : !hasConfirmedTimes ? 'Session 时间待确认 · 暂无实时状态' : '赛程时段已过 · 实际结果待数据源确认'}</p>
       </div>
-      <div className={styles.sheetBody} inert={compact && stop==='collapsed'}>
+      </div>
+      <div ref={bodyRef} id="atlas-race-week-content" data-sheet-scroll className={styles.sheetBody} inert={compact && stop==='collapsed'}>
         <div className={styles.sectionHeading}><h3>比赛周 / 时间线</h3><span>赛道当地时间</span></div>
         <div className={styles.progress}><span style={{width:`${entry.sessions.length ? elapsed/entry.sessions.length*100 : 0}%`}}/></div>
         <p className={styles.note}>已过计划开始时间 {elapsed}/{entry.sessions.length} · 不代表实际比赛进度</p>

@@ -1,0 +1,65 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> grid-delta-cn@0.1.0 test:unit
+> node --test --experimental-strip-types "src/lib/atlas/*.test.ts" "scripts/*.test.mjs"
+
+✔ unchanged calendars produce no candidate changes (1.992174ms)
+✔ calendar date, round, and confirmed session changes are reported (0.295244ms)
+✔ missing remote records produce count and missing-remote changes (0.457748ms)
+✔ manual override has precedence over a remote date difference (0.26591ms)
+✔ replacement and status changes are explicit (0.300783ms)
+✔ unmatched remote records are reported as additions (0.234132ms)
+✔ source failure keeps the last valid calendar and emits no candidate changes (0.154622ms)
+(node:73) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/4b0a4500c5e9/pitwallcn/src/lib/atlas/favorites.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/scratch/4b0a4500c5e9/pitwallcn/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ event and circuit favorites remain separate (1.860306ms)
+✔ favorite data normalizes malformed and duplicate storage values (0.294012ms)
+✔ storage access is safe when no browser window exists (0.189745ms)
+(node:74) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/4b0a4500c5e9/pitwallcn/src/lib/atlas/prototype-state.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/scratch/4b0a4500c5e9/pitwallcn/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ small slow movements retain the start; distance opens/closes only at two endpoints (1.131891ms)
+✔ recent release velocity can override distance, including a reversed fling (0.187672ms)
+✔ out-of-range movement never creates a third stop (0.32618ms)
+✔ schedule does not infer actual session status (0.277407ms)
+(node:80) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/4b0a4500c5e9/pitwallcn/src/lib/atlas/race-detail.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/scratch/4b0a4500c5e9/pitwallcn/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ unified 2026 race data keeps all 22 active calendar events (1.657521ms)
+✔ event detail lookup joins the stable event and circuit identifiers (3.442194ms)
+✔ unconfirmed session schedules fall back to the verified race-weekend start (0.996948ms)
+(node:87) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/4b0a4500c5e9/pitwallcn/src/lib/atlas/season-2026.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/scratch/4b0a4500c5e9/pitwallcn/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ 2026 Atlas calendar keeps all 22 races and nine European races (1.091521ms)
+✔ selection follows the active Belgium weekend and then the next race (0.318238ms)
+✔ selection handles pre-season and post-season boundaries (0.317688ms)
+(node:92) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/4b0a4500c5e9/pitwallcn/src/lib/atlas/solar.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/scratch/4b0a4500c5e9/pitwallcn/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ UTC solar direction places China at night around 02:00 CST (1.033483ms)
+✔ UTC solar direction broadly reverses after twelve hours (0.145229ms)
+✔ UTC 2026-07-19 16:09 places the Americas in daylight and East Asia at night (0.165529ms)
+✔ solar state direction uses the same geographic coordinate frame (0.73146ms)
+✔ solar subpoint follows seasonal declination at a fixed UTC hour (0.152779ms)
+(node:93) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/scratch/4b0a4500c5e9/pitwallcn/src/lib/atlas/visibility.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/scratch/4b0a4500c5e9/pitwallcn/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ projected points outside the viewport are hidden (1.072672ms)
+✔ surface visibility rejects the globe back side (0.200461ms)
+✔ adaptive labels return null instead of pinning outside the safe viewport (0.368043ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 556.305522
