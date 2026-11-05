@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-11-06",
+    "scope": "home-next prototype only",
+    "macrostructure": "Spatial operations interface",
+    "theme": "custom",
+    "theme_axes": "dark field / narrow sans / cool engineering accent",
+    "enrichment": "none",
+    "brief": "Fixed-viewport globe → race week → data navigation with two-stop sheet and collapsible desktop controls.",
+    "pre_emit": "P4 H4 E4 S5 R5 V4"
+  },
+  {
     "date": "2026-08-27",
     "scope": "app",
     "macrostructure": "In-context route transition + task-first data field",

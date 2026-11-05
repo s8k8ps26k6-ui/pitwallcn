@@ -46,6 +46,7 @@ export function SiteShell({ children, dataTheme }: { children: React.ReactNode; 
   const isImmersiveRoute =
     isHomepage ||
     pathname.startsWith("/atlas-v2") ||
+    pathname.startsWith("/home-next") ||
     pathname.startsWith("/news") ||
     pathname.startsWith("/schedule") ||
     pathname.startsWith("/races/");
