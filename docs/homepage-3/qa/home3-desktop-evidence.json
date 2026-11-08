@@ -1,0 +1,29 @@
+{
+  "canvasCount": 0,
+  "documentScroll": 0,
+  "environment": "cloud Chromium desktop / Next development server",
+  "globe": {
+    "bottom": 936,
+    "height": 936,
+    "left": 0,
+    "right": 963,
+    "top": 0,
+    "width": 963,
+    "x": 0,
+    "y": 0
+  },
+  "metrics": "{\"shellCommitObservedMs\":1021.5,\"responseEndMs\":108.20000000018626,\"domInteractiveMs\":236.60000000009313,\"viewportWidth\":1363,\"viewportHeight\":936,\"deviceDpr\":1,\"serverMode\":\"development\"}",
+  "nextDomRafMs": "1028.1000000000931",
+  "panel": "open",
+  "root": {
+    "bottom": 936,
+    "height": 936,
+    "left": 0,
+    "right": 1363,
+    "top": 0,
+    "width": 1363,
+    "x": 0,
+    "y": 0
+  },
+  "webgl": "blocked"
+}

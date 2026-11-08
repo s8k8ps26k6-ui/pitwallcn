@@ -1,0 +1,23 @@
+.lapmetry-globe-home {
+  --color-field: oklch(0.115 0.014 255);
+  --color-panel: oklch(0.155 0.017 255);
+  --color-ink: oklch(0.95 0.008 230);
+  --color-muted: oklch(0.70 0.024 245);
+  --color-line: oklch(0.32 0.022 245);
+  --color-accent: oklch(0.84 0.065 215);
+  --color-control-active: oklch(0.25 0.035 215);
+  --control-target: 44px;
+  --color-ring: oklch(0.90 0.08 210);
+  --font-display: 'Arial Narrow', Arial, sans-serif;
+  --font-body: 'Noto Sans SC Variable', system-ui, sans-serif;
+  --font-data: ui-monospace, Menlo, monospace;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --ease-out: cubic-bezier(.2,.65,.2,1);
+  --ease-in: cubic-bezier(.4,0,.8,.4);
+  --ease-in-out: cubic-bezier(.4,0,.2,1);
+  --dur-snap: 220ms;
+}

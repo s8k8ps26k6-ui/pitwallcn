@@ -1,0 +1,42 @@
+[
+  {
+    "foreground": "ink",
+    "background": "field",
+    "ratio": 17.64
+  },
+  {
+    "foreground": "ink",
+    "background": "panel",
+    "ratio": 16.92
+  },
+  {
+    "foreground": "muted",
+    "background": "field",
+    "ratio": 7.65
+  },
+  {
+    "foreground": "muted",
+    "background": "panel",
+    "ratio": 7.34
+  },
+  {
+    "foreground": "accent",
+    "background": "field",
+    "ratio": 12.72
+  },
+  {
+    "foreground": "accent",
+    "background": "panel",
+    "ratio": 12.2
+  },
+  {
+    "foreground": "ring",
+    "background": "field",
+    "ratio": 15.5
+  },
+  {
+    "foreground": "ring",
+    "background": "panel",
+    "ratio": 14.86
+  }
+]
