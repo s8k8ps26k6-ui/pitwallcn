@@ -39,6 +39,7 @@ export function GlobeHomepage({viewport}: {viewport?: {width:number; height:numb
   const [mode, setMode] = useState<AtlasViewMode>('global');
   const [navigation, setNavigation] = useState(0);
   const [focusVersion, setFocusVersion] = useState(1);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const rootRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const { sheetRef, zoneRef, bodyRef, peekRef, stop, settle, toggle } = useRaceSheet(compact);
@@ -106,7 +107,6 @@ export function GlobeHomepage({viewport}: {viewport?: {width:number; height:numb
   const race = races.find(r => r.id === selectedId) ?? automatic.race;
   const entry = getSeasonCalendarEntries2026(races).find(e => e.eventId === race.eventId)!;
   const circuit = getCircuitForRace(race, races);
-  const elapsed = entry.sessions.filter(s => sessionScheduleState(s, clock.getTime()) === 'elapsed').length;
   const hasConfirmedTimes = entry.sessions.some(s => s.isTimeConfirmed && Number.isFinite(Date.parse(s.startTime)));
   const sessionSummary = getHomepageSessionSummary(entry.sessions, clock.getTime());
   const nextSession = sessionSummary.next?.session;
@@ -131,14 +131,22 @@ export function GlobeHomepage({viewport}: {viewport?: {width:number; height:numb
       <Link href="/home-next" className={styles.brand}>LAPMETRY<span>GLOBAL RACE OPERATIONS</span></Link>
       <h1>全球赛事 <span>2026 / FORMULA 1</span></h1>
       <nav className={styles.primaryNav} aria-label="首页主导航"><Link href="/schedule">赛历</Link><Link href="/live">Live</Link><Link href="/results">比赛结果</Link></nav>
-      <button id="home-menu-button" className={styles.menuButton} aria-expanded={menuOpen} aria-controls="home-navigation" onClick={()=>setMenuOpen(v=>!v)}>导航 {menuOpen?'−':'＋'}</button>
+      <button ref={menuButtonRef} className={styles.menuButton} aria-expanded={menuOpen} aria-controls="home-navigation" onClick={()=>setMenuOpen(v=>!v)}>站点索引 <span aria-hidden="true">{menuOpen ? '−' : '≡'}</span></button>
     </header>
-    {menuOpen && <nav id="home-navigation" className={styles.menu} data-sheet-scroll aria-label="全部功能" onKeyDown={event=>{if(event.key==='Escape'){setMenuOpen(false);document.getElementById('home-menu-button')?.focus({preventScroll:true});}}}>
+    {menuOpen && <nav id="home-navigation" className={styles.menu} data-sheet-scroll aria-label="全部功能" onKeyDown={event=>{if(event.key==='Escape'){setMenuOpen(false);menuButtonRef.current?.focus({preventScroll:true});}}}>
       <div className={styles.menuLinks}><Link href="/schedule">赛历</Link><Link href="/live">Live</Link><Link href="/results">比赛结果</Link><Link href="/race-control">赛会控制</Link><Link href="/lap-analysis">圈速分析</Link><Link href="/standings">积分榜</Link><Link href="/weather">天气</Link><Link href="/atlas-v2">Atlas</Link><Link href="/">旧版首页</Link></div>
-      <label>直接选择赛事<select aria-label="导航选择赛事" value={race.id} onChange={event=>select(event.target.value)}>{races.map(r=><option key={r.id} value={r.id}>{String(r.round).padStart(2,'0')} · {r.name}</option>)}</select></label>
+      <label>直接选择赛事<select aria-label="导航选择赛事" value={race.id} onChange={event=>{select(event.target.value);menuButtonRef.current?.focus({preventScroll:true});}}>{races.map(r=><option key={r.id} value={r.id}>{String(r.round).padStart(2,'0')} · {r.name}</option>)}</select></label>
     </nav>}
     <div className={styles.location}>{now ? <><span>{race.country.toUpperCase()} / {race.region.replace('_',' ')}</span><p>{race.city}</p><small>{Math.abs(race.latitude).toFixed(3)}° {race.latitude>=0?'N':'S'} &nbsp; {Math.abs(race.longitude).toFixed(3)}° {race.longitude>=0?'E':'W'}</small></> : <span>正在读取赛历</span>}</div>
-    <nav className={styles.controls} inert={compact && stop==='expanded'} aria-label="地球视角"><button aria-pressed={mode==='global'} onClick={()=>navigate('global')}>全球</button><button aria-pressed={mode==='europe-focus'} onClick={()=>navigate('europe-focus')}>欧洲</button><button onClick={openCurrent}>当前比赛周 ↗</button></nav>
+    <div className={styles.controls} inert={compact && stop==='expanded'}>
+      <div className={styles.viewRail} role="group" aria-label="地球视角">
+        <button aria-pressed={mode==='global'} onClick={()=>navigate('global')}>全球</button>
+        <button aria-pressed={mode==='europe-focus'} onClick={()=>navigate('europe-focus')}>欧洲</button>
+      </div>
+      <button className={styles.currentAction} aria-controls="home-race-panel" onClick={openCurrent}>
+        <span>当前比赛周</span><span aria-hidden="true">↗</span>
+      </button>
+    </div>
     <button className={styles.panelToggle} aria-controls="home-race-panel" aria-expanded={panelOpen} onClick={()=>setPanelOpen(v=>!v)}>{panelOpen?'收起赛事面板 →':'← 打开赛事面板'}</button>
     {((webgl !== 'blocked' && !ready) || contextLost) && <div className={styles.loading} role="status">{contextLost ? '图形上下文中断 · 等待恢复' : '正在准备地球影像'}</div>}
     <aside id="home-race-panel" ref={sheetRef} inert={!compact && !panelOpen} className={styles.sheet} data-testid="race-sheet" data-stop={stop} aria-label="比赛周控制面板">
@@ -146,16 +154,15 @@ export function GlobeHomepage({viewport}: {viewport?: {width:number; height:numb
       <div ref={zoneRef} className={styles.gestureZone} data-testid="sheet-gesture-zone">
       <button data-sheet-handle className={styles.handle} aria-label="拖动或切换比赛周面板" aria-controls="home-race-week-content" aria-expanded={stop==='expanded'} onClick={toggle} onKeyDown={event=>{if(event.key==='ArrowUp'){event.preventDefault();settle('expanded');} if(event.key==='ArrowDown' || event.key==='Escape'){event.preventDefault();settle('collapsed');}}}><span/></button>
       <div className={styles.summary}>
-        <div className={styles.eyebrow}><span>{now ? phase : '正在读取赛历'}</span><span>ROUND {now ? String(race.round).padStart(2,'0') : '—'} / {races.length}</span></div>
-        <div className={styles.titleRow}><div><h2>{now ? race.city.toUpperCase() : 'ATLAS'}</h2><p>{now ? race.name : 'Season explorer'}</p></div><button className={styles.expand} aria-label={stop==='expanded' ? '收起面板' : '展开面板'} aria-expanded={stop==='expanded'} aria-controls="home-race-week-content" onClick={toggle}>{stop==='expanded'?'↓':'↑'}</button></div>
+        <div className={styles.eyebrow} aria-live="polite" aria-atomic="true"><span>{now ? phase : '正在读取赛历'}</span><span>ROUND {now ? String(race.round).padStart(2,'0') : '—'} / {races.length}</span></div>
+        <div className={styles.titleRow}><div><h2>{now ? race.name : '赛事总览'}</h2><p>{now ? race.city.toUpperCase() : '2026 / FORMULA 1'}</p></div><button className={styles.expand} aria-label={stop==='expanded' ? '收起面板' : '展开面板'} aria-expanded={stop==='expanded'} aria-controls="home-race-week-content" onClick={toggle}>{stop==='expanded'?'↓':'↑'}</button></div>
         <p className={styles.sessionHint}>{nextSession ? `下一节 · ${getSessionLabel(nextSession, entry.sessions.indexOf(nextSession), race.isSprint)} · ${formatTime(nextSession.startTime,displayZone)}` : !hasConfirmedTimes ? 'Session 时间待确认 · 暂无实时状态' : '计划时间已过 · 实际状态未接入'}</p>
       <p className={styles.gestureHint}>{stop === 'expanded' ? '下拉顶部收起 ↓' : '向上拖动查看比赛周 ↑'}</p>
       </div>
       </div>
       <div ref={bodyRef} id="home-race-week-content" data-sheet-scroll className={styles.sheetBody} inert={compact && stop==='collapsed'}>
-        <div className={styles.sectionHeading}><h3>Session 时间线</h3><button className={styles.timeZone} onClick={()=>setBeijingTime(v=>!v)}>{beijingTime?'北京时间 ⇄':'赛道当地 ⇄'}</button></div>
-        <div className={styles.progress}><span style={{width:`${entry.sessions.length ? elapsed/entry.sessions.length*100 : 0}%`}}/></div>
-        <p className={styles.note}>当前 Session 状态：未接入实时数据{hasConfirmedTimes ? ` · 已过计划开始时间 ${elapsed}/${entry.sessions.length}` : ' · 时间待确认'}</p>
+        <div className={styles.sectionHeading}><h3>Session 时间线</h3><button className={styles.timeZone} aria-label="使用北京时间" aria-pressed={beijingTime} onClick={()=>setBeijingTime(v=>!v)}>{beijingTime?'北京时间 ⇄':'赛道当地 ⇄'}</button></div>
+        <p className={styles.note}>当前 Session 状态：未接入实时数据{hasConfirmedTimes ? ` · 仅显示计划时间` : ' · 时间待确认'}</p>
         <ol className={styles.timeline}>{entry.sessions.map((session,index)=>{
           const state = sessionScheduleState(session,clock.getTime());
           return <li key={session.name} data-status={state}><span className={styles.sequence}>{String(index+1).padStart(2,'0')}</span><div><strong>{getSessionLabel(session, index, race.isSprint)}</strong><span>{state==='unconfirmed'?'时间待确认':state==='elapsed'?'计划时间已过':'即将开始'}</span></div><time dateTime={state==='unconfirmed'?undefined:session.startTime}>{state==='unconfirmed'?'待公布':formatTime(session.startTime,displayZone)}</time></li>;
