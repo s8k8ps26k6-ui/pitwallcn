@@ -1,0 +1,7 @@
+{
+  "source": "src/lib/race-calendar.ts",
+  "races": 22,
+  "sessions": 110,
+  "confirmed": 5,
+  "unconfirmed": 105
+}

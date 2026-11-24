@@ -1,0 +1,19 @@
+{
+  "documentScroll": 0,
+  "environment": "cloud Chromium; Next dev server; CSS container, not iPhone Safari",
+  "metrics": "{\"shellCommitObservedMs\":1132.4000000003725,\"responseEndMs\":422.90000000037253,\"domInteractiveMs\":499.70000000018626,\"viewportWidth\":430,\"viewportHeight\":932,\"deviceDpr\":1,\"serverMode\":\"development\"}",
+  "nextDomRafMs": "1137.3000000002794",
+  "rootScroll": 0,
+  "sheet": {
+    "bottom": 932,
+    "height": 932,
+    "left": 0,
+    "right": 430,
+    "top": 0,
+    "width": 430,
+    "x": 0,
+    "y": 0
+  },
+  "stop": "expanded",
+  "webgl": "blocked"
+}

@@ -60,6 +60,8 @@ type AtlasGlobeProps = {
   /** Opt-in prototype measurements; no production behavior change. */
   diagnostics?: boolean;
   fitGlobe?: boolean;
+  /** Prototype opt-in: omit 8K promotion and postprocessing. */
+  performanceMode?: boolean;
 };
 
 type SceneProps = AtlasGlobeProps;
@@ -2042,6 +2044,7 @@ function AtlasScene({
   onSelectTarget,
   onSceneReady,
   fitGlobe,
+  performanceMode,
 }: SceneProps) {
   const stationAnchors = useMemo<StationAnchor[]>(
     () =>
@@ -2167,7 +2170,7 @@ function AtlasScene({
         focusLevel={focusLevel === "selected" ? 0.58 : focusLevel ? 0.32 : 0}
         reducedMotion={reducedMotion}
         compact={compact}
-        highDetail={isEuropeContext}
+        highDetail={isEuropeContext && !performanceMode}
         sunDirection={solarDirection}
         debugDayTexture={renderSettings.dayTextureDebug}
         renderSettings={renderSettings}
@@ -2257,10 +2260,10 @@ function AtlasScene({
         reducedMotion={reducedMotion}
         compact={compact}
       />
-      <SubtleBloom
+      {!performanceMode && <SubtleBloom
         enabled={!compact && !reducedMotion && !renderSettings.dayTextureDebug}
         strength={renderSettings.bloomStrength}
-      />
+      />}
     </>
   );
 }
