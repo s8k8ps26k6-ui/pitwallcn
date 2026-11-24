@@ -43,7 +43,7 @@ test('real globe remains the same Canvas across mobile sheet and desktop panel s
   await page.getByRole('button',{name:'收起赛事面板 →'}).click();
   await page.getByRole('button',{name:'← 打开赛事面板'}).click();
   await page.setViewportSize({width:390,height:844});
-  await page.getByRole('button',{name:'当前比赛周'}).click();
+  await page.getByRole('button',{name:'展开面板',exact:true}).click();
   await expect(page.getByTestId('race-sheet')).toHaveAttribute('data-stop','expanded');
   await page.getByRole('button',{name:'收起面板',exact:true}).click();
   expect(await canvas.evaluate((node,previous)=>node===previous,identity)).toBe(true);

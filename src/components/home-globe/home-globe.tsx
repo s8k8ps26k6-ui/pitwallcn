@@ -120,7 +120,10 @@ export function GlobeHomepage({viewport}: {viewport?: {width:number; height:numb
   const navigate = (nextMode: AtlasViewMode) => { setMode(nextMode); setNavigation(v=>v+1); };
   const reset = () => { setSelectedId(null); setMode('global'); setNavigation(v=>v+1); setFocusVersion(v=>v+1); };
   const openCurrent = () => { reset(); setPanelOpen(true); setMenuOpen(false); if (compact) settle('expanded'); };
-  const fallback = <div className={styles.fallback} role="status">地球渲染不可用<span>可继续选择赛事并查看赛历。请尝试重新加载或启用 WebGL。</span></div>;
+  const fallback = <div className={styles.fallback}>
+    <div className={styles.nightEarth} aria-hidden="true" />
+    <span role="status">静态夜景 · 交互地球不可用</span>
+  </div>;
   return <div ref={viewportRef} className={styles.viewport} style={viewport ? {width:viewport.width, height:viewport.height, right:'auto', bottom:'auto'} : undefined}><main ref={rootRef} className={`lapmetry-globe-home ${styles.root}`} data-sheet={stop} data-panel={panelOpen ? "open" : "closed"} data-selected-event={race.id} data-home-ready={now ? "true" : "false"} data-webgl={webgl} data-view={mode} aria-label="LAPMETRY 全球赛事首页原型">
     <div className={styles.globe} data-testid="globe-stage" inert={compact && stop==='expanded'} role="region" aria-label="交互式全球赛事地球" aria-describedby="home-globe-help">
       <span id="home-globe-help" className={styles.srOnly}>拖动旋转地球，双指或滚轮缩放。也可以通过导航菜单直接选择赛事。</span>
@@ -128,8 +131,8 @@ export function GlobeHomepage({viewport}: {viewport?: {width:number; height:numb
       {now && webgl === 'supported' && <GlobeBoundary fallback={fallback}><AtlasGlobe races={races} hoveredTargetId={hoveredId} hoveredRace={races.find(r=>r.id===hoveredId) ?? null} selectedRace={selectedId ? race : null} currentRace={automatic.race} autoFocusRace={automatic.race} autoFocusVersion={focusVersion} viewMode={mode} navigationVersion={navigation} reducedMotion={reduced} compact={compact} active={visible && !contextLost && !(compact && stop === 'expanded')} renderSettings={ATLAS_RENDER_DEFAULTS} onHoverTarget={setHoveredId} onSelectTarget={select} onSceneReady={onReady} diagnostics={measure} fitGlobe performanceMode /></GlobeBoundary>}
     </div>
     <header className={styles.header} inert={compact && stop==='expanded'}>
-      <Link href="/home-next" className={styles.brand}>LAPMETRY<span>GLOBAL RACE OPERATIONS</span></Link>
-      <h1>全球赛事 <span>2026 / FORMULA 1</span></h1>
+      <Link href="/home-next" className={styles.brand}>LAPMETRY</Link>
+      <h1>赛事地球仪 <span>FORMULA 1 · 2026</span></h1>
       <nav className={styles.primaryNav} aria-label="首页主导航"><Link href="/schedule">赛历</Link><Link href="/live">Live</Link><Link href="/results">比赛结果</Link></nav>
       <button ref={menuButtonRef} className={styles.menuButton} aria-expanded={menuOpen} aria-controls="home-navigation" onClick={()=>setMenuOpen(v=>!v)}>站点索引 <span aria-hidden="true">{menuOpen ? '−' : '≡'}</span></button>
     </header>
@@ -137,15 +140,12 @@ export function GlobeHomepage({viewport}: {viewport?: {width:number; height:numb
       <div className={styles.menuLinks}><Link href="/schedule">赛历</Link><Link href="/live">Live</Link><Link href="/results">比赛结果</Link><Link href="/race-control">赛会控制</Link><Link href="/lap-analysis">圈速分析</Link><Link href="/standings">积分榜</Link><Link href="/weather">天气</Link><Link href="/atlas-v2">Atlas</Link><Link href="/">旧版首页</Link></div>
       <label>直接选择赛事<select aria-label="导航选择赛事" value={race.id} onChange={event=>{select(event.target.value);menuButtonRef.current?.focus({preventScroll:true});}}>{races.map(r=><option key={r.id} value={r.id}>{String(r.round).padStart(2,'0')} · {r.name}</option>)}</select></label>
     </nav>}
-    <div className={styles.location}>{now ? <><span>{race.country.toUpperCase()} / {race.region.replace('_',' ')}</span><p>{race.city}</p><small>{Math.abs(race.latitude).toFixed(3)}° {race.latitude>=0?'N':'S'} &nbsp; {Math.abs(race.longitude).toFixed(3)}° {race.longitude>=0?'E':'W'}</small></> : <span>正在读取赛历</span>}</div>
     <div className={styles.controls} inert={compact && stop==='expanded'}>
-      <div className={styles.viewRail} role="group" aria-label="地球视角">
+      {webgl === 'supported' && <div className={styles.viewRail} role="group" aria-label="地球视角">
         <button aria-pressed={mode==='global'} onClick={()=>navigate('global')}>全球</button>
         <button aria-pressed={mode==='europe-focus'} onClick={()=>navigate('europe-focus')}>欧洲</button>
-      </div>
-      <button className={styles.currentAction} aria-controls="home-race-panel" onClick={openCurrent}>
-        <span>当前比赛周</span><span aria-hidden="true">↗</span>
-      </button>
+      </div>}
+      {selectedId && <button className={styles.returnRace} onClick={openCurrent}>当前比赛周</button>}
     </div>
     <button className={styles.panelToggle} aria-controls="home-race-panel" aria-expanded={panelOpen} onClick={()=>setPanelOpen(v=>!v)}>{panelOpen?'收起赛事面板 →':'← 打开赛事面板'}</button>
     {((webgl !== 'blocked' && !ready) || contextLost) && <div className={styles.loading} role="status">{contextLost ? '图形上下文中断 · 等待恢复' : '正在准备地球影像'}</div>}
@@ -154,10 +154,15 @@ export function GlobeHomepage({viewport}: {viewport?: {width:number; height:numb
       <div ref={zoneRef} className={styles.gestureZone} data-testid="sheet-gesture-zone">
       <button data-sheet-handle className={styles.handle} aria-label="拖动或切换比赛周面板" aria-controls="home-race-week-content" aria-expanded={stop==='expanded'} onClick={toggle} onKeyDown={event=>{if(event.key==='ArrowUp'){event.preventDefault();settle('expanded');} if(event.key==='ArrowDown' || event.key==='Escape'){event.preventDefault();settle('collapsed');}}}><span/></button>
       <div className={styles.summary}>
-        <div className={styles.eyebrow} aria-live="polite" aria-atomic="true"><span>{now ? phase : '正在读取赛历'}</span><span>ROUND {now ? String(race.round).padStart(2,'0') : '—'} / {races.length}</span></div>
-        <div className={styles.titleRow}><div><h2>{now ? race.name : '赛事总览'}</h2><p>{now ? race.city.toUpperCase() : '2026 / FORMULA 1'}</p></div><button className={styles.expand} aria-label={stop==='expanded' ? '收起面板' : '展开面板'} aria-expanded={stop==='expanded'} aria-controls="home-race-week-content" onClick={toggle}>{stop==='expanded'?'↓':'↑'}</button></div>
+        <div className={styles.eyebrow} aria-live="polite"><span>{now ? phase : '读取赛历'}</span><span>RD / {now ? String(race.round).padStart(2,'0') : '—'}</span></div>
+        <div className={styles.titleRow}>
+          <div><h2>{now ? race.city : '赛事总览'}</h2><p>{now ? race.name : 'Formula 1'}</p></div>
+          <button data-sheet-handle className={styles.expand} aria-label={stop==='expanded' ? '收起面板' : '展开面板'} aria-expanded={stop==='expanded'} aria-controls="home-race-week-content" onClick={toggle}>
+            <span className={styles.chevron} aria-hidden="true" />
+          </button>
+        </div>
         <p className={styles.sessionHint}>{nextSession ? `下一节 · ${getSessionLabel(nextSession, entry.sessions.indexOf(nextSession), race.isSprint)} · ${formatTime(nextSession.startTime,displayZone)}` : !hasConfirmedTimes ? 'Session 时间待确认 · 暂无实时状态' : '计划时间已过 · 实际状态未接入'}</p>
-      <p className={styles.gestureHint}>{stop === 'expanded' ? '下拉顶部收起 ↓' : '向上拖动查看比赛周 ↑'}</p>
+
       </div>
       </div>
       <div ref={bodyRef} id="home-race-week-content" data-sheet-scroll className={styles.sheetBody} inert={compact && stop==='collapsed'}>
